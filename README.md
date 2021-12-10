@@ -1,6 +1,8 @@
 # Notes
 
-Plain Text Simple Notes taking App
+Plain Text Simple Notes taking App written in PHP and ReactJS.
+
+> This is rewrite of AngularJS [notes project](https://github.com/jcubic/notes).
 
 ![Notes taking app Screenshot](screenshot.png)
 
