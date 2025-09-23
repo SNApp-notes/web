@@ -1,4 +1,4 @@
-name: "Lint & Prettier Check"
+name: 'Lint & Prettier Check'
 
 on:
   push:
