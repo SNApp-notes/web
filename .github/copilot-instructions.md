@@ -5,6 +5,7 @@
 - Next.js
 - TypeScript
 - CSS Modules
+- Chakra UI
 - Prisma
 - MySQL
 - Firebase Authentication
@@ -15,6 +16,7 @@
 - prisma/ - Prisma schema and migrations
 - src/ - Main source code
   - components/ - Reusable React components
+    - ui/ - Generic UI components
   - hooks/ - Custom React hooks
   - app/ - Next.js app directory
 
