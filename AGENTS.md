@@ -13,7 +13,7 @@
 
 ## Tech Stack
 
-Next.js, TypeScript, Chakra UI v3, Prisma, MySQL, Firebase Auth, CSS Modules, Vitest, React Testing Library
+Next.js, TypeScript, Chakra UI v3, Prisma, MySQL, Better Auth, CSS Modules, Vitest, React Testing Library
 
 ## Code Style
 
