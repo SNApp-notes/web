@@ -27,14 +27,27 @@ const TreeNodeComponent = ({
     if (hasChildren) {
       setIsExpanded(!isExpanded);
     }
+  };
+
+  const handleNodeSelect = () => {
     onNodeSelect?.(node);
+  };
+
+  const handleArrowClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleToggle();
+  };
+
+  const handleArrowMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   return (
     <VStack align="stretch" gap={0}>
       <HStack
         cursor="pointer"
-        onClick={handleToggle}
+        onClick={handleNodeSelect}
         bg={isSelected ? 'accent.bg' : 'transparent'}
         _hover={{ bg: 'bg.hover' }}
         borderRadius="md"
@@ -44,7 +57,13 @@ const TreeNodeComponent = ({
         gap={2}
       >
         {hasChildren ? (
-          <Box color="fg.subtle" fontSize="xs">
+          <Box
+            color="fg.subtle"
+            fontSize="xs"
+            onClick={handleArrowClick}
+            onMouseDown={handleArrowMouseDown}
+            cursor="pointer"
+          >
             {isExpanded ? <FiChevronDown /> : <FiChevronRight />}
           </Box>
         ) : (
