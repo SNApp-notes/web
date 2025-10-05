@@ -31,6 +31,11 @@ Next.js, TypeScript, Chakra UI v3, Prisma, MySQL, Firebase Auth, CSS Modules, Vi
 - `prisma/` - Database schema
 - Use path alias `@/*` for src imports
 
+## Git Workflow
+
+- **Default branch**: `master` (not `main`)
+- Use `master` branch for all references in CI/CD, badges, and documentation
+
 ## Testing
 
 ### Framework: Vitest + React Testing Library
