@@ -6,11 +6,14 @@
 - `npm run build` - Build for production (uses turbopack)
 - `npm run lint` - Run ESLint
 - `npm run prettier` - Format code with Prettier
-- No test framework configured
+- `npm test` - Run tests in watch mode
+- `npm run test:run` - Run tests once
+- `npm run test:ui` - Run tests with UI (requires @vitest/ui)
+- `npm run test:coverage` - Run tests with coverage report
 
 ## Tech Stack
 
-Next.js, TypeScript, Chakra UI v3, Prisma, MySQL, Firebase Auth, CSS Modules
+Next.js, TypeScript, Chakra UI v3, Prisma, MySQL, Firebase Auth, CSS Modules, Vitest, React Testing Library
 
 ## Code Style
 
@@ -24,8 +27,43 @@ Next.js, TypeScript, Chakra UI v3, Prisma, MySQL, Firebase Auth, CSS Modules
 
 - `src/app/` - Next.js app router pages
 - `src/components/ui/` - Generic UI components
+- `src/test/` - Test utilities and setup files
 - `prisma/` - Database schema
 - Use path alias `@/*` for src imports
+
+## Testing
+
+### Framework: Vitest + React Testing Library
+
+- **Vitest**: Fast unit test runner with hot reload
+- **React Testing Library**: Component testing with user-centric approach
+- **jsdom**: Browser environment simulation for React components
+
+### Test Structure
+
+- Place test files next to components: `Component.test.tsx`
+- Use `src/test/utils.tsx` for custom render with Chakra Provider
+- Setup file: `src/test/setup.ts` (imported by vitest.config.ts)
+
+### Test Utilities
+
+```tsx
+// Use custom render with Chakra UI provider
+import { render, screen } from '@/test/utils';
+
+test('component renders correctly', () => {
+  render(<MyComponent />);
+  expect(screen.getByText('Hello')).toBeInTheDocument();
+});
+```
+
+### Best Practices
+
+- Test user interactions, not implementation details
+- Use `screen.getByRole()`, `getByLabelText()` for accessibility-focused queries
+- Test components in isolation with mock props
+- Use `userEvent` for realistic user interactions
+- Follow testing-library principles: "The more your tests resemble the way your software is used, the more confidence they can give you"
 
 ## Next.js 15+ Features & Breaking Changes
 
