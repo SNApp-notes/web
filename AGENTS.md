@@ -10,7 +10,7 @@
 
 ## Tech Stack
 
-Next.js, TypeScript, Chakra UI, Prisma, MySQL, Firebase Auth, CSS Modules
+Next.js, TypeScript, Chakra UI v3, Prisma, MySQL, Firebase Auth, CSS Modules
 
 ## Code Style
 
@@ -56,3 +56,49 @@ Next.js, TypeScript, Chakra UI, Prisma, MySQL, Firebase Auth, CSS Modules
 
 - Use `npx @next/codemod@canary upgrade latest` for automatic updates
 - Temporary compatibility modes available with warning messages
+
+## Chakra UI v3 Breaking Changes & Features
+
+### Component Structure Changes
+
+- Components now use namespaced structure (e.g., `Accordion.Root`, `Accordion.Item`)
+- `Modal` renamed to `Dialog`
+- `Collapse` renamed to `Collapsible`
+- `FormControl` replaced with `Field` component
+
+### Prop Changes
+
+- `colorScheme` → `colorPalette`
+- `isOpen` → `open`, `isDisabled` → `disabled`, `isInvalid` → `invalid`
+- `spacing` → `gap` (Stack component)
+- `noOfLines` → `lineClamp`, `truncated` → `truncate`
+- Boolean props simplified: `isActive` removed (use `data-active`)
+
+### Theme System
+
+- Use `createSystem()` instead of `extendTheme()`
+- Token values must be wrapped in `{ value: "..." }` objects
+- `ChakraProvider` now takes `value` prop instead of `theme`
+- Color transparency: Use `"blue.200/16"` instead of `transparentize()`
+
+### Provider Setup
+
+```tsx
+import { ChakraProvider, defaultSystem } from "@chakra-ui/react"
+// Use defaultSystem or custom system with createSystem()
+<ChakraProvider value={defaultSystem}>
+```
+
+### Breaking Removals
+
+- `@emotion/styled` and `framer-motion` no longer required
+- `forwardRef` from Chakra (use React's `forwardRef`)
+- `fallbackSrc` from Image component
+- `isExternal` from Link (use `target="_blank" rel="noopener noreferrer"`)
+
+### New Features
+
+- Better TypeScript support with improved prop inference
+- CSS-in-JS performance improvements
+- Enhanced accessibility
+- `asChild` prop for styling Next.js components
