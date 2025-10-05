@@ -30,7 +30,10 @@ const TreeNodeComponent = ({
   };
 
   const handleNodeSelect = () => {
-    onNodeSelect?.(node);
+    // Only allow selection of leaf nodes (notes without children)
+    if (!hasChildren) {
+      onNodeSelect?.(node);
+    }
   };
 
   const handleArrowClick = (e: React.MouseEvent) => {
@@ -47,7 +50,7 @@ const TreeNodeComponent = ({
     <VStack align="stretch" gap={0}>
       <HStack
         cursor="pointer"
-        onClick={handleNodeSelect}
+        onClick={hasChildren ? handleToggle : handleNodeSelect}
         bg={isSelected ? 'accent.bg' : 'transparent'}
         _hover={{ bg: 'bg.hover' }}
         borderRadius="md"
