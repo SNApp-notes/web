@@ -1,6 +1,6 @@
 # 10xDevs Project
 
-[![Coverage Status](https://coveralls.io/repos/github/jcubic/10xDevs/badge.svg?branch=main)](https://coveralls.io/github/jcubic/10xDevs?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/jcubic/10xDevs/badge.svg?branch=master)](https://coveralls.io/github/jcubic/10xDevs?branch=master)
 
 Next.js application for 10xDevs online training
 
