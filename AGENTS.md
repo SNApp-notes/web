@@ -13,7 +13,7 @@
 
 ## Tech Stack
 
-Next.js, TypeScript, Chakra UI v3, Prisma, MySQL, Better Auth, CSS Modules, Vitest, React Testing Library
+Next.js, TypeScript, Chakra UI v3, CodeMirror 6, Prisma, MySQL, Better Auth, CSS Modules, Vitest, React Testing Library
 
 ## Code Style
 
@@ -145,3 +145,44 @@ import { ChakraProvider, defaultSystem } from "@chakra-ui/react"
 - CSS-in-JS performance improvements
 - Enhanced accessibility
 - `asChild` prop for styling Next.js components
+
+## CodeMirror 6 Integration
+
+### MarkdownEditor Component
+
+- **Location**: `src/components/MarkdownEditor.tsx`
+- **Purpose**: React wrapper for CodeMirror 6 with Markdown syntax highlighting
+- **Dependencies**: `@uiw/react-codemirror`, `@codemirror/lang-markdown`, `@codemirror/language-data`, `@uiw/codemirror-theme-basic`
+
+### Key Features
+
+- Markdown syntax highlighting with nested code block support
+- Light/dark theme switching using `basicLight`/`basicDark` themes
+- Configurable height, width, read-only mode
+- Line numbers, bracket matching, auto-completion, folding
+- TypeScript interface in `src/types/markdown-editor.ts`
+
+### Usage Example
+
+```tsx
+import MarkdownEditor from '@/components/MarkdownEditor';
+
+function MyComponent() {
+  const [content, setContent] = useState('');
+
+  return (
+    <MarkdownEditor
+      value={content}
+      onChange={setContent}
+      theme="light" // or "dark"
+      height="400px"
+      placeholder="Start typing..."
+    />
+  );
+}
+```
+
+### Performance Optimization
+
+- Large markdown samples stored in `/public/samples/` to avoid webpack bundling warnings
+- Components load sample content dynamically via `fetch()` instead of embedding in bundle
