@@ -1,10 +1,10 @@
 import { render, screen } from '@/test/utils';
 import { vi, describe, it, expect } from 'vitest';
-import MarkdownEditor from './MarkdownEditor';
+import Editor from './Editor';
 
-describe('MarkdownEditor', () => {
+describe('Editor', () => {
   it('renders with default props', () => {
-    render(<MarkdownEditor />);
+    render(<Editor />);
 
     const editor = screen.getByRole('textbox');
     expect(editor).toBeInTheDocument();
@@ -12,7 +12,7 @@ describe('MarkdownEditor', () => {
 
   it('displays initial value', () => {
     const initialValue = '# Hello World';
-    render(<MarkdownEditor value={initialValue} />);
+    render(<Editor value={initialValue} />);
 
     const editor = screen.getByRole('textbox');
     expect(editor).toBeInTheDocument();
@@ -21,7 +21,7 @@ describe('MarkdownEditor', () => {
 
   it('shows placeholder when empty', () => {
     const placeholder = 'Start typing...';
-    render(<MarkdownEditor placeholder={placeholder} />);
+    render(<Editor placeholder={placeholder} />);
 
     const editor = screen.getByRole('textbox');
     expect(editor).toHaveAttribute('aria-placeholder', placeholder);
@@ -30,14 +30,14 @@ describe('MarkdownEditor', () => {
   it('calls onChange when provided', () => {
     const handleChange = vi.fn();
 
-    render(<MarkdownEditor onChange={handleChange} />);
+    render(<Editor onChange={handleChange} />);
 
     const editor = screen.getByRole('textbox');
     expect(editor).toBeInTheDocument();
   });
 
   it('respects readOnly prop', () => {
-    render(<MarkdownEditor readOnly />);
+    render(<Editor readOnly />);
 
     const editor = screen.getByRole('textbox');
     expect(editor).toHaveAttribute('contenteditable', 'false');
@@ -45,7 +45,7 @@ describe('MarkdownEditor', () => {
 
   it('applies custom height to wrapper', () => {
     const customHeight = '300px';
-    const { container } = render(<MarkdownEditor height={customHeight} />);
+    const { container } = render(<Editor height={customHeight} />);
 
     const editorWrapper = container.querySelector('.cm-editor');
     expect(editorWrapper).toBeInTheDocument();
@@ -53,13 +53,13 @@ describe('MarkdownEditor', () => {
 
   it('forwards ref correctly', () => {
     const ref = vi.fn();
-    render(<MarkdownEditor ref={ref} />);
+    render(<Editor ref={ref} />);
 
     expect(ref).toHaveBeenCalled();
   });
 
   it('renders with markdown language support', () => {
-    render(<MarkdownEditor value="# Test" />);
+    render(<Editor value="# Test" />);
 
     const editor = screen.getByRole('textbox');
     expect(editor).toHaveAttribute('data-language', 'markdown');

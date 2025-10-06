@@ -1,4 +1,4 @@
-export interface MarkdownEditorProps {
+export interface EditorProps {
   value?: string;
   onChange?: (value: string) => void;
   placeholder?: string;
@@ -26,7 +26,7 @@ export interface MarkdownEditorProps {
   className?: string;
 }
 
-export interface MarkdownEditorRef {
+export interface EditorRef {
   focus: () => void;
   blur: () => void;
   getValue: () => string;

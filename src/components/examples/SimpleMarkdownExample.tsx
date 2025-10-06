@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Box, Heading, VStack } from '@chakra-ui/react';
-import MarkdownEditor from '@/components/MarkdownEditor';
+import Editor from '@/components/Editor';
 
 export default function SimpleMarkdownExample() {
   const [content, setContent] = useState('Loading...');
@@ -19,7 +19,7 @@ export default function SimpleMarkdownExample() {
       <VStack gap={4} alignItems="stretch">
         <Heading size="md">Simple Markdown Editor</Heading>
 
-        <MarkdownEditor
+        <Editor
           value={content}
           onChange={setContent}
           placeholder="Start typing your markdown here..."

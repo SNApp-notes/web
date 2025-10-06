@@ -148,9 +148,9 @@ import { ChakraProvider, defaultSystem } from "@chakra-ui/react"
 
 ## CodeMirror 6 Integration
 
-### MarkdownEditor Component
+### Editor Component
 
-- **Location**: `src/components/MarkdownEditor.tsx`
+- **Location**: `src/components/Editor.tsx`
 - **Purpose**: React wrapper for CodeMirror 6 with Markdown syntax highlighting
 - **Dependencies**: `@uiw/react-codemirror`, `@codemirror/lang-markdown`, `@codemirror/language-data`, `@uiw/codemirror-theme-basic`
 
@@ -160,18 +160,18 @@ import { ChakraProvider, defaultSystem } from "@chakra-ui/react"
 - Light/dark theme switching using `basicLight`/`basicDark` themes
 - Configurable height, width, read-only mode
 - Line numbers, bracket matching, auto-completion, folding
-- TypeScript interface in `src/types/markdown-editor.ts`
+- TypeScript interface in `src/types/editor.ts`
 
 ### Usage Example
 
 ```tsx
-import MarkdownEditor from '@/components/MarkdownEditor';
+import Editor from '@/components/Editor';
 
 function MyComponent() {
   const [content, setContent] = useState('');
 
   return (
-    <MarkdownEditor
+    <Editor
       value={content}
       onChange={setContent}
       theme="light" // or "dark"

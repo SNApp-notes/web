@@ -1,15 +1,15 @@
 # Simple Usage Example
 
-Here's how to use the MarkdownEditor component:
+Here's how to use the Editor component:
 
 ```jsx
-import MarkdownEditor from '@/components/MarkdownEditor';
+import Editor from '@/components/Editor';
 
 function MyComponent() {
   const [content, setContent] = useState('');
 
   return (
-    <MarkdownEditor
+    <Editor
       value={content}
       onChange={setContent}
       placeholder="Start typing..."

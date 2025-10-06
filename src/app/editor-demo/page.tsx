@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Box, VStack, HStack, Text, Button, Tabs, Heading } from '@chakra-ui/react';
-import MarkdownEditor from '@/components/MarkdownEditor';
+import Editor from '@/components/Editor';
 
 export default function MarkdownEditorDemo() {
   const [value, setValue] = useState('');
@@ -75,7 +75,7 @@ export default function MarkdownEditorDemo() {
           </Tabs.List>
 
           <Tabs.Content value="editor">
-            <MarkdownEditor
+            <Editor
               value={value}
               onChange={setValue}
               height="500px"

@@ -6,9 +6,9 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { basicLight, basicDark } from '@uiw/codemirror-theme-basic';
 import { Box } from '@chakra-ui/react';
-import type { MarkdownEditorProps } from '@/types/markdown-editor';
+import type { EditorProps } from '@/types/editor';
 
-const MarkdownEditor = forwardRef<HTMLDivElement, MarkdownEditorProps>(
+const Editor = forwardRef<HTMLDivElement, EditorProps>(
   (
     {
       value = '',
@@ -61,6 +61,6 @@ const MarkdownEditor = forwardRef<HTMLDivElement, MarkdownEditorProps>(
   }
 );
 
-MarkdownEditor.displayName = 'MarkdownEditor';
+Editor.displayName = 'Editor';
 
-export default MarkdownEditor;
+export default Editor;
