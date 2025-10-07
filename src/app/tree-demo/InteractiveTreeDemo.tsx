@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Box, Text, VStack, HStack } from '@chakra-ui/react';
-import { NotesTreeView } from '@/components/NotesTreeView';
+import { TreeView } from '@/components/TreeView';
 import { ColorModeButton } from '@/components/ui/color-mode';
 import type { TreeNode } from '@/types/tree';
 import { sampleData } from './sampleData';
@@ -30,10 +30,11 @@ export function InteractiveTreeDemo({
 
       <HStack align="start" gap={6}>
         <Box flex="1" maxW="400px">
-          <NotesTreeView
+          <TreeView
             data={sampleData}
             onNodeSelect={handleNodeSelect}
             selectedNodeId={selectedNode?.id}
+            title="Notes"
           />
         </Box>
 

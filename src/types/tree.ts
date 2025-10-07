@@ -20,4 +20,5 @@ export interface TreeViewProps {
   onNodeCollapse?: (node: TreeNode) => void;
   selectedNodeId?: string;
   expandedNodeIds?: string[];
+  title?: string;
 }

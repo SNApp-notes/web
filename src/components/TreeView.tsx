@@ -104,7 +104,12 @@ const TreeNodeComponent = ({
   );
 };
 
-export const NotesTreeView = ({ data, onNodeSelect, selectedNodeId }: TreeViewProps) => {
+export const TreeView = ({
+  data,
+  onNodeSelect,
+  selectedNodeId,
+  title = 'Tree'
+}: TreeViewProps) => {
   return (
     <Box
       maxH="400px"
@@ -116,7 +121,7 @@ export const NotesTreeView = ({ data, onNodeSelect, selectedNodeId }: TreeViewPr
       bg="bg"
     >
       <Text fontSize="lg" fontWeight="bold" mb={3} color="fg">
-        Notes
+        {title}
       </Text>
       <VStack align="stretch" gap={1}>
         {data.map((node) => (
@@ -132,4 +137,4 @@ export const NotesTreeView = ({ data, onNodeSelect, selectedNodeId }: TreeViewPr
   );
 };
 
-export default NotesTreeView;
+export default TreeView;

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@/test/utils';
-import { NotesTreeView } from './NotesTreeView';
+import { TreeView } from './TreeView';
 import type { TreeNode } from '@/types/tree';
 
 const mockData: TreeNode[] = [
@@ -22,16 +22,23 @@ const mockData: TreeNode[] = [
   }
 ];
 
-describe('NotesTreeView', () => {
+describe('TreeView', () => {
   it('renders tree structure correctly', () => {
-    render(<NotesTreeView data={mockData} />);
+    render(<TreeView data={mockData} />);
 
-    expect(screen.getByText('Notes')).toBeInTheDocument();
+    expect(screen.getByText('Tree')).toBeInTheDocument();
+    expect(screen.getByText('Test Folder')).toBeInTheDocument();
+  });
+
+  it('renders with custom title', () => {
+    render(<TreeView data={mockData} title="My Custom Tree" />);
+
+    expect(screen.getByText('My Custom Tree')).toBeInTheDocument();
     expect(screen.getByText('Test Folder')).toBeInTheDocument();
   });
 
   it('expands folder when clicked', async () => {
-    const { user } = render(<NotesTreeView data={mockData} />);
+    const { user } = render(<TreeView data={mockData} />);
 
     const folder = screen.getByText('Test Folder');
     await user.click(folder);
@@ -41,9 +48,7 @@ describe('NotesTreeView', () => {
 
   it('calls onNodeSelect when note is clicked', async () => {
     const onNodeSelect = vi.fn();
-    const { user } = render(
-      <NotesTreeView data={mockData} onNodeSelect={onNodeSelect} />
-    );
+    const { user } = render(<TreeView data={mockData} onNodeSelect={onNodeSelect} />);
 
     // First expand the folder
     await user.click(screen.getByText('Test Folder'));
