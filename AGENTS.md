@@ -13,7 +13,7 @@
 
 ## Tech Stack
 
-Next.js, TypeScript, Chakra UI v3, CodeMirror 6, Prisma, MySQL, Better Auth, CSS Modules, Vitest, React Testing Library
+Next.js, TypeScript, Chakra UI v3, CodeMirror 6, Prisma, MySQL, Better Auth, CSS Modules, Vitest, React Testing Library, clsx
 
 ## Code Style
 
@@ -22,6 +22,7 @@ Next.js, TypeScript, Chakra UI v3, CodeMirror 6, Prisma, MySQL, Better Auth, CSS
 - Components: Use TypeScript, Readonly props, client/server components as needed
 - Naming: camelCase for variables/functions, PascalCase for components
 - Error handling: Use TypeScript strict mode, no empty object types allowed
+- ClassName handling: Use `clsx` library for conditional and dynamic class names
 
 ## Project Structure
 
@@ -186,3 +187,65 @@ function MyComponent() {
 
 - Large markdown samples stored in `/public/samples/` to avoid webpack bundling warnings
 - Components load sample content dynamically via `fetch()` instead of embedding in bundle
+
+## CSS Class Name Handling with clsx
+
+### Library: clsx
+
+- **Purpose**: Utility for constructing className strings conditionally
+- **Benefits**: Better readability, type safety, performance, maintainability
+- **Location**: Available globally, import with `import clsx from 'clsx'`
+
+### Usage Examples
+
+```tsx
+import clsx from 'clsx';
+
+// Basic conditional classes
+<div className={clsx('base-class', {
+  'active': isActive,
+  'disabled': isDisabled,
+  'selected': isSelected
+})} />
+
+// Mixed string and object syntax
+<div className={clsx(
+  'tree-node',
+  {
+    'tree-node-selected': isSelected,
+    'tree-node-expandable': hasChildren,
+    'tree-node-leaf': !hasChildren
+  }
+)} />
+
+// With arrays and multiple conditions
+<div className={clsx([
+  'btn',
+  size && `btn-${size}`,
+  {
+    'btn-primary': variant === 'primary',
+    'btn-disabled': disabled
+  }
+])} />
+```
+
+### Best Practices
+
+- **Always use clsx** instead of string concatenation for dynamic classNames
+- Use object syntax for boolean conditions: `{ 'class-name': condition }`
+- Combine base classes with conditional classes for clarity
+- Avoid manual string concatenation with template literals
+- Import clsx at component level, not globally
+
+### Migration from String Concatenation
+
+```tsx
+// ❌ Don't: String concatenation
+className={`base ${isActive ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
+
+// ✅ Do: Use clsx
+className={clsx('base', {
+  'active': isActive,
+  'disabled': disabled
+})}
+```

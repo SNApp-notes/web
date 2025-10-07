@@ -3,6 +3,7 @@
 import { Box, VStack, HStack, Text } from '@chakra-ui/react';
 import { FiFolder, FiFileText, FiChevronRight, FiChevronDown } from 'react-icons/fi';
 import { useState } from 'react';
+import clsx from 'clsx';
 import type { TreeNode, TreeViewProps } from '@/types/tree';
 
 interface TreeNodeComponentProps {
@@ -58,7 +59,11 @@ const TreeNodeComponent = ({
         py={1}
         ml={level * 4}
         gap={2}
-        className={`tree-node ${isSelected ? 'tree-node-selected' : ''} ${hasChildren ? 'tree-node-expandable' : 'tree-node-leaf'}`}
+        className={clsx('tree-node', {
+          'tree-node-selected': isSelected,
+          'tree-node-expandable': hasChildren,
+          'tree-node-leaf': !hasChildren
+        })}
         data-testid={`tree-node-${node.id}`}
       >
         {hasChildren ? (
