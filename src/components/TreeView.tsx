@@ -58,6 +58,8 @@ const TreeNodeComponent = ({
         py={1}
         ml={level * 4}
         gap={2}
+        className={`tree-node ${isSelected ? 'tree-node-selected' : ''} ${hasChildren ? 'tree-node-expandable' : 'tree-node-leaf'}`}
+        data-testid={`tree-node-${node.id}`}
       >
         {hasChildren ? (
           <Box
@@ -66,6 +68,7 @@ const TreeNodeComponent = ({
             onClick={handleArrowClick}
             onMouseDown={handleArrowMouseDown}
             cursor="pointer"
+            className="tree-expand-arrow"
           >
             {isExpanded ? <FiChevronDown /> : <FiChevronRight />}
           </Box>
@@ -73,7 +76,7 @@ const TreeNodeComponent = ({
           <Box w={3} />
         )}
 
-        <Box color="fg.muted">
+        <Box color="fg.muted" className="tree-node-icon">
           {isCategory ? <FiFolder size={16} /> : <FiFileText size={14} />}
         </Box>
 
@@ -82,6 +85,7 @@ const TreeNodeComponent = ({
           fontWeight={isSelected ? 'semibold' : 'normal'}
           color={isSelected ? 'accent.fg' : 'fg'}
           flex={1}
+          className="tree-node-label"
         >
           {node.name}
         </Text>
@@ -119,8 +123,10 @@ export const TreeView = ({
       borderColor="border"
       borderRadius="md"
       bg="bg"
+      className="tree-view-container"
+      data-testid="tree-view"
     >
-      <Text fontSize="lg" fontWeight="bold" mb={3} color="fg">
+      <Text fontSize="lg" fontWeight="bold" mb={3} color="fg" className="tree-view-title">
         {title}
       </Text>
       <VStack align="stretch" gap={1}>
