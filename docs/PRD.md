@@ -72,7 +72,9 @@ editor.
 ### Notes Management
 - Users can create new notes with a default name (e.g., "New Note") and optional
   initial content.
-- Rename notes by editing the name in the left panel.
+- When there are more then one note with default note, number is added the the
+  name, e.g. "New Note <2>"
+- Rename notes by editing the name in the left panel, by double click the name.
 - Edit and save notes in the middle panel, with real-time Markdown preview and
   syntax highlighting.
 - Delete notes individually from the notes list.
@@ -107,7 +109,7 @@ usability.
 ### In Scope
 - GitHub OAuth authentication and private note storage.
 - Basic CRUD operations for notes (create, read, update, delete).
-- Three-panel interface with filtering and header navigation.
+- Three-panel interface with filtering and markdown note headers navigation.
 - Dark mode toggle and account deletion in settings.
 - Example note for onboarding.
 - Anonymous analytics for success tracking.
@@ -155,7 +157,7 @@ US-003 Title: As a user, I want to create a new note so that I can start
 capturing ideas immediately.  Description: Users add blank or minimally titled
 notes to the list.  Acceptance Criteria:
 - Given an authenticated session, when the user clicks "New Note" button, a new
-  entry appears in the left panel with default name "New Note [timestamp]".
+  entry appears in the left panel with default name "New Note [counter]".
 - The new note opens in the editor with empty content.
 - Multiple creations in sequence are supported without errors.
 - Edge case: Creation with special characters in name is allowed but sanitized
@@ -168,16 +170,15 @@ Acceptance Criteria:
   an inline edit field appears.
 - Changes are saved on blur or Enter, updating the list and storage.
 - Names must be non-empty; empty input reverts to previous name.
-- Edge case: Duplicate names are allowed, distinguished by creation timestamp in
+- Edge case: Duplicate names are allowed, distinguished by creation counter in
   UI.
 
 US-005 Title: As a user, I want to edit and save a note so that I can record and
-update my content.  Description: The editor supports Markdown input with
-auto-save.  Acceptance Criteria:
+update my content.  Description: The editor supports Markdown input. Acceptance
+Criteria:
 - Given an open note, when the user types in the middle panel, changes are
   reflected in real-time preview and syntax highlighted.
-- Saves occur automatically every 30 seconds or on Ctrl+S, with a brief "Saved"
-  indicator.
+- Saves occur with Ctrl+S, with a brief "Saved" indicator.
 - Content persists across sessions.
 - Edge case: Large notes (>10KB) load and save without performance degradation
   (tested on supported browsers).
@@ -206,7 +207,8 @@ that I can jump to sections in long notes.  Description: The right panel lists
 clickable headers from the current note.  Acceptance Criteria:
 - Given a note with headers (e.g., # Header1), when loaded, the sidebar
   populates with links scrolling to sections on click.
-- Headers are extracted dynamically from Markdown.
+- Headers are extracted dynamically from Markdown and updated when text is
+  edited.
 - Sidebar collapses on mobile.
 - Edge case: Note without headers shows empty sidebar with placeholder text.
 
@@ -245,14 +247,6 @@ Criteria:
   they are redirected to login.
 - Open notes and unsaved changes prompt a warning before logout.
 - Edge case: Logout during editing discards unsaved content after confirmation.
-
-US-013 Title: As a user on mobile, I want a responsive interface so that I can
-access notes on any device.  Description: Layout adapts to screen sizes.
-Acceptance Criteria:
-- Given small screen (<768px), when viewing dashboard, sidebars collapse into
-  expandable modals.
-- All core actions (edit, filter) remain accessible via touch.
-- Tested on Chrome/Safari mobile for no horizontal scroll.
 
 ## 6. Success Metrics
 
