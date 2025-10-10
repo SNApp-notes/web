@@ -21,9 +21,8 @@ Key aspects of the MVP include:
 - A settings page for toggling dark mode and deleting the account with email
   confirmation.
 - Built with Next.js for modern development, including responsive design and
-  dark mode support via Tailwind CSS. The app is open-source to allow
-  self-hosting and targets online-only access without local synchronization or
-  offline capabilities.
+  dark mode support. The app is open-source to allow self-hosting and targets
+  online-only access without local synchronization or offline capabilities.
 
 The MVP focuses on simplicity and speed, leveraging server-side rendering for
 security and performance. Browser compatibility is prioritized for the latest
