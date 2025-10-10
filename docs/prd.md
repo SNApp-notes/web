@@ -82,12 +82,9 @@ editor.
 - Three-panel layout:
   - Left: Scrollable list of note names with a search input for name-based
     filtering (case-insensitive, partial matches).
-  - Middle: Full-width Markdown editor with syntax highlighting; auto-save on
-    edit or every 30 seconds.
+  - Middle: Full-width Markdown editor with syntax highlighting.
   - Right: Note summary sidebar showing clickable headers extracted from the
     current note's Markdown, with a filter input for header names.
-- Responsive design adapts to desktop and mobile, collapsing sidebars into
-  modals on small screens.
 - Keyboard shortcuts: Ctrl+S for save, Ctrl+N for new note, Arrow keys for
   header navigation in sidebar.
 
