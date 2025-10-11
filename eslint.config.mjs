@@ -24,7 +24,7 @@ const eslintConfig = [
       'build/**',
       'coverage/**',
       'next-env.d.ts',
-      'src/generated/**',
+      'prisma/generated/**',
       'prisma/migrations/**'
     ]
   }

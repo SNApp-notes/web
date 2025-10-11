@@ -11,7 +11,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.27.1",
@@ -44,6 +45,7 @@
     "eslint-config-next": "15.5.4",
     "jsdom": "^27.0.0",
     "prettier": "^3.6.2",
+    "prisma": "^6.17.1",
     "typescript": "^5",
     "vitest": "^3.2.4"
   },

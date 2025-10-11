@@ -38,7 +38,7 @@ This implementation satisfies US-001 requirements by providing secure GitHub OAu
 2. **Database Setup**
    - Ensure MySQL database is running
    - Run migrations: `npx prisma migrate dev`
-   - Generate Prisma client: `npx prisma generate`
+   - Prisma client generates automatically via `postinstall` script
 
 3. **Development**
    - Start server: `npm run dev`
