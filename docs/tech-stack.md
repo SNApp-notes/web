@@ -25,4 +25,3 @@
 - GitHub Actions
 - Vercel
 - Shared hosting for MySQL database
-

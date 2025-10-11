@@ -23,6 +23,7 @@ Functionality from old application:
 - Markdown syntax highliting
 
 ### What's not included in MVP
+
 - Categories and Notes Tree
 - Drag & Drop of notes and categories in Tree
 - Notes sorting
@@ -30,7 +31,7 @@ Functionality from old application:
 - Notes sharing/publishing
 
 ### Success criteria
+
 - Users can create and orgnize their notes
 - Users can filer for the note they need
 - Users can navigate inside a single note
-

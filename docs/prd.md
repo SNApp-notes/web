@@ -10,6 +10,7 @@ organize, edit, and navigate text-based notes stored as Markdown files on a
 server, accessible from any device via a web browser.
 
 Key aspects of the MVP include:
+
 - A classic three-panel interface: left panel for notes list with basic name
   filtering, middle panel for Markdown editing with syntax highlighting, and
   right panel for note summary with header navigation and filtering.
@@ -56,12 +57,13 @@ server-side text files, rendered with Markdown syntax highlighting in the
 editor.
 
 ### Authentication and User Management
+
 - Users authenticate exclusively via GitHub OAuth.
 - Upon first login, a single example note is created, containing onboarding
   content: Markdown examples (e.g., headers # H1, ## H2; lists - item; code
-  blocks ```code```), renaming instructions (double-click name in list),
+  blocks ` ```code``` `), renaming instructions (double-click name in list),
   navigation shortcuts (Ctrl+F for header filter), and a magic string
-  "___SNAPP_EXAMPLE_NOTE___" for analytics tracking.
+  "`___SNAPP_EXAMPLE_NOTE___`" for analytics tracking.
 - Notes are private and accessible only via authenticated sessions, enforced by
   server-side access controls over HTTPS.
 - Settings page includes a dark mode toggle (persisted in local storage) and
@@ -69,6 +71,7 @@ editor.
   GitHub-linked email.
 
 ### Notes Management
+
 - Users can create new notes with a default name (e.g., "New Note") and optional
   initial content.
 - When there are more then one note with default note, number is added the the
@@ -79,6 +82,7 @@ editor.
 - Delete notes individually from the notes list.
 
 ### Interface and Navigation
+
 - Three-panel layout:
   - Left: Scrollable list of note names with a search input for name-based
     filtering (case-insensitive, partial matches).
@@ -89,6 +93,7 @@ editor.
   header navigation in sidebar.
 
 ### Analytics
+
 - Anonymous tracking via database queries (using user ID hashes) to monitor
   engagement without PII collection. No third-party tools; implemented via
   server-side logs.
@@ -103,6 +108,7 @@ or data portability features, prioritizing rapid implementation and core
 usability.
 
 ### In Scope
+
 - GitHub OAuth authentication and private note storage.
 - Basic CRUD operations for notes (create, read, update, delete).
 - Three-panel interface with filtering and markdown note headers navigation.
@@ -111,6 +117,7 @@ usability.
 - Anonymous analytics for success tracking.
 
 ### Out of Scope for MVP
+
 - Offline access, local synchronization, or mobile apps.
 - Backup/export features (users can copy/paste content manually).
 - Alternative authentication methods (e.g., email/password).
@@ -126,9 +133,10 @@ multi-factor auth and exports in phase 3.
 ## 5. User Stories
 
 US-001 Title: As a new user, I want to authenticate via GitHub OAuth so that I
-can securely access my private notes.  Description: Users sign in using GitHub
-to establish a session and access personalized note storage.  Acceptance
+can securely access my private notes. Description: Users sign in using GitHub
+to establish a session and access personalized note storage. Acceptance
 Criteria:
+
 - Given no active session, when the user clicks "Sign In with GitHub," they are
   redirected to GitHub OAuth flow.
 - Upon successful OAuth, the user is redirected to the app dashboard with their
@@ -139,19 +147,21 @@ Criteria:
 - Notes from other users are inaccessible, verified by server-side checks.
 
 US-002 Title: As a new user, I want an example note upon first login so that I
-can quickly learn core features.  Description: On initial access, a
-pre-populated note demonstrates editing, renaming, and navigation.  Acceptance
+can quickly learn core features. Description: On initial access, a
+pre-populated note demonstrates editing, renaming, and navigation. Acceptance
 Criteria:
+
 - Given first login, when the dashboard loads, a note named "Welcome to SNApp"
   appears with content including Markdown samples, renaming steps, and
-  navigation tips, marked with "___SNAPP_EXAMPLE_NOTE___".
+  navigation tips, marked with "`___SNAPP_EXAMPLE_NOTE___`".
 - The note is editable and deletable like others.
 - On subsequent logins, the example note persists unless deleted.
 - Content renders correctly with syntax highlighting.
 
 US-003 Title: As a user, I want to create a new note so that I can start
-capturing ideas immediately.  Description: Users add blank or minimally titled
-notes to the list.  Acceptance Criteria:
+capturing ideas immediately. Description: Users add blank or minimally titled
+notes to the list. Acceptance Criteria:
+
 - Given an authenticated session, when the user clicks "New Note" button, a new
   entry appears in the left panel with default name "New Note [counter]".
 - The new note opens in the editor with empty content.
@@ -160,8 +170,9 @@ notes to the list.  Acceptance Criteria:
   for display.
 
 US-004 Title: As a user, I want to rename a note so that I can organize my notes
-meaningfully.  Description: Users edit note titles directly in the list.
+meaningfully. Description: Users edit note titles directly in the list.
 Acceptance Criteria:
+
 - Given a selected note, when the user double-clicks its name in the left panel,
   an inline edit field appears.
 - Changes are saved on blur or Enter, updating the list and storage.
@@ -170,8 +181,9 @@ Acceptance Criteria:
   UI.
 
 US-005 Title: As a user, I want to edit and save a note so that I can record and
-update my content.  Description: The editor supports Markdown input. Acceptance
+update my content. Description: The editor supports Markdown input. Acceptance
 Criteria:
+
 - Given an open note, when the user types in the middle panel, changes are
   reflected in real-time preview and syntax highlighted.
 - Saves occur with Ctrl+S, with a brief "Saved" indicator.
@@ -180,8 +192,9 @@ Criteria:
   (tested on supported browsers).
 
 US-006 Title: As a user, I want to delete a note so that I can remove obsolete
-content.  Description: Users remove individual notes from the list.  Acceptance
+content. Description: Users remove individual notes from the list. Acceptance
 Criteria:
+
 - Given a selected note, when the user clicks the delete icon, a confirmation
   modal appears.
 - On confirmation, the note is removed from the list and storage, and another
@@ -190,8 +203,9 @@ Criteria:
 - Edge case: Deleting the last note shows an empty list with "New Note" prompt.
 
 US-007 Title: As a user, I want to filter notes by name so that I can quickly
-find specific notes.  Description: Search input in the left panel narrows the
-notes list.  Acceptance Criteria:
+find specific notes. Description: Search input in the left panel narrows the
+notes list. Acceptance Criteria:
+
 - Given notes list, when the user types in the filter input, results show
   partial, case-insensitive matches.
 - Empty filter shows all notes.
@@ -199,8 +213,9 @@ notes list.  Acceptance Criteria:
 - Edge case: No matches display "No notes found" message with clear button.
 
 US-008 Title: As a user, I want to navigate a note via headers in the sidebar so
-that I can jump to sections in long notes.  Description: The right panel lists
-clickable headers from the current note.  Acceptance Criteria:
+that I can jump to sections in long notes. Description: The right panel lists
+clickable headers from the current note. Acceptance Criteria:
+
 - Given a note with headers (e.g., # Header1), when loaded, the sidebar
   populates with links scrolling to sections on click.
 - Headers are extracted dynamically from Markdown and updated when text is
@@ -209,8 +224,9 @@ clickable headers from the current note.  Acceptance Criteria:
 - Edge case: Note without headers shows empty sidebar with placeholder text.
 
 US-009 Title: As a user, I want to filter headers in the note summary so that I
-can locate subsections efficiently.  Description: Search within the sidebar
-refines header list.  Acceptance Criteria:
+can locate subsections efficiently. Description: Search within the sidebar
+refines header list. Acceptance Criteria:
+
 - Given populated sidebar, when the user types in the header filter, only
   matching headers display.
 - Matches are case-insensitive and partial.
@@ -218,8 +234,9 @@ refines header list.  Acceptance Criteria:
 - Edge case: No matches hide all headers and show "No headers found."
 
 US-010 Title: As a user, I want to toggle dark mode so that I can adjust the
-interface for my preferences.  Description: Settings allow theme switching.
+interface for my preferences. Description: Settings allow theme switching.
 Acceptance Criteria:
+
 - Given settings page, when the user toggles dark mode, the UI updates
   immediately and persists via local storage.
 - Toggle works across sessions and devices (per browser).
@@ -227,8 +244,9 @@ Acceptance Criteria:
 - Edge case: Local storage disabled falls back to light mode.
 
 US-011 Title: As a user, I want to delete my account so that I can remove my
-data permanently.  Description: Settings provide secure account removal.
+data permanently. Description: Settings provide secure account removal.
 Acceptance Criteria:
+
 - Given settings page, when the user clicks "Delete Account," an email
   confirmation is sent to the GitHub-linked address.
 - Confirmation link in email leads to deletion, removing all notes and user
@@ -237,8 +255,9 @@ Acceptance Criteria:
 - Edge case: Invalid/expired confirmation link shows error and requires restart.
 
 US-012 Title: As a returning user, I want to log out so that I can end my
-session securely.  Description: Explicit logout clears the session.  Acceptance
+session securely. Description: Explicit logout clears the session. Acceptance
 Criteria:
+
 - Given active session, when the user clicks "Logout," the session ends, and
   they are redirected to login.
 - Open notes and unsaved changes prompt a warning before logout.
@@ -251,8 +270,9 @@ features, tracked anonymously via server-side database queries without
 third-party tools or PII.
 
 Primary Metrics:
+
 - Percentage of users who delete or replace the example note (absence of
-  "___SNAPP_EXAMPLE_NOTE___" string in their notes) within 7 days of signup:
+  "`___SNAPP_EXAMPLE_NOTE___`" string in their notes) within 7 days of signup:
   Target >50%.
 - Percentage of users who create at least one new note (total notes >1,
   excluding example): Target >70%.
@@ -260,6 +280,7 @@ Primary Metrics:
   days: Target >40%.
 
 Measurement Approach:
+
 - Queries run weekly on anonymized user IDs (hashed) to count qualifying users.
 - No user-facing analytics; internal dashboard for product team.
 - Qualitative: Open-source GitHub stars/forks as proxy for interest (>10 in
