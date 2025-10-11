@@ -59,11 +59,11 @@ editor.
 ### Authentication and User Management
 
 - Users authenticate exclusively via GitHub OAuth.
-- Upon first login, a single example note is created, containing onboarding
-  content: Markdown examples (e.g., headers # H1, ## H2; lists - item; code
-  blocks ` ```code``` `), renaming instructions (double-click name in list),
-  navigation shortcuts (Ctrl+F for header filter), and a magic string
-  "`___SNAPP_EXAMPLE_NOTE___`" for analytics tracking.
+- Upon first login, a single example note is created with `null` content in the
+  database. The frontend displays onboarding content when content is `null`:
+  Markdown examples (e.g., headers # H1, ## H2; lists - item; code blocks ` ```code``` `), renaming instructions (double-click name in list), and
+  navigation shortcuts (Ctrl+F for header filter). Only one note with `null`
+  content is created per user account.
 - Notes are private and accessible only via authenticated sessions, enforced by
   server-side access controls over HTTPS.
 - Settings page includes a dark mode toggle (persisted in local storage) and
@@ -133,9 +133,8 @@ multi-factor auth and exports in phase 3.
 ## 5. User Stories
 
 US-001 Title: As a new user, I want to authenticate via GitHub OAuth so that I
-can securely access my private notes. Description: Users sign in using GitHub
-to establish a session and access personalized note storage. Acceptance
-Criteria:
+can securely access my private notes. Description: Users sign in using GitHub to
+establish a session and access personalized note storage. Acceptance Criteria:
 
 - Given no active session, when the user clicks "Sign In with GitHub," they are
   redirected to GitHub OAuth flow.
@@ -147,15 +146,17 @@ Criteria:
 - Notes from other users are inaccessible, verified by server-side checks.
 
 US-002 Title: As a new user, I want an example note upon first login so that I
-can quickly learn core features. Description: On initial access, a
-pre-populated note demonstrates editing, renaming, and navigation. Acceptance
-Criteria:
+can quickly learn core features. Description: On initial access, a pre-populated
+note demonstrates editing, renaming, and navigation. Acceptance Criteria:
 
 - Given first login, when the dashboard loads, a note named "Welcome to SNApp"
-  appears with content including Markdown samples, renaming steps, and
-  navigation tips, marked with "`___SNAPP_EXAMPLE_NOTE___`".
-- The note is editable and deletable like others.
-- On subsequent logins, the example note persists unless deleted.
+  is created with `null` content in the database. The frontend displays example
+  content including Markdown samples, renaming steps, and navigation tips when
+  content is `null`.
+- The note is editable, renameable, and deletable like others.
+- When the user saves the note, the content is written to the database and the
+  note becomes a normal note.
+- On subsequent logins, the example note persists unless deleted or saved.
 - Content renders correctly with syntax highlighting.
 
 US-003 Title: As a user, I want to create a new note so that I can start
@@ -271,9 +272,8 @@ third-party tools or PII.
 
 Primary Metrics:
 
-- Percentage of users who delete or replace the example note (absence of
-  "`___SNAPP_EXAMPLE_NOTE___`" string in their notes) within 7 days of signup:
-  Target >50%.
+- Percentage of users who interact with the example note (no notes with `null`
+  content remaining) within 7 days of signup: Target >50%.
 - Percentage of users who create at least one new note (total notes >1,
   excluding example): Target >70%.
 - Overall retention: Users returning for at least 3 sessions in the first 30
@@ -282,6 +282,8 @@ Primary Metrics:
 Measurement Approach:
 
 - Queries run weekly on anonymized user IDs (hashed) to count qualifying users.
+- Example note interaction is tracked by checking for notes with `null` content
+  in a single database query per user.
 - No user-facing analytics; internal dashboard for product team.
 - Qualitative: Open-source GitHub stars/forks as proxy for interest (>10 in
   first month).
