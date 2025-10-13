@@ -86,7 +86,7 @@ Key features include:
 
 4. **Environment Variables:**
    - Configure any required environment variables for authentication, database, etc., by creating a
-     `.env.local` file.
+     `.env` file, use `.env.example` as reference
 
 ## Available Scripts
 
