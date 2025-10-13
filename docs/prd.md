@@ -14,8 +14,8 @@ Key aspects of the MVP include:
 - A classic three-panel interface: left panel for notes list with basic name
   filtering, middle panel for Markdown editing with syntax highlighting, and
   right panel for note summary with header navigation and filtering.
-- User authentication via GitHub OAuth, ensuring private notes accessible only
-  to the account owner.
+- User authentication via GitHub OAuth or email/password registration, ensuring
+  private notes accessible only to the account owner.
 - An onboarding example note pre-populated upon first login, containing
   documentation on core features like editing Markdown, renaming notes, and
   header navigation.
@@ -58,8 +58,14 @@ editor.
 
 ### Authentication and User Management
 
-- Users authenticate exclusively via GitHub OAuth.
-- Upon first login, a single example note is created with `null` content in the
+- Users authenticate via GitHub OAuth or email/password registration.
+- Email/password registration requires email verification before account activation:
+  - Upon registration, users receive a verification email with a secure link
+  - Users must click the verification link to activate their account
+  - Unverified accounts cannot access the application features
+  - Verification links expire after 24 hours for security
+  - In development, verification URLs are logged to console for testing
+- Upon first login (after email verification for email users), a single example note is created with `null` content in the
   database. The frontend displays onboarding content when content is `null`:
   Markdown examples (e.g., headers # H1, ## H2; lists - item; code blocks ` ```code``` `), renaming instructions (double-click name in list), and
   navigation shortcuts (Ctrl+F for header filter). Only one note with `null`
@@ -67,8 +73,8 @@ editor.
 - Notes are private and accessible only via authenticated sessions, enforced by
   server-side access controls over HTTPS.
 - Settings page includes a dark mode toggle (persisted in local storage) and
-  account deletion button, requiring email confirmation sent to the
-  GitHub-linked email.
+  account deletion button, requiring email confirmation sent to the user's
+  registered email.
 
 ### Notes Management
 
@@ -109,7 +115,7 @@ usability.
 
 ### In Scope
 
-- GitHub OAuth authentication and private note storage.
+- Dual authentication: GitHub OAuth and email/password registration.
 - Basic CRUD operations for notes (create, read, update, delete).
 - Three-panel interface with filtering and markdown note headers navigation.
 - Dark mode toggle and account deletion in settings.
@@ -120,7 +126,6 @@ usability.
 
 - Offline access, local synchronization, or mobile apps.
 - Backup/export features (users can copy/paste content manually).
-- Alternative authentication methods (e.g., email/password).
 - Categories, notes tree, drag-and-drop reordering, or sorting.
 - Favorite notes, full-text search, or notes sharing/publishing.
 - Client-side encryption (relies on HTTPS and server controls).
@@ -132,16 +137,23 @@ multi-factor auth and exports in phase 3.
 
 ## 5. User Stories
 
-US-001 Title: As a new user, I want to authenticate via GitHub OAuth so that I
-can securely access my private notes. Description: Users sign in using GitHub to
-establish a session and access personalized note storage. Acceptance Criteria:
+US-001 Title: As a new user, I want to authenticate via GitHub OAuth or
+email/password so that I can securely access my private notes. Description:
+Users sign in using GitHub OAuth or create an account with email/password to
+establish a session and access personalized note storage. Email registration
+requires verification before account activation. Acceptance Criteria:
 
-- Given no active session, when the user clicks "Sign In with GitHub," they are
+- Given no active session, when the user clicks "Continue with GitHub," they are
   redirected to GitHub OAuth flow.
-- Upon successful OAuth, the user is redirected to the app dashboard with their
-  notes (or example note if first login).
-- Failed OAuth (e.g., denied permissions) displays an error message and returns
-  to login page.
+- Alternatively, users can sign in with email/password or create a new account
+  via the registration form.
+- For email registration, upon successful account creation, users see a "Check Your Email"
+  message and receive a verification email with a secure link that expires in 24 hours.
+- Users must click the email verification link to activate their account before they
+  can sign in and access features.
+- Upon successful authentication (GitHub OAuth or verified email account), the user is
+  redirected to the app dashboard with their notes (or example note if first login).
+- Failed authentication displays appropriate error messages and allows retry.
 - Session persists via secure cookies until explicit logout.
 - Notes from other users are inaccessible, verified by server-side checks.
 
@@ -249,13 +261,26 @@ data permanently. Description: Settings provide secure account removal.
 Acceptance Criteria:
 
 - Given settings page, when the user clicks "Delete Account," an email
-  confirmation is sent to the GitHub-linked address.
+  confirmation is sent to the user's registered email address.
 - Confirmation link in email leads to deletion, removing all notes and user
   record.
 - Post-deletion, user is logged out and redirected to login.
 - Edge case: Invalid/expired confirmation link shows error and requires restart.
 
-US-012 Title: As a returning user, I want to log out so that I can end my
+US-012 Title: As a new user registering with email, I want to verify my email
+address so that I can activate my account securely. Description: Email
+verification ensures account ownership and prevents abuse. Acceptance Criteria:
+
+- Given successful email registration, when the form is submitted, a "Check Your Email"
+  success page displays with the registered email address.
+- A verification email is sent containing a secure link that expires in 24 hours.
+- When the user clicks the verification link, they are redirected to a confirmation page
+  showing success and auto-redirecting to the dashboard after 3 seconds.
+- Verified users can now sign in normally with their email and password.
+- Invalid or expired verification links show an error page with options to register again.
+- Edge case: Multiple verification attempts with the same token are handled gracefully.
+
+US-013 Title: As a returning user, I want to log out so that I can end my
 session securely. Description: Explicit logout clears the session. Acceptance
 Criteria:
 
