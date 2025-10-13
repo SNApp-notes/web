@@ -1,10 +1,12 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { nextCookies } from 'better-auth/next-js';
 import prisma from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
+  plugins: [nextCookies()],
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: process.env.NODE_ENV === 'production',

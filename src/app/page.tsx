@@ -1,96 +1,37 @@
-'use client';
-
 import {
   Button,
   Box,
   Heading,
   VStack,
   Text,
-  Input,
   HStack,
   Separator,
   Alert
 } from '@chakra-ui/react';
-import { signIn, useSession } from '@/lib/auth-client';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import { auth } from '@/lib/auth';
+import SignInForm from '@/components/SignInForm';
 import Link from 'next/link';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
-export default function Home() {
-  const { data: session, isPending } = useSession();
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+export default async function Home() {
+  // Check if user is already authenticated
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
 
-  useEffect(() => {
-    if (session) {
-      router.push('/dashboard');
-    }
-  }, [session, router]);
+  // If user is authenticated, redirect to dashboard
+  if (session) {
+    redirect('/dashboard');
+  }
 
   const handleGitHubSignIn = async () => {
-    await signIn.social({
-      provider: 'github',
-      callbackURL: '/dashboard'
-    });
+    'use server';
+    // GitHub sign-in will be handled by Better Auth's built-in OAuth flow
+    redirect(`/api/auth/sign-in/github?callbackURL=/dashboard`);
   };
-
-  const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      await signIn.email({
-        email,
-        password,
-        callbackURL: '/dashboard'
-      });
-      router.push('/dashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (isPending) {
-    return (
-      <Box
-        p={6}
-        maxW="lg"
-        mx="auto"
-        bg="bg"
-        minH="100vh"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Text color="fg">Loading...</Text>
-      </Box>
-    );
-  }
-
-  if (session) {
-    return (
-      <Box
-        p={6}
-        maxW="lg"
-        mx="auto"
-        bg="bg"
-        minH="100vh"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Text color="fg">Redirecting to dashboard...</Text>
-      </Box>
-    );
-  }
 
   return (
     <Box
@@ -122,38 +63,8 @@ export default function Home() {
             </Alert.Content>
           </Alert.Root>
         )}
-        {error && (
-          <Alert.Root status="error" p={3}>
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Description>{error}</Alert.Description>
-            </Alert.Content>
-          </Alert.Root>
-        )}
 
-        <form onSubmit={handleEmailSignIn} style={{ width: '100%' }}>
-          <VStack gap={4} align="stretch">
-            <Input
-              p={3}
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <Input
-              p={3}
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <Button type="submit" size="lg" loading={loading}>
-              Sign In
-            </Button>
-          </VStack>
-        </form>
+        <SignInForm />
 
         <HStack gap={4} align="center" width="full">
           <Separator />
@@ -163,20 +74,22 @@ export default function Home() {
           <Separator />
         </HStack>
 
-        <Button
-          onClick={handleGitHubSignIn}
-          size="lg"
-          bg="gray.900"
-          color="white"
-          _hover={{
-            bg: 'gray.700'
-          }}
-          px={8}
-          py={6}
-          width="full"
-        >
-          Continue with GitHub
-        </Button>
+        <form action={handleGitHubSignIn}>
+          <Button
+            type="submit"
+            size="lg"
+            bg="gray.900"
+            color="white"
+            _hover={{
+              bg: 'gray.700'
+            }}
+            px={8}
+            py={6}
+            width="full"
+          >
+            Continue with GitHub
+          </Button>
+        </form>
 
         <Text textAlign="center" color="fg.muted" fontSize="sm">
           Don&apos;t have an account?{' '}

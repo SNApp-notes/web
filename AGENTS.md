@@ -188,6 +188,147 @@ function MyComponent() {
 - Large markdown samples stored in `/public/samples/` to avoid webpack bundling warnings
 - Components load sample content dynamically via `fetch()` instead of embedding in bundle
 
+## React Server Components & Server Actions
+
+### Overview
+
+- **React Server Components (RSC)**: Components that run on the server, reducing bundle size and improving performance
+- **Server Actions**: Functions that run on the server and can be called from client or server components
+- **Better Auth Integration**: Use Server Actions for authentication instead of API routes
+
+### Server Actions Best Practices
+
+- **Location**: Create in `src/app/actions/` directory
+- **File Convention**: Use `auth.ts`, `users.ts`, etc. with `'use server'` directive
+- **Security**: Always validate inputs and check authentication in Server Actions
+- **Error Handling**: Use proper error types and validation with Zod schemas
+
+### Server Action Structure
+
+```tsx
+'use server';
+
+import { z } from 'zod';
+import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth';
+
+const signUpSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  name: z.string().min(1)
+});
+
+export async function signUp(prevState: any, formData: FormData) {
+  // Validate input
+  const validatedFields = signUpSchema.safeParse({
+    email: formData.get('email'),
+    password: formData.get('password'),
+    name: formData.get('name')
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Invalid fields'
+    };
+  }
+
+  // Perform authentication
+  try {
+    await auth.api.signUpEmail({
+      body: validatedFields.data
+    });
+  } catch (error) {
+    return {
+      message: 'Failed to create account'
+    };
+  }
+
+  redirect('/dashboard');
+}
+```
+
+### Server Component with Form
+
+```tsx
+import { signUp } from '@/app/actions/auth';
+
+export default function SignUpPage() {
+  return (
+    <form action={signUp}>
+      <input name="email" type="email" required />
+      <input name="password" type="password" required />
+      <input name="name" type="text" required />
+      <button type="submit">Sign Up</button>
+    </form>
+  );
+}
+```
+
+### Client Component with useActionState
+
+```tsx
+'use client';
+
+import { useActionState } from 'react';
+import { signUp } from '@/app/actions/auth';
+
+export default function SignUpForm() {
+  const [state, action, pending] = useActionState(signUp, undefined);
+
+  return (
+    <form action={action}>
+      <input name="email" type="email" required />
+      {state?.errors?.email && <p>{state.errors.email}</p>}
+
+      <input name="password" type="password" required />
+      {state?.errors?.password && <p>{state.errors.password}</p>}
+
+      <input name="name" type="text" required />
+      {state?.errors?.name && <p>{state.errors.name}</p>}
+
+      <button disabled={pending} type="submit">
+        {pending ? 'Creating Account...' : 'Sign Up'}
+      </button>
+
+      {state?.message && <p>{state.message}</p>}
+    </form>
+  );
+}
+```
+
+### Authentication Patterns
+
+- **Server Actions**: Use for form submissions (sign up, sign in, sign out)
+- **Server Components**: Use for displaying user state, protected routes
+- **Middleware**: Use for route protection and session validation
+- **API Routes**: Only when you need REST endpoints for external integrations
+
+### Better Auth Server Action Integration
+
+```tsx
+'use server';
+
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+
+export async function signInAction(formData: FormData) {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
+  const { data, error } = await auth.api.signInEmail({
+    body: { email, password },
+    headers: await headers() // Pass headers for Better Auth
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true };
+}
+```
+
 ## CSS Class Name Handling with clsx
 
 ### Library: clsx

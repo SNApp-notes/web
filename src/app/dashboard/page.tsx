@@ -1,40 +1,18 @@
-'use client';
-
 import { Box, Heading, VStack, Text, Button } from '@chakra-ui/react';
-import { useSession, signOut } from '@/lib/auth-client';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import { auth } from '@/lib/auth';
+import { signOutAction } from '@/app/actions/auth';
 
-export default function Dashboard() {
-  const { data: session, isPending } = useSession();
-  const router = useRouter();
+export default async function Dashboard() {
+  // Check if user is authenticated
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
 
-  useEffect(() => {
-    if (!isPending && !session) {
-      router.push('/');
-    }
-  }, [session, isPending, router]);
-
-  const handleSignOut = async () => {
-    await signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.push('/');
-        }
-      }
-    });
-  };
-
-  if (isPending) {
-    return (
-      <Box p={6} maxW="1200px" mx="auto" bg="bg" minH="100vh">
-        <Text color="fg">Loading...</Text>
-      </Box>
-    );
-  }
-
+  // If user is not authenticated, redirect to home
   if (!session) {
-    return null;
+    redirect('/');
   }
 
   return (
@@ -44,9 +22,11 @@ export default function Dashboard() {
           <Heading size="xl" color="fg">
             SNApp Dashboard
           </Heading>
-          <Button onClick={handleSignOut} size="sm" variant="outline">
-            Sign Out
-          </Button>
+          <form action={signOutAction}>
+            <Button type="submit" size="sm" variant="outline">
+              Sign Out
+            </Button>
+          </form>
         </Box>
 
         <Text color="fg.muted">
