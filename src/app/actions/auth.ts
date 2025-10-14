@@ -144,14 +144,14 @@ export async function signInAction(
         message: errorMessage
       };
     }
-
-    redirect('/dashboard');
   } catch (error) {
     console.error('Sign in error:', error);
     return {
       message: 'An unexpected error occurred. Please try again.'
     };
   }
+
+  redirect('/dashboard');
 }
 
 export async function signOutAction() {
