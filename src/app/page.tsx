@@ -23,7 +23,7 @@ export default async function Dashboard() {
             SNApp Dashboard
           </Heading>
           <form action={signOutAction}>
-            <Button type="submit" size="sm" variant="outline">
+            <Button p={3} type="submit" size="sm" variant="outline">
               Sign Out
             </Button>
           </form>
