@@ -65,7 +65,7 @@ export default function Register() {
             <form action={formAction}>
               <VStack gap={4} align="stretch">
                 <VStack align="stretch" gap={1}>
-                  <Input p={3} name="name" placeholder="Full Name" required/>
+                  <Input p={3} name="name" placeholder="Full Name" required />
                   {state.errors?.name && (
                     <Text color="red.500" fontSize="sm">
                       {state.errors.name[0]}

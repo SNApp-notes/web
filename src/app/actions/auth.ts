@@ -161,7 +161,6 @@ export async function signOutAction() {
     await auth.api.signOut({
       headers: headersList
     });
-
   } catch (error) {
     console.error('Sign out error:', error);
   }
