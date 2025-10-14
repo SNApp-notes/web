@@ -35,7 +35,7 @@ export default function Register() {
     >
       <VStack gap={6} align="stretch" width="full">
         {isDevelopment && (
-          <Alert.Root status="info">
+          <Alert.Root status="info" p={3}>
             <Alert.Indicator />
             <Alert.Content>
               <Alert.Title>🚧 Development Mode</Alert.Title>
@@ -54,7 +54,7 @@ export default function Register() {
             </Heading>
 
             {state.message && (
-              <Alert.Root status="error">
+              <Alert.Root status="error" p={3}>
                 <Alert.Indicator />
                 <Alert.Content>
                   <Alert.Description>{state.message}</Alert.Description>
@@ -65,7 +65,7 @@ export default function Register() {
             <form action={formAction}>
               <VStack gap={4} align="stretch">
                 <VStack align="stretch" gap={1}>
-                  <Input name="name" placeholder="Full Name" required />
+                  <Input p={3} name="name" placeholder="Full Name" required/>
                   {state.errors?.name && (
                     <Text color="red.500" fontSize="sm">
                       {state.errors.name[0]}
@@ -74,7 +74,7 @@ export default function Register() {
                 </VStack>
 
                 <VStack align="stretch" gap={1}>
-                  <Input type="email" name="email" placeholder="Email" required />
+                  <Input p={3} type="email" name="email" placeholder="Email" required />
                   {state.errors?.email && (
                     <Text color="red.500" fontSize="sm">
                       {state.errors.email[0]}
@@ -84,6 +84,7 @@ export default function Register() {
 
                 <VStack align="stretch" gap={1}>
                   <Input
+                    p={3}
                     type="password"
                     name="password"
                     placeholder="Password (min 8 characters)"
