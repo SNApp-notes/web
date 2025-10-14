@@ -32,9 +32,9 @@ function VerifyEmailContent() {
         });
         setStatus('success');
 
-        // Redirect to dashboard after successful verification
+        // Redirect to main app after successful verification
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/');
         }, 3000);
       } catch (err) {
         setStatus('error');
@@ -99,16 +99,16 @@ function VerifyEmailContent() {
 
             <VStack gap={4} align="stretch">
               <Text textAlign="center" color="fg.muted" fontSize="sm">
-                Redirecting to your dashboard in 3 seconds...
+                Redirecting to the app in 3 seconds...
               </Text>
 
-              <Button onClick={() => router.push('/dashboard')} size="lg">
-                Go to Dashboard
+              <Button onClick={() => router.push('/')} size="lg">
+                Go to App
               </Button>
 
               <Text textAlign="center" color="fg.muted" fontSize="sm">
                 Or{' '}
-                <Link href="/" style={{ color: 'var(--chakra-colors-blue-500)' }}>
+                <Link href="/login" style={{ color: 'var(--chakra-colors-blue-500)' }}>
                   sign in here
                 </Link>
               </Text>
@@ -149,7 +149,7 @@ function VerifyEmailContent() {
 
               <Text textAlign="center" color="fg.muted" fontSize="sm">
                 Need help?{' '}
-                <Link href="/" style={{ color: 'var(--chakra-colors-blue-500)' }}>
+                <Link href="/login" style={{ color: 'var(--chakra-colors-blue-500)' }}>
                   Contact Support
                 </Link>
               </Text>

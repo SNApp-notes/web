@@ -50,7 +50,7 @@ export async function signUpAction(
         email,
         password,
         name,
-        callbackURL: '/dashboard'
+        callbackURL: '/'
       },
       headers: headersList,
       asResponse: true
@@ -85,7 +85,7 @@ export async function signUpAction(
 
   if (isDevelopment) {
     // In development, redirect immediately as email verification is disabled
-    redirect('/dashboard');
+    redirect('/');
   } else {
     // In production, show success message for email verification
     return {
@@ -151,7 +151,7 @@ export async function signInAction(
     };
   }
 
-  redirect('/dashboard');
+  redirect('/');
 }
 
 export async function signOutAction() {
@@ -162,9 +162,8 @@ export async function signOutAction() {
       headers: headersList
     });
 
-    redirect('/');
   } catch (error) {
     console.error('Sign out error:', error);
-    redirect('/');
   }
+  redirect('/login');
 }
