@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --turbopack",
+    "build": "next build --turbopack && prisma migrate deploy",
     "start": "next start",
     "lint": "eslint",
     "prettier": "prettier --write .",
