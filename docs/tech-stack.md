@@ -17,7 +17,7 @@
 
 ## Testing
 
-- Bitest
+- Vitest
 - React Testing Library
 
 ## CI/CD Hosting
