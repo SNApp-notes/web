@@ -11,6 +11,36 @@
 - `npm run test:ui` - Run tests with UI (requires @vitest/ui)
 - `npm run test:coverage` - Run tests with coverage report
 
+## Build & Development Workflow
+
+### Important: Clean Build Cache After Production Builds
+
+**CRITICAL**: After running `npm run build`, you MUST delete the `.next` directory before running `npm run dev` to avoid conflicts.
+
+**Workflow Pattern:**
+
+```bash
+# After running production build
+npm run build
+# ALWAYS clean build cache before switching back to development
+rm -rf .next
+# Now safe to run development server
+npm run dev
+```
+
+**Why This Matters:**
+
+- `npm run build` creates optimized production assets in `.next/`
+- These production assets can conflict with development server hot-reload
+- Development server may serve stale production assets instead of live code
+- Can cause mysterious "changes not appearing" issues during development
+
+**Best Practice for Agents:**
+
+- Always include `rm -rf .next` command after any `npm run build`
+- Use: `npm run build && rm -rf .next` as a single command chain
+- Never run `npm run dev` immediately after `npm run build` without cleaning `.next`
+
 ## Tech Stack
 
 Next.js, TypeScript, Chakra UI v3, CodeMirror 6, Prisma, MySQL, Better Auth, CSS Modules, Vitest, React Testing Library, clsx
