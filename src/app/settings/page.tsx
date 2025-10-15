@@ -24,6 +24,7 @@ function SettingsContent() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormDataState>({
     email: '',
+    errors: undefined,
     message: ''
   });
 
@@ -72,7 +73,7 @@ function SettingsContent() {
   const handleDeleteSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
-    setFormData((prev: FormDataState) => ({ ...prev, errors: null, message: '' }));
+    setFormData((prev: FormDataState) => ({ ...prev, errors: undefined, message: '' }));
 
     const formDataObj = new FormData(event.currentTarget);
 
@@ -87,7 +88,7 @@ function SettingsContent() {
           duration: 10000
         });
         setShowDeleteForm(false);
-        setFormData({ email: '', errors: null, message: '' });
+        setFormData({ email: '', errors: undefined, message: '' });
       } else {
         setFormData((prev: FormDataState) => ({
           ...prev,
@@ -213,7 +214,7 @@ function SettingsContent() {
                           variant="outline"
                           onClick={() => {
                             setShowDeleteForm(false);
-                            setFormData({ email: '', errors: null, message: '' });
+                            setFormData({ email: '', errors: undefined, message: '' });
                           }}
                           disabled={isLoading}
                         >
