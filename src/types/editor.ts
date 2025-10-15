@@ -24,6 +24,7 @@ export interface EditorProps {
     tabSize?: number;
   };
   className?: string;
+  onEditorReady?: (editorRef: EditorRef) => void;
 }
 
 export interface EditorRef {
@@ -31,4 +32,5 @@ export interface EditorRef {
   blur: () => void;
   getValue: () => string;
   setValue: (value: string) => void;
+  scrollToLine: (line: number) => void;
 }
