@@ -167,7 +167,7 @@ US-002 Title: As a new user, I want an example note upon first login so that I
 can quickly learn core features. Description: On initial access, a pre-populated
 note demonstrates editing, renaming, and navigation. Acceptance Criteria:
 
-- Given first login, when the dashboard loads, a note named "Welcome to SNApp"
+- Given first login, when the main app loads, a note named "Welcome to SNApp"
   is created with `null` content in the database. The frontend displays example
   content including Markdown samples, renaming steps, and navigation tips when
   content is `null`.
@@ -177,18 +177,32 @@ note demonstrates editing, renaming, and navigation. Acceptance Criteria:
 - On subsequent logins, the example note persists unless deleted or saved.
 - Content renders correctly with syntax highlighting.
 
-US-003 Title: As a user, I want to create a new note so that I can start
+US-003 Title: As a user, I want a three-panel layout with navigation so that I can
+efficiently browse, edit, and navigate my notes. Description: Main interface
+provides structured workspace with notes list, editor, and navigation panels.
+Acceptance Criteria:
+
+- Given an authenticated session, when the main app loads at `/`, three panels display:
+  Left panel (250px fixed) with TreeView notes list and filter, Middle panel (flexible)
+  with CodeMirror editor and syntax highlighting, Right panel (300px fixed) with header navigation.
+- Top navigation bar includes user info, logout button, and settings link.
+- Layout is fixed for desktop without responsive breakpoints.
+- URL structure supports `/note/{noteId}` for individual notes and `/note/{noteId}/{lineNumber}` for header positions.
+- Authentication handled via Better Auth with specific routers and middleware.
+- Edge case: Very long note names or headers are truncated with ellipsis.
+
+US-004 Title: As a user, I want to create a new note so that I can start
 capturing ideas immediately. Description: Users add blank or minimally titled
 notes to the list. Acceptance Criteria:
 
 - Given an authenticated session, when the user clicks "New Note" button, a new
   entry appears in the left panel with default name "New Note [counter]".
-- The new note opens in the editor with empty content.
+- The new note opens in the editor with empty content and URL updates to `/note/{id}`.
 - Multiple creations in sequence are supported without errors.
 - Edge case: Creation with special characters in name is allowed but sanitized
   for display.
 
-US-004 Title: As a user, I want to rename a note so that I can organize my notes
+US-005 Title: As a user, I want to rename a note so that I can organize my notes
 meaningfully. Description: Users edit note titles directly in the list.
 Acceptance Criteria:
 
@@ -199,29 +213,29 @@ Acceptance Criteria:
 - Edge case: Duplicate names are allowed, distinguished by creation counter in
   UI.
 
-US-005 Title: As a user, I want to edit and save a note so that I can record and
-update my content. Description: The editor supports Markdown input. Acceptance
-Criteria:
+US-006 Title: As a user, I want to edit and save a note so that I can record and
+update my content. Description: The editor supports Markdown input with CodeMirror.
+Acceptance Criteria:
 
 - Given an open note, when the user types in the middle panel, changes are
-  reflected in real-time preview and syntax highlighted.
+  reflected with syntax highlighting via CodeMirror.
 - Saves occur with Ctrl+S, with a brief "Saved" indicator.
-- Content persists across sessions.
+- Content persists across sessions and URL reflects current note.
 - Edge case: Large notes (>10KB) load and save without performance degradation
   (tested on supported browsers).
 
-US-006 Title: As a user, I want to delete a note so that I can remove obsolete
+US-007 Title: As a user, I want to delete a note so that I can remove obsolete
 content. Description: Users remove individual notes from the list. Acceptance
 Criteria:
 
 - Given a selected note, when the user clicks the delete icon, a confirmation
   modal appears.
 - On confirmation, the note is removed from the list and storage, and another
-  note (or empty state) loads.
+  note (or empty state) loads with URL update.
 - Deletion is irreversible in MVP; no undo.
 - Edge case: Deleting the last note shows an empty list with "New Note" prompt.
 
-US-007 Title: As a user, I want to filter notes by name so that I can quickly
+US-008 Title: As a user, I want to filter notes by name so that I can quickly
 find specific notes. Description: Search input in the left panel narrows the
 notes list. Acceptance Criteria:
 
@@ -231,7 +245,7 @@ notes list. Acceptance Criteria:
 - Filter updates in real-time as typed.
 - Edge case: No matches display "No notes found" message with clear button.
 
-US-008 Title: As a user, I want to navigate a note via headers in the sidebar so
+US-009 Title: As a user, I want to navigate a note via headers in the sidebar so
 that I can jump to sections in long notes. Description: The right panel lists
 clickable headers from the current note. Acceptance Criteria:
 
@@ -246,7 +260,7 @@ clickable headers from the current note. Acceptance Criteria:
 - Sidebar collapses on mobile.
 - Edge case: Note without headers shows empty sidebar with placeholder text.
 
-US-009 Title: As a user, I want to filter headers in the note summary so that I
+US-010 Title: As a user, I want to filter headers in the note summary so that I
 can locate subsections efficiently. Description: Search within the sidebar
 refines header list. Acceptance Criteria:
 
@@ -256,17 +270,17 @@ refines header list. Acceptance Criteria:
 - Clear filter restores full list.
 - Edge case: No matches hide all headers and show "No headers found."
 
-US-010 Title: As a user, I want to toggle dark mode so that I can adjust the
+US-011 Title: As a user, I want to toggle dark mode so that I can adjust the
 interface for my preferences. Description: Settings allow theme switching.
 Acceptance Criteria:
 
 - Given settings page, when the user toggles dark mode, the UI updates
   immediately and persists via local storage.
 - Toggle works across sessions and devices (per browser).
-- All panels respect the theme (e.g., via Tailwind classes).
+- All panels respect the theme including CodeMirror editor synchronization.
 - Edge case: Local storage disabled falls back to light mode.
 
-US-011 Title: As a user, I want to delete my account so that I can remove my
+US-012 Title: As a user, I want to delete my account so that I can remove my
 data permanently. Description: Settings provide secure account removal.
 Acceptance Criteria:
 
@@ -277,7 +291,7 @@ Acceptance Criteria:
 - Post-deletion, user is logged out and redirected to login.
 - Edge case: Invalid/expired confirmation link shows error and requires restart.
 
-US-012 Title: As a new user registering with email, I want to verify my email
+US-013 Title: As a new user registering with email, I want to verify my email
 address so that I can activate my account securely. Description: Email
 verification ensures account ownership and prevents abuse. Acceptance Criteria:
 
@@ -285,12 +299,12 @@ verification ensures account ownership and prevents abuse. Acceptance Criteria:
   success page displays with the registered email address.
 - A verification email is sent containing a secure link that expires in 24 hours.
 - When the user clicks the verification link, they are redirected to a confirmation page
-  showing success and auto-redirecting to the dashboard after 3 seconds.
+  showing success and auto-redirecting to the main app (/) after 3 seconds.
 - Verified users can now sign in normally with their email and password.
 - Invalid or expired verification links show an error page with options to register again.
 - Edge case: Multiple verification attempts with the same token are handled gracefully.
 
-US-013 Title: As a returning user, I want to log out so that I can end my
+US-014 Title: As a returning user, I want to log out so that I can end my
 session securely. Description: Explicit logout clears the session. Acceptance
 Criteria:
 
