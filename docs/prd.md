@@ -313,6 +313,24 @@ Criteria:
 - Open notes and unsaved changes prompt a warning before logout.
 - Edge case: Logout during editing discards unsaved content after confirmation.
 
+US-015 Title: As a user with unsaved changes, I want to be warned before
+leaving the app so that I don't accidentally lose my work. Description: Browser
+navigation protection prevents data loss when there are unsaved changes in the
+editor. Acceptance Criteria:
+
+- Given unsaved changes in the current note, when the user tries to close the
+  browser tab, navigate away, or refresh the page, a browser confirmation dialog
+  appears asking "You have unsaved changes. Are you sure you want to leave?"
+- The warning uses the standard `beforeunload` event to ensure compatibility
+  across all supported browsers (Chrome v120+, Firefox v115+, Safari v17+, Edge v120+).
+- The warning only appears when `hasUnsavedChanges` is true in the notes context.
+- If the user confirms leaving, unsaved changes are lost (no auto-save in MVP).
+- If the user cancels, they remain on the page with their unsaved work intact.
+- The warning does not appear when navigating between notes within the app or
+  after successfully saving changes.
+- Edge case: The warning also appears when using browser back/forward buttons
+  with unsaved changes.
+
 ## 6. Success Metrics
 
 Success for the SNApp MVP is measured by user adoption and engagement with core
