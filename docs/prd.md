@@ -97,6 +97,12 @@ editor.
     current note's Markdown, with a filter input for header names.
 - Keyboard shortcuts: Ctrl+S for save, Ctrl+N for new note, Arrow keys for
   header navigation in sidebar.
+- URL structure and deep linking:
+  - Root application at `/` (not `/dashboard`)
+  - Note selection reflected in URL: `/note/{noteId}` (e.g., `/note/10`)
+  - Header navigation updates URL with line numbers: `/note/{noteId}/{lineNumber}` (e.g., `/note/10/121`)
+  - URLs preserve state on page refresh, opening the exact note and scroll position
+  - Authentication handled via Better Auth specific routers and middleware
 
 ### Analytics
 
@@ -152,7 +158,7 @@ requires verification before account activation. Acceptance Criteria:
 - Users must click the email verification link to activate their account before they
   can sign in and access features.
 - Upon successful authentication (GitHub OAuth or verified email account), the user is
-  redirected to the app dashboard with their notes (or example note if first login).
+  redirected to the app root (`/`) with their notes (or example note if first login).
 - Failed authentication displays appropriate error messages and allows retry.
 - Session persists via secure cookies until explicit logout.
 - Notes from other users are inaccessible, verified by server-side checks.
@@ -233,6 +239,10 @@ clickable headers from the current note. Acceptance Criteria:
   populates with links scrolling to sections on click.
 - Headers are extracted dynamically from Markdown and updated when text is
   edited.
+- When clicking a header, the URL updates to include the line number (e.g., `/note/10/121`)
+  and the editor scrolls to the exact location.
+- Page refresh with line number URL preserves the scroll position and opens the note
+  at the correct location.
 - Sidebar collapses on mobile.
 - Edge case: Note without headers shows empty sidebar with placeholder text.
 
