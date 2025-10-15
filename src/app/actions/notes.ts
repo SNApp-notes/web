@@ -18,7 +18,7 @@ export async function getNotes(): Promise<Note[]> {
 
     const notes = await prisma.note.findMany({
       where: { userId: session.user.id },
-      orderBy: { updatedAt: 'desc' }
+      orderBy: { createdAt: 'desc' }
     });
 
     return notes;

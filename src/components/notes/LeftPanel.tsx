@@ -28,13 +28,14 @@ export default function LeftPanel({
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState('');
+
   const { hasUnsavedChanges } = useNotesContext();
   const listRef = useRef<HTMLDivElement>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredNotes = notes.filter((note) =>
-    note.name.toLowerCase().includes(filter.toLowerCase())
-  );
+  const filteredNotes = notes
+    .filter((note) => note.name.toLowerCase().includes(filter.toLowerCase()))
+    .sort((a, b) => a.id - b.id);
 
   // Keyboard navigation
   useEffect(() => {
