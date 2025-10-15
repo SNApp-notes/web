@@ -30,7 +30,6 @@ export default function MarkdownEditorDemo() {
         setIsLoading(false);
       });
   };
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [readOnly, setReadOnly] = useState(false);
 
   return (
@@ -39,20 +38,6 @@ export default function MarkdownEditorDemo() {
         <Heading size="lg">Markdown Editor Component</Heading>
 
         <HStack gap={4}>
-          <Button
-            size="sm"
-            variant={theme === 'light' ? 'solid' : 'outline'}
-            onClick={() => setTheme('light')}
-          >
-            Light Theme
-          </Button>
-          <Button
-            size="sm"
-            variant={theme === 'dark' ? 'solid' : 'outline'}
-            onClick={() => setTheme('dark')}
-          >
-            Dark Theme
-          </Button>
           <Button
             size="sm"
             variant={readOnly ? 'solid' : 'outline'}
@@ -79,7 +64,6 @@ export default function MarkdownEditorDemo() {
               value={value}
               onChange={setValue}
               height="500px"
-              theme={theme}
               readOnly={readOnly}
               placeholder="Start typing your markdown here..."
             />

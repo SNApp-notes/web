@@ -75,7 +75,6 @@ export default function MiddlePanel({
                 : 'Start writing your note...'
             }
             height="100%"
-            theme="light" // TODO: Add theme context for dark/light mode
           />
         ) : (
           <Flex h="100%" align="center" justify="center">

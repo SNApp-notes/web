@@ -1,6 +1,8 @@
 'use client';
 
 import { Flex, Button, Text, Box } from '@chakra-ui/react';
+import { FiSettings } from 'react-icons/fi';
+import { useRouter } from 'next/navigation';
 import { signOutAction } from '@/app/actions/auth';
 
 interface TopNavigationBarProps {
@@ -12,6 +14,8 @@ export default function TopNavigationBar({
   hasUnsavedChanges,
   onLogout
 }: TopNavigationBarProps) {
+  const router = useRouter();
+
   const handleLogout = async () => {
     if (hasUnsavedChanges) {
       const confirm = window.confirm(
@@ -41,6 +45,16 @@ export default function TopNavigationBar({
               Unsaved changes
             </Text>
           )}
+
+          <Button
+            p={3}
+            size="sm"
+            variant="ghost"
+            onClick={() => router.push('/settings')}
+            aria-label="Settings"
+          >
+            <FiSettings />
+          </Button>
 
           <Button p={3} size="sm" variant="ghost" onClick={handleLogout}>
             Logout

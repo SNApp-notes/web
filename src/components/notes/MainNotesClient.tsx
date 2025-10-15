@@ -162,6 +162,20 @@ export default function MainNotesClient({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedNote, content, handleSave, handleNewNote]);
 
+  // Unsaved changes warning (US-015)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return 'You have unsaved changes. Are you sure you want to leave?';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   return (
     <>
       <TopNavigationBar hasUnsavedChanges={hasUnsavedChanges} onLogout={handleLogout} />

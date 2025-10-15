@@ -5,7 +5,7 @@ export interface EditorProps {
   height?: string;
   width?: string;
   readOnly?: boolean;
-  theme?: 'light' | 'dark';
+
   basicSetup?: {
     lineNumbers?: boolean;
     highlightActiveLine?: boolean;

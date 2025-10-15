@@ -6,6 +6,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { basicLight, basicDark } from '@uiw/codemirror-theme-basic';
 import { Box } from '@chakra-ui/react';
+import { useColorMode } from '@/components/ui/color-mode';
 import type { EditorView } from 'codemirror';
 import type { EditorProps, EditorRef } from '@/types/editor';
 
@@ -16,7 +17,6 @@ export default function Editor({
   height = '400px',
   width = '100%',
   readOnly = false,
-  theme = 'light',
   basicSetup = {
     lineNumbers: true,
     highlightActiveLine: true,
@@ -42,7 +42,8 @@ export default function Editor({
     })
   ];
 
-  const themeExtension = theme === 'dark' ? basicDark : basicLight;
+  const { colorMode } = useColorMode();
+  const themeExtension = colorMode === 'dark' ? basicDark : basicLight;
 
   const handleEditorMount = useCallback(
     (view: EditorView) => {
