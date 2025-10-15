@@ -119,15 +119,15 @@ function SettingsContent() {
     <Box minH="100vh" bg="bg" p={6}>
       <Box maxW="2xl" mx="auto">
         <Flex justify="space-between" align="center" mb={6}>
-          <Heading size="lg">Settings</Heading>
-          <Button variant="outline" onClick={() => router.push('/')}>
+          <Heading p={3} size="lg">Settings</Heading>
+          <Button p={3} variant="outline" onClick={() => router.push('/')}>
             Back to Notes
           </Button>
         </Flex>
 
         <Stack gap={6}>
           {/* Theme Settings */}
-          <Card.Root>
+          <Card.Root p={3}>
             <Card.Header>
               <Card.Title>Appearance</Card.Title>
               <Card.Description>Customize how SNApp looks and feels</Card.Description>
@@ -148,7 +148,7 @@ function SettingsContent() {
           </Card.Root>
 
           {/* Account Management */}
-          <Card.Root>
+          <Card.Root p={3}>
             <Card.Header>
               <Card.Title>Account</Card.Title>
               <Card.Description>Manage your account settings and data</Card.Description>
@@ -165,6 +165,7 @@ function SettingsContent() {
                     </Text>
                   </Box>
                   <Button
+                    p={3}
                     colorPalette="red"
                     variant="outline"
                     size="sm"
