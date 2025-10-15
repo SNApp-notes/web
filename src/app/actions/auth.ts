@@ -8,7 +8,7 @@ import { sendEmail } from '@/lib/email';
 import prisma from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 
-type FormDataState = {
+export type FormDataState = {
   errors?: Record<string, string[]>;
   message?: string;
   success?: boolean;
