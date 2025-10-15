@@ -14,17 +14,16 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { ColorModeButton } from '@/components/ui/color-mode';
-import { requestAccountDeletionAction } from '@/app/actions/auth';
+import { requestAccountDeletionAction, FormDataState } from '@/app/actions/auth';
 import { Toaster, toaster } from '@/components/ui/toaster';
 
 function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [showDeleteForm, setShowDeleteForm] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [showDeleteForm, setShowDeleteForm] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [formData, setFormData] = useState<FormDataState>({
     email: '',
-    errors: null as any,
     message: ''
   });
 
@@ -73,7 +72,7 @@ function SettingsContent() {
   const handleDeleteSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
-    setFormData((prev) => ({ ...prev, errors: null, message: '' }));
+    setFormData((prev: FormDataState) => ({ ...prev, errors: null, message: '' }));
 
     const formDataObj = new FormData(event.currentTarget);
 
@@ -90,7 +89,7 @@ function SettingsContent() {
         setShowDeleteForm(false);
         setFormData({ email: '', errors: null, message: '' });
       } else {
-        setFormData((prev) => ({
+        setFormData((prev: FormDataState) => ({
           ...prev,
           errors: result.errors,
           message: result.message || ''
@@ -119,7 +118,9 @@ function SettingsContent() {
     <Box minH="100vh" bg="bg" p={6}>
       <Box maxW="2xl" mx="auto">
         <Flex justify="space-between" align="center" mb={6}>
-          <Heading p={3} size="lg">Settings</Heading>
+          <Heading p={3} size="lg">
+            Settings
+          </Heading>
           <Button p={3} variant="outline" onClick={() => router.push('/')}>
             Back to Notes
           </Button>

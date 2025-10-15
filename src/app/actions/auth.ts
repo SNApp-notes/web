@@ -8,6 +8,13 @@ import { sendEmail } from '@/lib/email';
 import prisma from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 
+type FormDataState = {
+  errors?: Record<string, string[]>;
+  message?: string;
+  success?: boolean;
+  email?: string;
+};
+
 const signUpSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
@@ -19,15 +26,7 @@ const signInSchema = z.object({
   password: z.string().min(1, 'Password is required')
 });
 
-export async function signUpAction(
-  _prevState: {
-    errors?: Record<string, string[]>;
-    message?: string;
-    success?: boolean;
-    email?: string;
-  },
-  formData: FormData
-) {
+export async function signUpAction(_prevState: FormDataState, formData: FormData) {
   const validatedFields = signUpSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
@@ -175,11 +174,7 @@ const deleteAccountSchema = z.object({
 });
 
 export async function requestAccountDeletionAction(
-  _prevState: {
-    errors?: Record<string, string[]>;
-    message?: string;
-    success?: boolean;
-  },
+  _prevState: FormDataState,
   formData: FormData
 ) {
   const validatedFields = deleteAccountSchema.safeParse({
