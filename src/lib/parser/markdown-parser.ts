@@ -18,7 +18,7 @@ export function extractHeaders(content: string): Header[] {
         headers.push({
           id: `header-${index}-${headerNode.level}`,
           text: headerNode.content.replace(/^#+\s*/, '').trim(),
-          level: headerNode.level as 1 | 2 | 3 | 4 | 5 | 6,
+          content: headerNode.content.trim(),
           line: headerNode.loc.start.line
         });
       }
@@ -29,45 +29,4 @@ export function extractHeaders(content: string): Header[] {
     console.error('Failed to parse markdown content:', error);
     return [];
   }
-}
-
-/**
- * Build hierarchical header tree from flat header list
- */
-export function buildHeaderTree(headers: Header[]): Header[] {
-  if (headers.length === 0) return [];
-
-  const result: Header[] = [];
-  const stack: Header[] = [];
-
-  headers.forEach((header) => {
-    // Remove headers from stack that are at same or deeper level
-    while (stack.length > 0 && stack[stack.length - 1].level >= header.level) {
-      stack.pop();
-    }
-
-    // Create a copy of the header without children first
-    const headerCopy: Header = {
-      id: header.id,
-      text: header.text,
-      level: header.level,
-      line: header.line
-    };
-
-    if (stack.length === 0) {
-      // Top level header
-      result.push(headerCopy);
-    } else {
-      // Child header
-      const parent = stack[stack.length - 1];
-      if (!parent.children) {
-        parent.children = [];
-      }
-      parent.children.push(headerCopy);
-    }
-
-    stack.push(headerCopy);
-  });
-
-  return result;
 }

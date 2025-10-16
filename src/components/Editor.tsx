@@ -17,6 +17,7 @@ export default function Editor({
   height = '400px',
   width = '100%',
   readOnly = false,
+  selectedLine,
   basicSetup = {
     lineNumbers: true,
     highlightActiveLine: true,
@@ -70,9 +71,30 @@ export default function Editor({
     ...(Array.isArray(fullHeightTheme) ? fullHeightTheme : [fullHeightTheme])
   ];
 
+  const scrollToLine = useCallback((line: number) => {
+    if (!viewRef.current) {
+      return;
+    }
+    try {
+      const { from: position } = viewRef.current.state.doc.line(line);
+      viewRef.current.dispatch({
+        selection: { anchor: position, head: position },
+        scrollIntoView: true
+      });
+      viewRef.current.focus();
+    } catch (error) {
+      console.warn(`Cannot scroll to line ${selectedLine}:`, error);
+    }
+  }, [viewRef]);
+
   const handleEditorMount = useCallback(
     (view: EditorView) => {
       viewRef.current = view;
+
+      // Scroll to selectedLine if provided on mount
+      if (selectedLine) {
+        scrollToLine(selectedLine);
+      }
 
       if (onEditorReady) {
         const editorRef: EditorRef = {
@@ -90,22 +112,13 @@ export default function Editor({
               });
             }
           },
-          scrollToLine: (line: number) => {
-            if (view) {
-              const linePos = view.state.doc.line(line).from;
-              view.dispatch({
-                selection: { anchor: linePos },
-                scrollIntoView: true
-              });
-              view.focus();
-            }
-          }
+          scrollToLine
         };
 
         onEditorReady(editorRef);
       }
     },
-    [onEditorReady]
+    [onEditorReady, selectedLine]
   );
 
   return (

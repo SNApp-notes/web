@@ -10,9 +10,8 @@ export interface NoteData {
 export interface Header {
   id: string;
   text: string;
-  level: 1 | 2 | 3 | 4 | 5 | 6; // H1-H6
+  content: string;
   line: number;
-  children?: Header[];
 }
 
 // UI State types

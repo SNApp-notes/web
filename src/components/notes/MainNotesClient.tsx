@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import type { NoteTreeNode } from '@/types/tree';
 import { useNotesContext } from './NotesContext';
 import { createNote, updateNote, deleteNote } from '@/app/actions/notes';
@@ -18,6 +19,7 @@ interface MainNotesClientProps {
 }
 
 export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
+  const router = useRouter();
   const {
     notes,
     selectedNoteId,
@@ -147,6 +149,11 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
   };
 
   const handleHeaderClick = (line: number) => {
+    // Update URL with line number
+    if (selectedNoteId) {
+      router.push(`/note/${selectedNoteId}?line=${line}`, { scroll: false });
+    }
+
     // Scroll to line in CodeMirror editor
     if (editorRef.current) {
       editorRef.current.scrollToLine(line);
@@ -211,9 +218,12 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
           note={selectedNote}
           content={content}
           saveStatus={saveStatus}
+          selectedLine={lineNumber}
           onContentChange={handleContentChange}
           onSave={handleSave}
-          onEditorReady={(editor) => (editorRef.current = editor)}
+          onEditorReady={(editor) => {
+            editorRef.current = editor;
+          }}
         />
         <RightPanel
           headers={headers}

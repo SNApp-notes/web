@@ -5,6 +5,7 @@ export interface EditorProps {
   height?: string;
   width?: string;
   readOnly?: boolean;
+  selectedLine?: number;
 
   basicSetup?: {
     lineNumbers?: boolean;

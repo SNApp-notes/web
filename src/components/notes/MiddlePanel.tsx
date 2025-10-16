@@ -11,6 +11,7 @@ interface MiddlePanelProps {
   note: NoteTreeNode | null;
   content: string;
   saveStatus: SaveStatus;
+  selectedLine?: number;
   onContentChange: (content: string) => void;
   onSave: () => void;
   onEditorReady?: (editorRef: EditorRef) => void;
@@ -20,6 +21,7 @@ export default function MiddlePanel({
   note,
   content,
   saveStatus,
+  selectedLine,
   onContentChange,
   onEditorReady
 }: MiddlePanelProps) {
@@ -92,6 +94,7 @@ export default function MiddlePanel({
           <Editor
             value={note.data?.content === null ? welcomeContent : content}
             onChange={(value) => onContentChange(value || '')}
+            selectedLine={selectedLine}
             onEditorReady={onEditorReady}
             placeholder="Start writing your note..."
             height="100%"

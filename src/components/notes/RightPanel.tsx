@@ -42,23 +42,26 @@ export default function RightPanel({
             {headers.length === 0 ? 'No headers found' : 'No matching headers'}
           </Text>
         ) : (
-          <Stack gap={1}>
+          <Stack gap={1} p={2}>
             {filteredHeaders.map((header) => (
               <Box
                 key={header.id}
-                pl={header.level * 2}
-                py={1}
                 cursor="pointer"
-                borderRadius="sm"
-                bg={currentLine === header.line ? 'bg.emphasized' : 'transparent'}
-                color={currentLine === header.line ? 'fg.inverted' : 'fg'}
-                _hover={{
-                  bg: currentLine === header.line ? 'bg.emphasized' : 'bg.muted'
-                }}
+                bg={currentLine === header.line ? 'blue.solid' : 'transparent'}
+                color={currentLine === header.line ? 'white' : 'fg'}
+                _hover={{ bg: currentLine === header.line ? 'blue.solid' : 'bg.muted' }}
+                borderRadius="md"
+                px={2}
+                py={2}
                 onClick={() => onHeaderClick(header.line)}
               >
-                <Text fontSize="sm" lineClamp={2}>
-                  {header.text}
+                <Text
+                  fontSize="sm"
+                  fontWeight="medium"
+                  color="currentColor"
+                  lineClamp={2}
+                >
+                  {header.content}
                 </Text>
               </Box>
             ))}
