@@ -30,9 +30,9 @@ const TreeNodeComponent = ({
   const [editingName, setEditingName] = useState(node.name);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isSelected = selectedNodeId === node.id;
+  const isSelected = selectedNodeId === node.id.toString();
   const hasChildren = node.children && node.children.length > 0;
-  const isCategory = node.type === 'category';
+  const isCategory = hasChildren; // For notes, categories are nodes with children
 
   const handleToggle = () => {
     if (hasChildren) {
@@ -170,7 +170,7 @@ const TreeNodeComponent = ({
             onDoubleClick={handleDoubleClick}
             cursor="pointer"
           >
-            {isSelected && hasUnsavedChanges ? '*' : ''}
+            {isSelected && hasUnsavedChanges ? '* ' : ''}
             {node.name}
           </Text>
         )}

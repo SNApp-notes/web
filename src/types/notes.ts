@@ -1,6 +1,12 @@
 // Re-export Prisma types
 export type { Note, User } from '@prisma/client';
 
+// Tree node data types
+export interface NoteData {
+  content: string | null;
+  dirty: boolean;
+}
+
 export interface Header {
   id: string;
   text: string;

@@ -2,20 +2,19 @@
 
 import { useState, useMemo } from 'react';
 import { Box, Button, Input, Stack, Text } from '@chakra-ui/react';
-import type { Note } from '@prisma/client';
-import type { TreeNode } from '@/types/tree';
+import type { NoteTreeNode, TreeNode } from '@/types/tree';
 
 import TreeView from '@/components/TreeView';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { useNotesContext } from './NotesContext';
 
 interface LeftPanelProps {
-  notes: Note[];
+  notes: NoteTreeNode[];
   selectedNoteId: number | null;
   onNoteSelect: (id: number) => void;
   onNewNote: () => void;
-  onDeleteNote?: (id: number) => void;
-  onRenameNote?: (id: number, newName: string) => Promise<void>;
+  onDeleteNote: (id: number) => void;
+  onRenameNote: (id: number, name: string) => Promise<void>;
 }
 
 export default function LeftPanel({
@@ -26,49 +25,42 @@ export default function LeftPanel({
   onDeleteNote,
   onRenameNote
 }: LeftPanelProps) {
-  const { hasUnsavedChanges } = useNotesContext();
+  const { getSelectedNote } = useNotesContext();
   const [filter, setFilter] = useState('');
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
-    note: TreeNode | null;
+    note: NoteTreeNode | null;
   }>({ isOpen: false, note: null });
 
-  // Convert Notes to TreeNodes
-  const treeData = useMemo<TreeNode[]>(() => {
+  // Get unsaved changes status for the selected note
+  const selectedNote = getSelectedNote();
+  const hasUnsavedChanges = selectedNote?.data?.dirty || false;
+
+  // Filter and prepare notes for TreeView
+  const treeData = useMemo<NoteTreeNode[]>(() => {
     return notes
       .filter((note) => note.name.toLowerCase().includes(filter.toLowerCase()))
-      .sort((a, b) => a.id - b.id)
-      .map((note) => ({
-        id: note.id.toString(),
-        name: note.name,
-        type: 'note' as const,
-        content: note.content || '',
-        createdAt: note.createdAt,
-        updatedAt: note.updatedAt
-      }));
+      .sort((a, b) => a.id - b.id);
   }, [notes, filter]);
 
   // Handle TreeNode selection
   const handleTreeNodeSelect = (node: TreeNode) => {
-    const noteId = parseInt(node.id);
-    onNoteSelect(noteId);
+    onNoteSelect((node as NoteTreeNode).id);
   };
 
   // Handle TreeNode rename
   const handleTreeNodeRename = async (node: TreeNode, newName: string) => {
-    const noteId = parseInt(node.id);
-    await onRenameNote?.(noteId, newName);
+    await onRenameNote?.((node as NoteTreeNode).id, newName);
   };
 
   // Handle TreeNode delete
   const handleTreeNodeDelete = (node: TreeNode) => {
-    setDeleteDialog({ isOpen: true, note: node });
+    setDeleteDialog({ isOpen: true, note: node as NoteTreeNode });
   };
 
   const handleConfirmDelete = async () => {
     if (deleteDialog.note) {
-      const noteId = parseInt(deleteDialog.note.id);
-      await onDeleteNote?.(noteId);
+      await onDeleteNote?.(deleteDialog.note.id);
     }
   };
 

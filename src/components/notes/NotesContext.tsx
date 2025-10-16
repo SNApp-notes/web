@@ -1,17 +1,21 @@
 'use client';
 
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import type { Note, SaveStatus } from '@/types/notes';
+import type { NoteTreeNode } from '@/types/tree';
+import type { SaveStatus } from '@/types/notes';
 
 interface NotesContextValue {
-  selectedNote: Note | null;
-  content: string;
+  notes: NoteTreeNode[];
+  selectedNoteId: number | null;
   saveStatus: SaveStatus;
-  hasUnsavedChanges: boolean;
-  setSelectedNote: (note: Note | null) => void;
-  setContent: (content: string) => void;
+  setNotes: (notes: NoteTreeNode[] | ((prev: NoteTreeNode[]) => NoteTreeNode[])) => void;
+  setSelectedNoteId: (noteId: number | null) => void;
   setSaveStatus: (status: SaveStatus) => void;
-  setHasUnsavedChanges: (hasChanges: boolean) => void;
+  updateNoteContent: (noteId: number, content: string) => void;
+  updateNoteName: (noteId: number, name: string) => void;
+  markNoteDirty: (noteId: number, dirty: boolean) => void;
+  getSelectedNote: () => NoteTreeNode | null;
+  getNote: (noteId: number) => NoteTreeNode | null;
 }
 
 const NotesContext = createContext<NotesContextValue | undefined>(undefined);
@@ -26,24 +30,81 @@ export function useNotesContext() {
 
 interface NotesProviderProps {
   children: ReactNode;
-  initialNote?: Note | null;
+  initialNotes?: NoteTreeNode[];
+  initialSelectedNoteId?: number | null;
 }
 
-export function NotesProvider({ children, initialNote }: NotesProviderProps) {
-  const [selectedNote, setSelectedNote] = useState<Note | null>(initialNote || null);
-  const [content, setContent] = useState<string>(initialNote?.content || '');
+export function NotesProvider({
+  children,
+  initialNotes = [],
+  initialSelectedNoteId = null
+}: NotesProviderProps) {
+  const [notes, setNotes] = useState<NoteTreeNode[]>(initialNotes);
+  const [selectedNoteId, setSelectedNoteId] = useState<number | null>(
+    initialSelectedNoteId
+  );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  const updateNoteContent = (noteId: number, content: string) => {
+    setNotes((prevNotes) =>
+      prevNotes.map((note) =>
+        note.id === noteId
+          ? {
+              ...note,
+              data: {
+                ...note.data!,
+                content,
+                dirty: true
+              }
+            }
+          : note
+      )
+    );
+  };
+
+  const updateNoteName = (noteId: number, name: string) => {
+    setNotes((prevNotes) =>
+      prevNotes.map((note) => (note.id === noteId ? { ...note, name } : note))
+    );
+  };
+
+  const markNoteDirty = (noteId: number, dirty: boolean) => {
+    setNotes((prevNotes) =>
+      prevNotes.map((note) =>
+        note.id === noteId
+          ? {
+              ...note,
+              data: {
+                ...note.data!,
+                dirty
+              }
+            }
+          : note
+      )
+    );
+  };
+
+  const getSelectedNote = (): NoteTreeNode | null => {
+    if (!selectedNoteId) return null;
+    return notes.find((note) => note.id === selectedNoteId) || null;
+  };
+
+  const getNote = (noteId: number): NoteTreeNode | null => {
+    return notes.find((note) => note.id === noteId) || null;
+  };
 
   const value: NotesContextValue = {
-    selectedNote,
-    content,
+    notes,
+    selectedNoteId,
     saveStatus,
-    hasUnsavedChanges,
-    setSelectedNote,
-    setContent,
+    setNotes,
+    setSelectedNoteId,
     setSaveStatus,
-    setHasUnsavedChanges
+    updateNoteContent,
+    updateNoteName,
+    markNoteDirty,
+    getSelectedNote,
+    getNote
   };
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;

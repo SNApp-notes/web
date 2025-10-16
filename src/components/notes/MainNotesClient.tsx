@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import type { Note } from '@prisma/client';
+import type { NoteTreeNode } from '@/types/tree';
 import { useNotesContext } from './NotesContext';
 import { createNote, updateNote, deleteNote } from '@/app/actions/notes';
 import { extractHeaders } from '@/lib/parser/markdown-parser';
@@ -15,65 +14,65 @@ import Footer from '@/components/Footer';
 import styles from './MainNotesLayout.module.css';
 
 interface MainNotesClientProps {
-  notes: Note[];
-  initialSelectedNoteId?: number;
   lineNumber?: number;
 }
 
-export default function MainNotesClient({
-  notes,
-  initialSelectedNoteId,
-  lineNumber
-}: MainNotesClientProps) {
-  const router = useRouter();
+export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
   const {
-    selectedNote,
-    content,
+    notes,
+    selectedNoteId,
     saveStatus,
-    hasUnsavedChanges,
-    setSelectedNote,
-    setContent,
+    setSelectedNoteId,
     setSaveStatus,
-    setHasUnsavedChanges
+    updateNoteContent,
+    updateNoteName,
+    markNoteDirty,
+    getSelectedNote,
+    setNotes
   } = useNotesContext();
 
   const editorRef = useRef<import('@/types/editor').EditorRef | null>(null);
 
+  const selectedNote = getSelectedNote();
+  const content = selectedNote?.data?.content || '';
+  const hasUnsavedChanges = selectedNote?.data?.dirty || false;
+
   // Extract headers from current content
   const headers = useMemo(() => extractHeaders(content), [content]);
 
-  // Initialize with selected note if provided
-  useEffect(() => {
-    if (initialSelectedNoteId && notes.length > 0) {
-      const note = notes.find((n) => n.id === initialSelectedNoteId);
-      if (note) {
-        setSelectedNote(note);
-        setContent(note.content || '');
-      }
-    }
-  }, [initialSelectedNoteId, notes, setSelectedNote, setContent]);
-
   const handleNoteSelect = useCallback(
     (noteId: number) => {
-      // Navigate to the note URL which will update the selected note
-      router.push(`/note/${noteId}`);
+      // Client-side selection only - no router navigation
+      setSelectedNoteId(noteId);
     },
-    [router]
+    [setSelectedNoteId]
   );
 
   const handleNewNote = useCallback(async () => {
     try {
       const newNote = await createNote('New Note');
-      // Navigate to the new note and refresh to show updated notes list
-      router.push(`/note/${newNote.id}`);
+
+      // Add the new note to our local state
+      const newTreeNode: NoteTreeNode = {
+        id: newNote.id,
+        name: newNote.name,
+        data: {
+          content: newNote.content || '',
+          dirty: false
+        }
+      };
+
+      setNotes((prevNotes: NoteTreeNode[]) => [newTreeNode, ...prevNotes]);
+      setSelectedNoteId(newNote.id);
     } catch (error) {
       console.error('Failed to create note:', error);
     }
-  }, [router]);
+  }, [setNotes, setSelectedNoteId]);
 
   const handleContentChange = (newContent: string) => {
-    setContent(newContent);
-    setHasUnsavedChanges(true);
+    if (selectedNoteId) {
+      updateNoteContent(selectedNoteId, newContent);
+    }
   };
 
   const handleSave = useCallback(async () => {
@@ -83,7 +82,7 @@ export default function MainNotesClient({
       setSaveStatus('saving');
       await updateNote(selectedNote.id, { content });
       setSaveStatus('saved');
-      setHasUnsavedChanges(false);
+      markNoteDirty(selectedNote.id, false);
 
       // Reset status after 2 seconds
       setTimeout(() => setSaveStatus('idle'), 2000);
@@ -91,44 +90,55 @@ export default function MainNotesClient({
       setSaveStatus('error');
       console.error('Failed to save note:', error);
     }
-  }, [selectedNote, content, setSaveStatus, setHasUnsavedChanges]);
+  }, [selectedNote, content, setSaveStatus, markNoteDirty]);
+
+  const handleRefresh = useCallback(async () => {
+    if (!selectedNote) return;
+
+    try {
+      setSaveStatus('saving');
+      const freshNote = await updateNote(selectedNote.id, {}); // Fetch without changes
+      updateNoteContent(selectedNote.id, freshNote.content || '');
+      markNoteDirty(selectedNote.id, false);
+      setSaveStatus('idle');
+    } catch (error) {
+      setSaveStatus('error');
+      console.error('Failed to refresh note:', error);
+    }
+  }, [selectedNote, setSaveStatus, updateNoteContent, markNoteDirty]);
 
   const handleDeleteNote = useCallback(
     async (noteId: number) => {
       try {
         await deleteNote(noteId);
-        // If we deleted the currently selected note, navigate to main notes page
-        if (selectedNote?.id === noteId) {
-          router.push('/');
-        } else {
-          // Otherwise, refresh to update the notes list
-          router.refresh();
+
+        // Remove from local state
+        setNotes((prevNotes: NoteTreeNode[]) =>
+          prevNotes.filter((note: NoteTreeNode) => note.id !== noteId)
+        );
+
+        // If we deleted the currently selected note, clear selection
+        if (selectedNoteId === noteId) {
+          setSelectedNoteId(null);
         }
       } catch (error) {
         console.error('Failed to delete note:', error);
       }
     },
-    [router, selectedNote]
+    [setNotes, selectedNoteId, setSelectedNoteId]
   );
 
   const handleRenameNote = useCallback(
     async (noteId: number, newName: string) => {
       try {
         const updatedNote = await updateNote(noteId, { name: newName });
-
-        // Update the selected note if it's the one being renamed
-        if (selectedNote?.id === noteId) {
-          setSelectedNote(updatedNote);
-        }
-
-        // Refresh to update the notes list
-        router.refresh();
+        updateNoteName(noteId, updatedNote.name);
       } catch (error) {
         console.error('Failed to rename note:', error);
         throw error; // Re-throw to let the component handle the error
       }
     },
-    [selectedNote, setSelectedNote, router]
+    [updateNoteName]
   );
 
   const handleLogout = () => {
@@ -156,13 +166,20 @@ export default function MainNotesClient({
             e.preventDefault();
             handleNewNote();
             break;
+          case 'r':
+            // Only trigger refresh when focused in editor
+            if (document.activeElement?.closest('[data-editor]')) {
+              e.preventDefault();
+              handleRefresh();
+            }
+            break;
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNote, content, handleSave, handleNewNote]);
+  }, [handleSave, handleNewNote, handleRefresh]);
 
   // Unsaved changes warning (US-015)
   useEffect(() => {
@@ -184,7 +201,7 @@ export default function MainNotesClient({
       <div className={styles.panels}>
         <LeftPanel
           notes={notes}
-          selectedNoteId={selectedNote?.id || null}
+          selectedNoteId={selectedNoteId}
           onNoteSelect={handleNoteSelect}
           onNewNote={handleNewNote}
           onDeleteNote={handleDeleteNote}

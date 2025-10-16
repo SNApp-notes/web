@@ -1,31 +1,31 @@
 import { render, screen, fireEvent, waitFor } from '@/test/utils';
 import { vi, expect, test, describe, beforeEach } from 'vitest';
 import LeftPanel from './LeftPanel';
-import type { Note } from '@prisma/client';
+import type { NoteTreeNode } from '@/types/tree';
 
 // Mock NotesContext
 vi.mock('./NotesContext', () => ({
   useNotesContext: () => ({
-    hasUnsavedChanges: false
+    getSelectedNote: () => null // Mock function
   })
 }));
 
-const mockNotes: Note[] = [
+const mockNotes: NoteTreeNode[] = [
   {
     id: 1,
     name: 'Test Note 1',
-    content: 'Content 1',
-    userId: 'user1',
-    createdAt: new Date('2023-01-01'),
-    updatedAt: new Date('2023-01-01')
+    data: {
+      content: 'Content 1',
+      dirty: false
+    }
   },
   {
     id: 2,
     name: 'Test Note 2',
-    content: 'Content 2',
-    userId: 'user1',
-    createdAt: new Date('2023-01-02'),
-    updatedAt: new Date('2023-01-02')
+    data: {
+      content: 'Content 2',
+      dirty: false
+    }
   }
 ];
 

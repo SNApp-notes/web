@@ -2,13 +2,13 @@
 
 import { Box, Text, Flex } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
-import type { Note } from '@prisma/client';
+import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import type { EditorRef } from '@/types/editor';
 import Editor from '@/components/Editor';
 
 interface MiddlePanelProps {
-  note: Note | null;
+  note: NoteTreeNode | null;
   content: string;
   saveStatus: SaveStatus;
   onContentChange: (content: string) => void;
@@ -90,7 +90,7 @@ export default function MiddlePanel({
       <Box flex={1}>
         {note ? (
           <Editor
-            value={note.content === null ? welcomeContent : content}
+            value={note.data?.content === null ? welcomeContent : content}
             onChange={(value) => onContentChange(value || '')}
             onEditorReady={onEditorReady}
             placeholder="Start writing your note..."

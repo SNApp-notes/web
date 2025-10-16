@@ -1,5 +1,6 @@
 import type { Note } from '@prisma/client';
-import { getNotes, getNote } from '@/app/actions/notes';
+import type { NoteTreeNode } from '@/types/tree';
+import { getNotes } from '@/app/actions/notes';
 import { NotesProvider } from './NotesContext';
 import MainNotesClient from './MainNotesClient';
 import styles from './MainNotesLayout.module.css';
@@ -9,30 +10,35 @@ interface MainNotesLayoutProps {
   lineNumber?: number;
 }
 
+// Convert Prisma Note to NoteTreeNode
+function convertNoteToTreeNode(note: Note): NoteTreeNode {
+  return {
+    id: note.id,
+    name: note.name,
+    data: {
+      content: note.content, // Preserve null for example notes
+      dirty: false
+    }
+  };
+}
+
 export default async function MainNotesLayout({
   selectedNoteId,
   lineNumber
 }: MainNotesLayoutProps) {
+  // Single fetch - get all notes once
   const notes = await getNotes();
 
-  // Get the selected note if provided
-  let selectedNote: Note | null = null;
-  if (selectedNoteId) {
-    try {
-      selectedNote = await getNote(selectedNoteId);
-    } catch (error) {
-      console.error('Failed to load selected note:', error);
-    }
-  }
+  // Convert to TreeNodes
+  const treeNodes: NoteTreeNode[] = notes.map(convertNoteToTreeNode);
 
   return (
     <div className={styles.layout}>
-      <NotesProvider initialNote={selectedNote}>
-        <MainNotesClient
-          notes={notes}
-          initialSelectedNoteId={selectedNoteId}
-          lineNumber={lineNumber}
-        />
+      <NotesProvider
+        initialNotes={treeNodes}
+        initialSelectedNoteId={selectedNoteId || null}
+      >
+        <MainNotesClient lineNumber={lineNumber} />
       </NotesProvider>
     </div>
   );
