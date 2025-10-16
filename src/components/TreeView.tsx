@@ -52,11 +52,12 @@ const TreeNodeComponent = ({
       <HStack
         cursor="pointer"
         onClick={hasChildren ? handleToggle : handleNodeSelect}
-        bg={isSelected ? 'accent.bg' : 'transparent'}
-        _hover={{ bg: 'bg.hover' }}
+        bg={isSelected ? 'blue.solid' : 'transparent'}
+        color={isSelected ? 'white' : 'fg'}
+        _hover={{ bg: isSelected ? 'blue.solid' : 'bg.muted' }}
         borderRadius="md"
         px={2}
-        py={1}
+        py={2}
         ml={level * 4}
         gap={2}
         className={clsx('tree-node', {
@@ -87,9 +88,10 @@ const TreeNodeComponent = ({
 
         <Text
           fontSize="sm"
-          fontWeight={isSelected ? 'semibold' : 'normal'}
-          color={isSelected ? 'accent.fg' : 'fg'}
+          fontWeight="medium"
+          color="currentColor"
           flex={1}
+          lineClamp={1}
           className="tree-node-label"
         >
           {node.name}
@@ -121,19 +123,22 @@ export const TreeView = ({
 }: TreeViewProps) => {
   return (
     <Box
-      maxH="400px"
+      h="100%"
       overflowY="auto"
-      p={2}
-      border="1px"
-      borderColor="border"
-      borderRadius="md"
-      bg="bg"
       className="tree-view-container"
       data-testid="tree-view"
     >
-      <Text fontSize="lg" fontWeight="bold" mb={3} color="fg" className="tree-view-title">
-        {title}
-      </Text>
+      {title && (
+        <Text
+          fontSize="lg"
+          fontWeight="bold"
+          mb={3}
+          color="fg"
+          className="tree-view-title"
+        >
+          {title}
+        </Text>
+      )}
       <VStack align="stretch" gap={1}>
         {data.map((node) => (
           <TreeNodeComponent

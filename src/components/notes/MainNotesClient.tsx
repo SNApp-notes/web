@@ -10,6 +10,8 @@ import TopNavigationBar from './TopNavigationBar';
 import LeftPanel from './LeftPanel';
 import MiddlePanel from './MiddlePanel';
 import RightPanel from './RightPanel';
+import Footer from '@/components/Footer';
+
 import styles from './MainNotesLayout.module.css';
 
 interface MainNotesClientProps {
@@ -202,6 +204,9 @@ export default function MainNotesClient({
           onHeaderClick={handleHeaderClick}
         />
       </div>
+      <Footer />
+
+      {/* TODO: Add confirmation dialog back when needed */}
     </>
   );
 }
