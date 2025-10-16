@@ -6,7 +6,6 @@ import type { NoteTreeNode, TreeNode } from '@/types/tree';
 
 import TreeView from '@/components/TreeView';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import { useNotesContext } from './NotesContext';
 
 interface LeftPanelProps {
   notes: NoteTreeNode[];
@@ -53,9 +52,9 @@ export default function LeftPanel({
     setDeleteDialog({ isOpen: true, note: node as NoteTreeNode });
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = () => {
     if (deleteDialog.note) {
-      await onDeleteNote?.(deleteDialog.note.id);
+      onDeleteNote?.(deleteDialog.note.id);
     }
   };
 

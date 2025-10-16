@@ -71,21 +71,24 @@ export default function Editor({
     ...(Array.isArray(fullHeightTheme) ? fullHeightTheme : [fullHeightTheme])
   ];
 
-  const scrollToLine = useCallback((line: number) => {
-    if (!viewRef.current) {
-      return;
-    }
-    const { from: position } = viewRef.current.state.doc.line(line);
-    try {
-      viewRef.current.dispatch({
-        selection: { anchor: position, head: position },
-        scrollIntoView: true
-      });
-      viewRef.current.focus();
-    } catch (error) {
-      console.warn(`Cannot scroll to line ${position}:`, error);
-    }
-  }, [viewRef]);
+  const scrollToLine = useCallback(
+    (line: number) => {
+      if (!viewRef.current) {
+        return;
+      }
+      const { from: position } = viewRef.current.state.doc.line(line);
+      try {
+        viewRef.current.dispatch({
+          selection: { anchor: position, head: position },
+          scrollIntoView: true
+        });
+        viewRef.current.focus();
+      } catch (error) {
+        console.warn(`Cannot scroll to line ${position}:`, error);
+      }
+    },
+    [viewRef]
+  );
 
   const handleEditorMount = useCallback(
     (view: EditorView) => {
