@@ -75,15 +75,15 @@ export default function Editor({
     if (!viewRef.current) {
       return;
     }
+    const { from: position } = viewRef.current.state.doc.line(line);
     try {
-      const { from: position } = viewRef.current.state.doc.line(line);
       viewRef.current.dispatch({
         selection: { anchor: position, head: position },
         scrollIntoView: true
       });
       viewRef.current.focus();
     } catch (error) {
-      console.warn(`Cannot scroll to line ${selectedLine}:`, error);
+      console.warn(`Cannot scroll to line ${position}:`, error);
     }
   }, [viewRef]);
 
@@ -118,7 +118,7 @@ export default function Editor({
         onEditorReady(editorRef);
       }
     },
-    [onEditorReady, selectedLine]
+    [onEditorReady, scrollToLine, selectedLine]
   );
 
   return (

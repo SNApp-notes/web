@@ -13,15 +13,15 @@ export type { NoteData } from './notes';
 // Combined type for note tree nodes
 export type NoteTreeNode = TreeNode<import('./notes').NoteData>;
 
-export interface TreeViewProps {
-  data: TreeNode[];
-  onNodeSelect?: (node: TreeNode) => void;
-  onNodeRename?: (node: TreeNode, newName: string) => void;
-  onNodeDelete?: (node: TreeNode) => void;
-  onNodeExpand?: (node: TreeNode) => void;
-  onNodeCollapse?: (node: TreeNode) => void;
+export interface TreeViewProps<T = unknown> {
+  data: TreeNode<T>[];
+  onNodeSelect?: (node: TreeNode<T>) => void;
+  onNodeRename?: (node: TreeNode<T>, newName: string) => void;
+  onNodeDelete?: (node: TreeNode<T>) => void;
+  onNodeExpand?: (node: TreeNode<T>) => void;
+  onNodeCollapse?: (node: TreeNode<T>) => void;
+  generateName?: (node: TreeNode<T>) => string;
   selectedNodeId?: string;
   expandedNodeIds?: string[];
-  hasUnsavedChanges?: boolean;
   title?: string;
 }

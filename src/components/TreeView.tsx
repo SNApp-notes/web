@@ -6,25 +6,25 @@ import { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import type { TreeNode, TreeViewProps } from '@/types/tree';
 
-interface TreeNodeComponentProps {
-  node: TreeNode;
-  onNodeSelect?: (node: TreeNode) => void;
-  onNodeRename?: (node: TreeNode, newName: string) => void;
-  onNodeDelete?: (node: TreeNode) => void;
+interface TreeNodeComponentProps<T = unknown> {
+  node: TreeNode<T>;
+  onNodeSelect?: (node: TreeNode<T>) => void;
+  onNodeRename?: (node: TreeNode<T>, newName: string) => void;
+  onNodeDelete?: (node: TreeNode<T>) => void;
+  generateName?: (node: TreeNode<T>) => string;
   selectedNodeId?: string;
-  hasUnsavedChanges?: boolean;
   level?: number;
 }
 
-const TreeNodeComponent = ({
+const TreeNodeComponent = <T = unknown,>({
   node,
   onNodeSelect,
   onNodeRename,
   onNodeDelete,
+  generateName,
   selectedNodeId,
-  hasUnsavedChanges = false,
   level = 0
-}: TreeNodeComponentProps) => {
+}: TreeNodeComponentProps<T>) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingName, setEditingName] = useState(node.name);
@@ -136,7 +136,7 @@ const TreeNodeComponent = ({
           <Box w={3} />
         )}
 
-        <Box color="fg.muted" className="tree-node-icon">
+        <Box color={isSelected ? 'currentColor' : 'fg.muted'} className="tree-node-icon">
           {isCategory ? <FiFolder size={16} /> : <FiFileText size={14} />}
         </Box>
 
@@ -170,8 +170,7 @@ const TreeNodeComponent = ({
             onDoubleClick={handleDoubleClick}
             cursor="pointer"
           >
-            {isSelected && hasUnsavedChanges ? '* ' : ''}
-            {node.name}
+            {generateName ? generateName(node) : node.name}
           </Text>
         )}
       </HStack>
@@ -185,8 +184,8 @@ const TreeNodeComponent = ({
               onNodeSelect={onNodeSelect}
               onNodeRename={onNodeRename}
               onNodeDelete={onNodeDelete}
+              generateName={generateName}
               selectedNodeId={selectedNodeId}
-              hasUnsavedChanges={hasUnsavedChanges}
               level={level + 1}
             />
           ))}
@@ -196,15 +195,15 @@ const TreeNodeComponent = ({
   );
 };
 
-export const TreeView = ({
+export const TreeView = <T = unknown,>({
   data,
   onNodeSelect,
   onNodeRename,
   onNodeDelete,
+  generateName,
   selectedNodeId,
-  hasUnsavedChanges = false,
   title = 'Tree'
-}: TreeViewProps) => {
+}: TreeViewProps<T>) => {
   return (
     <Box
       h="100%"
@@ -231,8 +230,8 @@ export const TreeView = ({
             onNodeSelect={onNodeSelect}
             onNodeRename={onNodeRename}
             onNodeDelete={onNodeDelete}
+            generateName={generateName}
             selectedNodeId={selectedNodeId}
-            hasUnsavedChanges={hasUnsavedChanges}
           />
         ))}
       </VStack>

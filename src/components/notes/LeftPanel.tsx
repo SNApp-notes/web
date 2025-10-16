@@ -25,16 +25,11 @@ export default function LeftPanel({
   onDeleteNote,
   onRenameNote
 }: LeftPanelProps) {
-  const { getSelectedNote } = useNotesContext();
   const [filter, setFilter] = useState('');
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
     note: NoteTreeNode | null;
   }>({ isOpen: false, note: null });
-
-  // Get unsaved changes status for the selected note
-  const selectedNote = getSelectedNote();
-  const hasUnsavedChanges = selectedNote?.data?.dirty || false;
 
   // Filter and prepare notes for TreeView
   const treeData = useMemo<NoteTreeNode[]>(() => {
@@ -95,8 +90,8 @@ export default function LeftPanel({
             onNodeSelect={handleTreeNodeSelect}
             onNodeRename={handleTreeNodeRename}
             onNodeDelete={handleTreeNodeDelete}
+            generateName={(node) => `${node.data?.dirty ? '* ' : ''}${node.name}`}
             selectedNodeId={selectedNoteId?.toString()}
-            hasUnsavedChanges={hasUnsavedChanges}
             title=""
           />
         )}
