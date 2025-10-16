@@ -12,6 +12,7 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest --coverage",
+    "parser": "peggy --format es src/lib/parser/grammar.peggy -o src/lib/parser/parser.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -45,6 +46,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "jsdom": "^27.0.0",
+    "peggy": "^5.0.6",
     "prettier": "^3.6.2",
     "prisma": "^6.17.1",
     "typescript": "^5",

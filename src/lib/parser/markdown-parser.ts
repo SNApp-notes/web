@@ -1,29 +1,39 @@
 import type { Header } from '@/types/notes';
+import { parse, type MarkdownNode, type HeaderNode } from './index';
 
+/**
+ * Extract headers from markdown content using peggy parser
+ * This replaces the regex-based solution which breaks with headers in code blocks
+ */
 export function extractHeaders(content: string): Header[] {
   if (!content) return [];
 
-  const lines = content.split('\n');
-  const headers: Header[] = [];
+  try {
+    const nodes: MarkdownNode[] = parse(content);
+    const headers: Header[] = [];
 
-  lines.forEach((line, index) => {
-    const match = line.match(/^(#{1,6})\s+(.+)$/);
-    if (match) {
-      const [, hashes, text] = match;
-      const level = hashes.length as 1 | 2 | 3 | 4 | 5 | 6;
+    nodes.forEach((node, index) => {
+      if (node.type === 'header') {
+        const headerNode = node as HeaderNode;
+        headers.push({
+          id: `header-${index}-${headerNode.level}`,
+          text: headerNode.content.replace(/^#+\s*/, '').trim(),
+          level: headerNode.level as 1 | 2 | 3 | 4 | 5 | 6,
+          line: headerNode.loc.start.line
+        });
+      }
+    });
 
-      headers.push({
-        id: `header-${index}-${level}`,
-        text: text.trim(),
-        level,
-        line: index + 1 // 1-based line numbers
-      });
-    }
-  });
-
-  return headers;
+    return headers;
+  } catch (error) {
+    console.error('Failed to parse markdown content:', error);
+    return [];
+  }
 }
 
+/**
+ * Build hierarchical header tree from flat header list
+ */
 export function buildHeaderTree(headers: Header[]): Header[] {
   if (headers.length === 0) return [];
 

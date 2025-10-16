@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Note } from '@prisma/client';
 import { useNotesContext } from './NotesContext';
 import { createNote, updateNote, deleteNote } from '@/app/actions/notes';
-import { extractHeaders } from '@/lib/markdown-headers';
+import { extractHeaders } from '@/lib/parser/markdown-parser';
 import TopNavigationBar from './TopNavigationBar';
 import LeftPanel from './LeftPanel';
 import MiddlePanel from './MiddlePanel';
