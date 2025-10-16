@@ -1,6 +1,7 @@
 'use client';
 
 import { Box, Text, Flex } from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
 import type { Note } from '@prisma/client';
 import type { SaveStatus } from '@/types/notes';
 import type { EditorRef } from '@/types/editor';
@@ -22,6 +23,23 @@ export default function MiddlePanel({
   onContentChange,
   onEditorReady
 }: MiddlePanelProps) {
+  const [welcomeContent, setWelcomeContent] = useState<string>('');
+
+  // Load welcome content when component mounts
+  useEffect(() => {
+    const loadWelcomeContent = async () => {
+      try {
+        const response = await fetch('/samples/welcome.md');
+        const text = await response.text();
+        setWelcomeContent(text);
+      } catch (error) {
+        console.error('Failed to load welcome content:', error);
+        setWelcomeContent('# Welcome to SNApp\n\nStart writing your note...');
+      }
+    };
+
+    loadWelcomeContent();
+  }, []);
   const getSaveStatusText = () => {
     switch (saveStatus) {
       case 'saving':
@@ -49,9 +67,15 @@ export default function MiddlePanel({
   };
 
   return (
-    <Box as="main" h="100%" display="flex" flexDirection="column" p={4}>
+    <Box as="main" h="100%" display="flex" flexDirection="column">
       {/* Save status bar */}
-      <Flex justify="space-between" align="center" mb={2}>
+      <Flex
+        justify="space-between"
+        align="center"
+        p={4}
+        borderBottom="1px solid"
+        borderColor="border"
+      >
         <Text fontSize="lg" fontWeight="semibold">
           {note?.name || 'Select a note'}
         </Text>
@@ -66,14 +90,10 @@ export default function MiddlePanel({
       <Box flex={1}>
         {note ? (
           <Editor
-            value={content}
+            value={note.content === null ? welcomeContent : content}
             onChange={(value) => onContentChange(value || '')}
             onEditorReady={onEditorReady}
-            placeholder={
-              note.content === null
-                ? '# Welcome to SNApp\n\nThis is your example note. You can:\n\n- Edit this content with **Markdown** syntax\n- Save with Ctrl+S\n- Create new notes with Ctrl+N\n- Double-click note names to rename them\n\nStart typing to replace this content!'
-                : 'Start writing your note...'
-            }
+            placeholder="Start writing your note..."
             height="100%"
           />
         ) : (

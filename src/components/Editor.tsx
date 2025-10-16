@@ -7,7 +7,7 @@ import { languages } from '@codemirror/language-data';
 import { basicLight, basicDark } from '@uiw/codemirror-theme-basic';
 import { Box } from '@chakra-ui/react';
 import { useColorMode } from '@/components/ui/color-mode';
-import type { EditorView } from 'codemirror';
+import { EditorView } from '@codemirror/view';
 import type { EditorProps, EditorRef } from '@/types/editor';
 
 export default function Editor({
@@ -35,15 +35,40 @@ export default function Editor({
 }: EditorProps) {
   const viewRef = useRef<EditorView | null>(null);
 
+  const { colorMode } = useColorMode();
+  const themeExtension = colorMode === 'dark' ? basicDark : basicLight;
+
+  // Create a theme for full height when height is 100%
+  const fullHeightTheme =
+    height === '100%'
+      ? EditorView.theme({
+          '&': {
+            height: '100%',
+            maxHeight: '100%'
+          },
+          '.cm-scroller': {
+            overflow: 'auto',
+            maxHeight: '100%'
+          },
+          '.cm-focused': {
+            outline: 'none'
+          },
+          '.cm-content': {
+            minHeight: '100%'
+          },
+          '.cm-editor': {
+            height: '100%'
+          }
+        })
+      : [];
+
   const extensions = [
     markdown({
       base: markdownLanguage,
       codeLanguages: languages
-    })
+    }),
+    ...(Array.isArray(fullHeightTheme) ? fullHeightTheme : [fullHeightTheme])
   ];
-
-  const { colorMode } = useColorMode();
-  const themeExtension = colorMode === 'dark' ? basicDark : basicLight;
 
   const handleEditorMount = useCallback(
     (view: EditorView) => {
@@ -84,7 +109,14 @@ export default function Editor({
   );
 
   return (
-    <Box className={className} width={width} {...props}>
+    <Box
+      className={className}
+      width={width}
+      height={height === '100%' ? '100%' : 'auto'}
+      display="flex"
+      flexDirection="column"
+      {...props}
+    >
       <CodeMirror
         value={value}
         height={height}
@@ -95,6 +127,14 @@ export default function Editor({
         basicSetup={basicSetup}
         theme={themeExtension}
         onCreateEditor={handleEditorMount}
+        style={
+          height === '100%'
+            ? {
+                height: '100%',
+                flex: 1
+              }
+            : undefined
+        }
       />
     </Box>
   );
