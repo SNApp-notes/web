@@ -65,6 +65,64 @@ Next.js, TypeScript, Chakra UI v3, CodeMirror 6, Prisma, MySQL, Better Auth, CSS
 - **Default branch**: `master` (not `main`)
 - Use `master` branch for all references in CI/CD, badges, and documentation
 
+### Git Command Restrictions
+
+**CRITICAL - NEVER RUN THESE COMMANDS:**
+
+```bash
+# ❌ FORBIDDEN: Commands that modify local git tree
+git commit
+git add
+git rm
+git mv
+git reset
+git revert
+git cherry-pick
+git merge
+git rebase
+git stash
+git checkout -b
+git branch -d
+
+# ❌ FORBIDDEN: Commands that modify remote repository
+git push
+git push --force
+git push --delete
+git pull --rebase
+
+# ❌ FORBIDDEN: Commands with dangerous flags
+git reset --hard
+git clean -f
+git checkout --force
+```
+
+**ALLOWED: Read-only git commands only:**
+
+```bash
+# ✅ SAFE: Read-only commands for information gathering
+git status
+git diff
+git log
+git show
+git branch
+git remote -v
+git ls-files
+```
+
+**Why These Restrictions Exist:**
+
+- Prevents accidental commits or pushes without explicit user approval
+- Protects against data loss from destructive commands
+- Maintains clean git history and prevents merge conflicts
+- Ensures all git operations are intentional and controlled by the user
+- Allows agents to gather git information safely without making changes
+
+**If You Need to Commit Changes:**
+
+1. Use read-only git commands to show what needs to be committed
+2. Inform the user about the changes that should be committed
+3. Let the user decide when and how to commit the changes manually
+
 ## Testing
 
 ### Framework: Vitest + React Testing Library
