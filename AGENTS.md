@@ -20,10 +20,8 @@
 **Workflow Pattern:**
 
 ```bash
-# After running production build
-npm run build
-# ALWAYS clean build cache before switching back to development
-rm -rf .next
+# Run production build with automatic cleanup
+npm run build && rm -rf .next
 # Now safe to run development server
 npm run dev
 ```
@@ -37,9 +35,9 @@ npm run dev
 
 **Best Practice for Agents:**
 
-- Always include `rm -rf .next` command after any `npm run build`
-- Use: `npm run build && rm -rf .next` as a single command chain
-- Never run `npm run dev` immediately after `npm run build` without cleaning `.next`
+- Always use `npm run build && rm -rf .next` as a single command chain
+- This automatically cleans `.next` after any build, preventing conflicts
+- Never run `npm run dev` immediately after `npm run build` without this cleanup pattern
 
 ## Tech Stack
 
