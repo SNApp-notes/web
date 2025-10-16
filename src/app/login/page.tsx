@@ -1,18 +1,10 @@
-import {
-  Button,
-  Box,
-  Heading,
-  VStack,
-  Text,
-  HStack,
-  Separator,
-  Alert
-} from '@chakra-ui/react';
+import { Box, Heading, VStack, Text, HStack, Separator, Alert } from '@chakra-ui/react';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import SignInForm from '@/components/SignInForm';
 import Link from 'next/link';
+import GitHubSignInButton from '@/components/GitHubSignInButton';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -26,12 +18,6 @@ export default async function Login() {
   if (session) {
     redirect('/');
   }
-
-  const handleGitHubSignIn = async () => {
-    'use server';
-    // GitHub sign-in will be handled by Better Auth's built-in OAuth flow
-    redirect(`/api/auth/sign-in/github?callbackURL=/`);
-  };
 
   return (
     <Box
@@ -74,22 +60,7 @@ export default async function Login() {
           <Separator />
         </HStack>
 
-        <form action={handleGitHubSignIn}>
-          <Button
-            type="submit"
-            size="lg"
-            bg="gray.900"
-            color="white"
-            _hover={{
-              bg: 'gray.700'
-            }}
-            px={8}
-            py={6}
-            width="full"
-          >
-            Continue with GitHub
-          </Button>
-        </form>
+        <GitHubSignInButton />
 
         <Text textAlign="center" color="fg.muted" fontSize="sm">
           Don&apos;t have an account?{' '}
