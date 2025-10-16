@@ -21,6 +21,19 @@ export async function getNotes(): Promise<Note[]> {
       orderBy: { createdAt: 'desc' }
     });
 
+    // If user has no notes, create welcome note automatically
+    if (notes.length === 0) {
+      try {
+        const welcomeNote = await createWelcomeNoteForUser(session.user.id);
+        if (welcomeNote) {
+          return [welcomeNote];
+        }
+      } catch (error) {
+        console.error('Error creating welcome note:', error);
+        // Continue without welcome note if creation fails
+      }
+    }
+
     return notes;
   } catch (error) {
     console.error('Error fetching notes:', error);
@@ -217,5 +230,33 @@ export async function createExampleNote(): Promise<Note> {
   } catch (error) {
     console.error('Error creating example note:', error);
     throw new Error('Failed to create example note');
+  }
+}
+
+// Create welcome note for new users during signup process
+export async function createWelcomeNoteForUser(userId: string): Promise<Note | null> {
+  try {
+    // Check if user already has notes
+    const existingNotes = await prisma.note.findMany({
+      where: { userId }
+    });
+
+    if (existingNotes.length > 0) {
+      return null; // User already has notes
+    }
+
+    const welcomeNote = await prisma.note.create({
+      data: {
+        name: 'Welcome to SNApp',
+        content: null, // null content triggers onboarding display
+        userId
+      }
+    });
+
+    return welcomeNote;
+  } catch (error) {
+    console.error('Error creating welcome note for new user:', error);
+    // Don't throw error here - we don't want to fail signup if note creation fails
+    return null;
   }
 }
