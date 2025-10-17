@@ -228,7 +228,7 @@ US-007 Title: As a user, I want to delete a note so that I can remove obsolete
 content. Description: Users remove individual notes from the list. Acceptance
 Criteria:
 
-- Given a selected note, when the user clicks the delete icon, a confirmation
+- Given any note on the list, when the user clicks the delete icon, a confirmation
   modal appears.
 - On confirmation, the note is removed from the list and storage, and another
   note (or empty state) loads with URL update.
