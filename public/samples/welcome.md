@@ -6,7 +6,7 @@ This is your example note. You can:
 - You can use JavaScript code blocks
 
 ```javascript
-console.log("Hello, world!");
+console.log('Hello, world!');
 ```
 
 - Save with Ctrl+S
