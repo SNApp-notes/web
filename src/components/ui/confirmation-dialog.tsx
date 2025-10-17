@@ -32,20 +32,21 @@ export function ConfirmationDialog({
   return (
     <Dialog.Root open={isOpen} onOpenChange={(e) => !e.open && onClose()}>
       <Dialog.Backdrop />
-      <Dialog.Positioner>
-        <Dialog.Content>
+      <Dialog.Positioner display="flex" alignItems="center" justifyContent="center">
+        <Dialog.Content p={3}>
           <Dialog.Header>
-            <Dialog.Title>{title}</Dialog.Title>
+            <Dialog.Title pt={3}>{title}</Dialog.Title>
           </Dialog.Header>
-          <Dialog.Body>
+          <Dialog.Body py={3}>
             <p>{message}</p>
           </Dialog.Body>
           <Dialog.Footer>
             <Stack direction="row" gap="3">
-              <Button variant="outline" onClick={onClose}>
+              <Button p={3} variant="outline" onClick={onClose}>
                 {cancelText}
               </Button>
               <Button
+                p={3}
                 colorScheme={variant === 'danger' ? 'red' : 'orange'}
                 onClick={handleConfirm}
               >
