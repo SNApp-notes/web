@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
@@ -76,15 +76,23 @@ export default function Editor({
       if (!viewRef.current) {
         return;
       }
-      const { from: position } = viewRef.current.state.doc.line(line);
+
+      const doc = viewRef.current.state.doc;
+      // Check if the requested line exists in the document
+      if (line > doc.lines || line < 1) {
+        console.warn(`Cannot scroll to line ${line}: document has ${doc.lines} lines`);
+        return;
+      }
+
       try {
+        const { from: position } = doc.line(line);
         viewRef.current.dispatch({
           selection: { anchor: position, head: position },
           scrollIntoView: true
         });
         viewRef.current.focus();
       } catch (error) {
-        console.warn(`Cannot scroll to line ${position}:`, error);
+        console.warn(`Cannot scroll to line ${line}:`, error);
       }
     },
     [viewRef]
@@ -93,11 +101,6 @@ export default function Editor({
   const handleEditorMount = useCallback(
     (view: EditorView) => {
       viewRef.current = view;
-
-      // Scroll to selectedLine if provided on mount
-      if (selectedLine) {
-        scrollToLine(selectedLine);
-      }
 
       if (onEditorReady) {
         const editorRef: EditorRef = {
@@ -121,8 +124,20 @@ export default function Editor({
         onEditorReady(editorRef);
       }
     },
-    [onEditorReady, scrollToLine, selectedLine]
+    [onEditorReady, scrollToLine]
   );
+
+  // Handle line scrolling when content is loaded and selectedLine changes
+  useEffect(() => {
+    if (selectedLine && viewRef.current && value) {
+      // Add a small delay to ensure content is fully rendered
+      const timeoutId = setTimeout(() => {
+        scrollToLine(selectedLine);
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [selectedLine, value, scrollToLine]);
 
   return (
     <Box

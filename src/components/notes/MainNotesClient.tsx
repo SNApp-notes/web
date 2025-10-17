@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { NoteTreeNode } from '@/types/tree';
 import { useNotesContext } from './NotesContext';
@@ -24,7 +24,6 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
     notes,
     selectedNoteId,
     saveStatus,
-    setSelectedNoteId,
     setSaveStatus,
     updateNoteContent,
     updateNoteName,
@@ -34,20 +33,41 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
   } = useNotesContext();
 
   const editorRef = useRef<import('@/types/editor').EditorRef | null>(null);
+  const [welcomeContent, setWelcomeContent] = useState<string>('');
+
+  // Load welcome content when component mounts
+  useEffect(() => {
+    const loadWelcomeContent = async () => {
+      try {
+        const response = await fetch('/samples/welcome.md');
+        const text = await response.text();
+        setWelcomeContent(text);
+      } catch (error) {
+        console.error('Failed to load welcome content:', error);
+        setWelcomeContent('# Welcome to SNApp\n\nStart writing your note...');
+      }
+    };
+
+    loadWelcomeContent();
+  }, []);
 
   const selectedNote = getSelectedNote();
-  const content = selectedNote?.data?.content || '';
+  // Use the same logic as MiddlePanel to determine the actual content being displayed
+  const content =
+    selectedNote?.data?.content === null
+      ? welcomeContent
+      : selectedNote?.data?.content || '';
   const hasUnsavedChanges = selectedNote?.data?.dirty || false;
 
-  // Extract headers from current content
+  // Extract headers from current content (the actual content being displayed)
   const headers = useMemo(() => extractHeaders(content), [content]);
 
   const handleNoteSelect = useCallback(
     (noteId: number) => {
-      // Client-side selection only - no router navigation
-      setSelectedNoteId(noteId);
+      // Navigate to the selected note
+      router.push(`/note/${noteId}`);
     },
-    [setSelectedNoteId]
+    [router]
   );
 
   const handleNewNote = useCallback(async () => {
@@ -65,11 +85,11 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
       };
 
       setNotes((prevNotes: NoteTreeNode[]) => [newTreeNode, ...prevNotes]);
-      setSelectedNoteId(newNote.id);
+      router.push(`/note/${newNote.id}`);
     } catch (error) {
       console.error('Failed to create note:', error);
     }
-  }, [setNotes, setSelectedNoteId]);
+  }, [setNotes, router]);
 
   const handleContentChange = (newContent: string) => {
     if (selectedNoteId) {
@@ -119,15 +139,15 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
           prevNotes.filter((note: NoteTreeNode) => note.id !== noteId)
         );
 
-        // If we deleted the currently selected note, clear selection
+        // If we deleted the currently selected note, navigate home
         if (selectedNoteId === noteId) {
-          setSelectedNoteId(null);
+          router.push('/');
         }
       } catch (error) {
         console.error('Failed to delete note:', error);
       }
     },
-    [setNotes, selectedNoteId, setSelectedNoteId]
+    [setNotes, selectedNoteId, router]
   );
 
   const handleRenameNote = useCallback(
