@@ -194,7 +194,7 @@ const TreeNodeComponent = <T = unknown,>({
             onClick={handleDeleteClick}
             className="tree-node-delete"
             data-testid={`delete-node-${node.id}`}
-            _hover={{ color: "red.500" }}
+            _hover={{ color: 'red.500' }}
           >
             <FiTrash2 size={12} />
           </IconButton>
