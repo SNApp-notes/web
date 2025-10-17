@@ -34,7 +34,6 @@ const TreeNodeComponent = <T = unknown,>({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingName, setEditingName] = useState(node.name);
-  const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isSelected = selectedNodeId === node.id.toString();
@@ -115,8 +114,6 @@ const TreeNodeComponent = <T = unknown,>({
       <HStack
         cursor="pointer"
         onClick={hasChildren ? handleToggle : handleNodeSelect}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         bg={isSelected ? 'blue.solid' : 'transparent'}
         color={isSelected ? 'white' : 'fg'}
         _hover={{ bg: isSelected ? 'blue.solid' : 'bg.muted' }}
