@@ -1,7 +1,13 @@
 'use client';
 
-import { Box, VStack, HStack, Text, Input } from '@chakra-ui/react';
-import { FiFolder, FiFileText, FiChevronRight, FiChevronDown } from 'react-icons/fi';
+import { Box, VStack, HStack, Text, Input, IconButton } from '@chakra-ui/react';
+import {
+  FiFolder,
+  FiFileText,
+  FiChevronRight,
+  FiChevronDown,
+  FiTrash2
+} from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import type { TreeNode, TreeViewProps } from '@/types/tree';
@@ -28,6 +34,7 @@ const TreeNodeComponent = <T = unknown,>({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingName, setEditingName] = useState(node.name);
+  const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isSelected = selectedNodeId === node.id.toString();
@@ -80,6 +87,11 @@ const TreeNodeComponent = <T = unknown,>({
     handleSaveEdit();
   };
 
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onNodeDelete?.(node);
+  };
+
   // Focus input when editing starts
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -103,6 +115,8 @@ const TreeNodeComponent = <T = unknown,>({
       <HStack
         cursor="pointer"
         onClick={hasChildren ? handleToggle : handleNodeSelect}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         bg={isSelected ? 'blue.solid' : 'transparent'}
         color={isSelected ? 'white' : 'fg'}
         _hover={{ bg: isSelected ? 'blue.solid' : 'bg.muted' }}
@@ -172,6 +186,21 @@ const TreeNodeComponent = <T = unknown,>({
           >
             {generateName ? generateName(node) : node.name}
           </Text>
+        )}
+
+        {/* Delete button - only show for leaf nodes (notes) and when hovered or selected */}
+        {!hasChildren && onNodeDelete && !isEditing && (
+          <IconButton
+            variant="ghost"
+            colorScheme="red"
+            size="xs"
+            onClick={handleDeleteClick}
+            className="tree-node-delete"
+            data-testid={`delete-node-${node.id}`}
+            _hover={{ color: "red.500" }}
+          >
+            <FiTrash2 size={12} />
+          </IconButton>
         )}
       </HStack>
 

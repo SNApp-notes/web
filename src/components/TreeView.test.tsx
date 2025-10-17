@@ -1,55 +1,37 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@/test/utils';
+import { render, screen, fireEvent } from '@/test/utils';
 import { TreeView } from './TreeView';
 import type { TreeNode } from '@/types/tree';
 
 const mockData: TreeNode[] = [
   {
-    id: '1',
+    id: 1,
     name: 'Test Folder',
-    type: 'category',
     children: [
       {
-        id: '2',
-        name: 'Test Note',
-        type: 'note',
-        content: 'Test content',
-        createdAt: new Date('2024-01-01'),
-        parentId: '1'
+        id: 2,
+        name: 'Test Note'
       }
-    ],
-    createdAt: new Date('2024-01-01')
+    ]
   }
 ];
 
 const mockDataFlat: TreeNode[] = [
   {
-    id: '1',
-    name: 'First Note',
-    type: 'note',
-    content: 'First note content',
-    createdAt: new Date('2024-01-01')
+    id: 1,
+    name: 'First Note'
   },
   {
-    id: '2',
-    name: 'Second Note',
-    type: 'note',
-    content: 'Second note content',
-    createdAt: new Date('2024-01-02')
+    id: 2,
+    name: 'Second Note'
   },
   {
-    id: '3',
-    name: 'Third Note',
-    type: 'note',
-    content: 'Third note content',
-    createdAt: new Date('2024-01-03')
+    id: 3,
+    name: 'Third Note'
   },
   {
-    id: '4',
-    name: 'Fourth Note',
-    type: 'note',
-    content: 'Fourth note content',
-    createdAt: new Date('2024-01-04')
+    id: 4,
+    name: 'Fourth Note'
   }
 ];
 
@@ -138,6 +120,60 @@ describe('TreeView', () => {
       expect(onNodeSelect).toHaveBeenCalledWith(mockDataFlat[3]);
 
       expect(onNodeSelect).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('delete functionality', () => {
+    it('shows delete button on hover for leaf nodes', async () => {
+      const onNodeDelete = vi.fn();
+      const { user } = render(
+        <TreeView data={mockDataFlat} onNodeDelete={onNodeDelete} />
+      );
+
+      // Hover over a note to show delete button
+      await user.hover(screen.getByText('First Note'));
+
+      // Check if delete button appears
+      expect(screen.getByTestId('delete-node-1')).toBeInTheDocument();
+    });
+
+    it('does not show delete button for category nodes', async () => {
+      const onNodeDelete = vi.fn();
+      const { user } = render(<TreeView data={mockData} onNodeDelete={onNodeDelete} />);
+
+      // Hover over category node
+      await user.hover(screen.getByText('Test Folder'));
+
+      // Delete button should not be present for categories
+      expect(screen.queryByTestId('delete-node-1')).not.toBeInTheDocument();
+    });
+
+    it('calls onNodeDelete when delete button is clicked', async () => {
+      const onNodeDelete = vi.fn();
+      const { user } = render(
+        <TreeView data={mockDataFlat} onNodeDelete={onNodeDelete} />
+      );
+
+      // Hover over note to show delete button
+      await user.hover(screen.getByText('First Note'));
+
+      // Check if delete button is there before clicking
+      const deleteButton = screen.getByTestId('delete-node-1');
+
+      // Try clicking directly with fireEvent
+      fireEvent.click(deleteButton);
+
+      expect(onNodeDelete).toHaveBeenCalledWith(mockDataFlat[0]);
+    });
+
+    it('does not show delete button when onNodeDelete is not provided', async () => {
+      const { user } = render(<TreeView data={mockDataFlat} />);
+
+      // Hover over note
+      await user.hover(screen.getByText('First Note'));
+
+      // Delete button should not appear when no delete handler is provided
+      expect(screen.queryByTestId('delete-node-1')).not.toBeInTheDocument();
     });
   });
 });
