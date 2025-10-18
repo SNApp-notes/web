@@ -2,7 +2,9 @@
 
 ## 1. Overview
 
-This specification details the architecture for optimizing SNApp's note navigation performance to meet US-016 requirements. The solution implements Next.js 15 Parallel Routes to eliminate the 3-4 second delay during note selection while maintaining full compatibility with existing functionality.
+This specification details the architecture for optimizing SNApp's note navigation performance to
+meet US-016 requirements. The solution implements Next.js 15 Parallel Routes to eliminate the 3-4
+second delay during note selection while maintaining full compatibility with existing functionality.
 
 ## 2. Performance Problem Analysis
 
@@ -283,4 +285,5 @@ graph LR
 4. **Zero Breaking Changes**: No existing URLs, features, or workflows broken
 5. **Browser Compatibility Maintained**: Works optimally on all supported browsers
 
-This architecture delivers the requested AngularJS-like nested route performance while maintaining full compatibility with existing SNApp functionality and requirements.
+This architecture delivers the requested AngularJS-like nested route performance while maintaining
+full compatibility with existing SNApp functionality and requirements.
