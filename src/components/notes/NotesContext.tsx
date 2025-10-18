@@ -6,6 +6,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   type ReactNode
 } from 'react';
 import { usePathname } from 'next/navigation';
@@ -56,56 +57,78 @@ export function NotesProvider({
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const pathname = usePathname();
 
-  const updateNoteContent = (noteId: number, content: string) => {
-    setNotes((prevNotes) =>
-      prevNotes.map((note) =>
-        note.id === noteId
-          ? {
-              ...note,
-              data: {
-                ...note.data!,
-                content,
-                dirty: true
-              }
-            }
-          : note
-      )
-    );
-  };
+  const updateNoteContent = useCallback((noteId: number, content: string) => {
+    setNotes((prevNotes) => {
+      const noteIndex = prevNotes.findIndex((note) => note.id === noteId);
+      if (noteIndex === -1) return prevNotes;
 
-  const updateNoteName = (noteId: number, name: string) => {
-    setNotes((prevNotes) =>
-      prevNotes.map((note) => (note.id === noteId ? { ...note, name } : note))
-    );
-  };
+      const currentNote = prevNotes[noteIndex];
+      // Don't update if content hasn't actually changed
+      if (currentNote.data?.content === content) return prevNotes;
 
-  const markNoteDirty = useCallback(
-    (noteId: number, dirty: boolean) => {
-      setNotes((prevNotes) =>
-        prevNotes.map((note) =>
-          note.id === noteId
-            ? {
-                ...note,
-                data: {
-                  ...note.data!,
-                  dirty
-                }
-              }
-            : note
-        )
-      );
-    },
-    [setNotes]
-  );
+      // Create new array with only the changed note updated
+      const newNotes = [...prevNotes];
+      newNotes[noteIndex] = {
+        ...currentNote,
+        data: {
+          ...currentNote.data!,
+          content,
+          dirty: true
+        }
+      };
+      return newNotes;
+    });
+  }, []);
 
-  const getSelectedNote = (): NoteTreeNode | null => {
+  const updateNoteName = useCallback((noteId: number, name: string) => {
+    setNotes((prevNotes) => {
+      const noteIndex = prevNotes.findIndex((note) => note.id === noteId);
+      if (noteIndex === -1) return prevNotes;
+
+      const currentNote = prevNotes[noteIndex];
+      // Don't update if name hasn't actually changed
+      if (currentNote.name === name) return prevNotes;
+
+      // Create new array with only the changed note updated
+      const newNotes = [...prevNotes];
+      newNotes[noteIndex] = { ...currentNote, name };
+      return newNotes;
+    });
+  }, []);
+
+  const markNoteDirty = useCallback((noteId: number, dirty: boolean) => {
+    setNotes((prevNotes) => {
+      const noteIndex = prevNotes.findIndex((note) => note.id === noteId);
+      if (noteIndex === -1) return prevNotes;
+
+      const currentNote = prevNotes[noteIndex];
+      // Don't update if dirty state hasn't actually changed
+      if (currentNote.data?.dirty === dirty) return prevNotes;
+
+      // Create new array with only the changed note updated
+      const newNotes = [...prevNotes];
+      newNotes[noteIndex] = {
+        ...currentNote,
+        data: {
+          ...currentNote.data!,
+          dirty
+        }
+      };
+      return newNotes;
+    });
+  }, []);
+
+  const getSelectedNote = useCallback((): NoteTreeNode | null => {
     if (!selectedNoteId) return null;
     return notes.find((note) => note.id === selectedNoteId) || null;
-  };
+  }, [notes, selectedNoteId]);
 
-  const getNote = (noteId: number): NoteTreeNode | null => {
-    return notes.find((note) => note.id === noteId) || null;
-  };
+  const getNote = useCallback(
+    (noteId: number): NoteTreeNode | null => {
+      return notes.find((note) => note.id === noteId) || null;
+    },
+    [notes]
+  );
 
   // URL synchronization - extract note ID from current URL
   const syncUrlToState = useCallback(() => {
@@ -158,21 +181,35 @@ export function NotesProvider({
     return () => window.removeEventListener('popstate', handlePopState);
   }, [syncUrlToState, pathname]);
 
-  const value: NotesContextValue = {
-    notes,
-    selectedNoteId,
-    saveStatus,
-    setNotes,
-    setSelectedNoteId,
-    setSaveStatus,
-    updateNoteContent,
-    updateNoteName,
-    markNoteDirty,
-    getSelectedNote,
-    getNote,
-    selectNote,
-    syncUrlToState
-  };
+  const value: NotesContextValue = useMemo(
+    () => ({
+      notes,
+      selectedNoteId,
+      saveStatus,
+      setNotes,
+      setSelectedNoteId,
+      setSaveStatus,
+      updateNoteContent,
+      updateNoteName,
+      markNoteDirty,
+      getSelectedNote,
+      getNote,
+      selectNote,
+      syncUrlToState
+    }),
+    [
+      notes,
+      selectedNoteId,
+      saveStatus,
+      updateNoteContent,
+      updateNoteName,
+      markNoteDirty,
+      getSelectedNote,
+      getNote,
+      selectNote,
+      syncUrlToState
+    ]
+  );
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;
 }

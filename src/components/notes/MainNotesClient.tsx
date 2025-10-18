@@ -116,6 +116,11 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
   // Extract headers from current content (the actual content being displayed)
   const headers = useMemo(() => extractHeaders(content), [content]);
 
+  // Memoize editor ready handler to prevent re-renders
+  const handleEditorReady = useCallback((editor: import('@/types/editor').EditorRef) => {
+    editorRef.current = editor;
+  }, []);
+
   const handleNoteSelect = useCallback(
     (noteId: number) => {
       // Navigate to the selected note
@@ -145,13 +150,16 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
     }
   }, [setNotes, router]);
 
-  const handleContentChange = (newContent: string) => {
-    if (selectedNoteId) {
-      // Update local state immediately for responsiveness
-      updateNoteContent(selectedNoteId, newContent);
-      // Manual save only - no automatic background saving
-    }
-  };
+  const handleContentChange = useCallback(
+    (newContent: string) => {
+      if (selectedNoteId) {
+        // Update local state immediately for responsiveness
+        updateNoteContent(selectedNoteId, newContent);
+        // Manual save only - no automatic background saving
+      }
+    },
+    [selectedNoteId, updateNoteContent]
+  );
 
   const handleSave = useCallback(async () => {
     if (!selectedNote) return;
@@ -219,19 +227,22 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
     [updateNoteName]
   );
 
-  const handleHeaderClick = (line: number) => {
-    // Update current line state immediately for visual feedback
-    setCurrentLine(line);
+  const handleHeaderClick = useCallback(
+    (line: number) => {
+      // Update current line state immediately for visual feedback
+      setCurrentLine(line);
 
-    if (selectedNoteId) {
-      const newUrl = `/note/${selectedNoteId}?line=${line}`;
-      window.history.pushState({ noteId: selectedNoteId, line }, '', newUrl);
-    }
+      if (selectedNoteId) {
+        const newUrl = `/note/${selectedNoteId}?line=${line}`;
+        window.history.pushState({ noteId: selectedNoteId, line }, '', newUrl);
+      }
 
-    if (editorRef.current) {
-      editorRef.current.scrollToLine(line);
-    }
-  };
+      if (editorRef.current) {
+        editorRef.current.scrollToLine(line);
+      }
+    },
+    [selectedNoteId]
+  );
 
   const handleLogout = () => {
     // TODO: Implement logout logic
@@ -299,9 +310,7 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
           selectedLine={currentLine}
           onContentChange={handleContentChange}
           onSave={handleSave}
-          onEditorReady={(editor) => {
-            editorRef.current = editor;
-          }}
+          onEditorReady={handleEditorReady}
         />
         <RightPanel
           headers={headers}

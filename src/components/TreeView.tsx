@@ -8,7 +8,7 @@ import {
   FiChevronDown,
   FiTrash2
 } from 'react-icons/fi';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import clsx from 'clsx';
 import type { TreeNode, TreeViewProps } from '@/types/tree';
 
@@ -36,30 +36,30 @@ const TreeNodeComponent = <T = unknown,>({
   const [editingName, setEditingName] = useState(node.name);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isSelected = selectedNodeId === node.id.toString();
+  const isSelected = selectedNodeId ? selectedNodeId === node.id.toString() : false;
   const hasChildren = node.children && node.children.length > 0;
-  const isCategory = hasChildren; // For notes, categories are nodes with children
+  const isCategory = hasChildren;
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     if (hasChildren) {
       setIsExpanded(!isExpanded);
     }
-  };
+  }, [hasChildren, isExpanded]);
 
-  const handleNodeSelect = () => {
+  const handleNodeSelect = useCallback(() => {
     // Only allow selection of leaf nodes (notes without children)
     if (!hasChildren && !isEditing) {
       onNodeSelect?.(node);
     }
-  };
+  }, [hasChildren, isEditing, onNodeSelect, node]);
 
-  const handleDoubleClick = () => {
+  const handleDoubleClick = useCallback(() => {
     // Only allow editing of leaf nodes (notes)
     if (!hasChildren && !isEditing) {
       setIsEditing(true);
       setEditingName(node.name);
     }
-  };
+  }, [hasChildren, isEditing, node.name]);
 
   const handleEditingKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -221,7 +221,7 @@ const TreeNodeComponent = <T = unknown,>({
   );
 };
 
-export const TreeView = <T = unknown,>({
+const MemoizedTreeView = <T = unknown,>({
   data,
   onNodeSelect,
   onNodeRename,
@@ -265,4 +265,5 @@ export const TreeView = <T = unknown,>({
   );
 };
 
+export const TreeView = MemoizedTreeView;
 export default TreeView;

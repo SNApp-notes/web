@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { useRef, useCallback, useEffect, useState, memo, useMemo } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
@@ -10,7 +10,7 @@ import { useColorMode } from '@/components/ui/color-mode';
 import { EditorView } from '@codemirror/view';
 import type { EditorProps, EditorRef } from '@/types/editor';
 
-export default function Editor({
+const Editor = memo(function Editor({
   value = '',
   onChange,
   placeholder,
@@ -38,39 +38,48 @@ export default function Editor({
   const [contentLoaded, setContentLoaded] = useState(false);
 
   const { colorMode } = useColorMode();
-  const themeExtension = colorMode === 'dark' ? basicDark : basicLight;
+  const themeExtension = useMemo(
+    () => (colorMode === 'dark' ? basicDark : basicLight),
+    [colorMode]
+  );
 
   // Create a theme for full height when height is 100%
-  const fullHeightTheme =
-    height === '100%'
-      ? EditorView.theme({
-          '&': {
-            height: '100%',
-            maxHeight: '100%'
-          },
-          '.cm-scroller': {
-            overflow: 'auto',
-            maxHeight: '100%'
-          },
-          '.cm-focused': {
-            outline: 'none'
-          },
-          '.cm-content': {
-            minHeight: '100%'
-          },
-          '.cm-editor': {
-            height: '100%'
-          }
-        })
-      : [];
+  const fullHeightTheme = useMemo(
+    () =>
+      height === '100%'
+        ? EditorView.theme({
+            '&': {
+              height: '100%',
+              maxHeight: '100%'
+            },
+            '.cm-scroller': {
+              overflow: 'auto',
+              maxHeight: '100%'
+            },
+            '.cm-focused': {
+              outline: 'none'
+            },
+            '.cm-content': {
+              minHeight: '100%'
+            },
+            '.cm-editor': {
+              height: '100%'
+            }
+          })
+        : [],
+    [height]
+  );
 
-  const extensions = [
-    markdown({
-      base: markdownLanguage,
-      codeLanguages: languages
-    }),
-    ...(Array.isArray(fullHeightTheme) ? fullHeightTheme : [fullHeightTheme])
-  ];
+  const extensions = useMemo(
+    () => [
+      markdown({
+        base: markdownLanguage,
+        codeLanguages: languages
+      }),
+      ...(Array.isArray(fullHeightTheme) ? fullHeightTheme : [fullHeightTheme])
+    ],
+    [fullHeightTheme]
+  );
 
   const scrollToLine = useCallback(
     (line: number) => {
@@ -172,4 +181,6 @@ export default function Editor({
       />
     </Box>
   );
-}
+});
+
+export default Editor;
