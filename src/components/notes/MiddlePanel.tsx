@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Text, Flex } from '@chakra-ui/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useMemo, useCallback } from 'react';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import type { EditorRef } from '@/types/editor';
@@ -17,7 +17,7 @@ interface MiddlePanelProps {
   onEditorReady?: (editorRef: EditorRef) => void;
 }
 
-export default function MiddlePanel({
+const MiddlePanel = memo(function MiddlePanel({
   note,
   content,
   saveStatus,
@@ -42,7 +42,7 @@ export default function MiddlePanel({
 
     loadWelcomeContent();
   }, []);
-  const getSaveStatusText = () => {
+  const saveStatusText = useMemo(() => {
     switch (saveStatus) {
       case 'saving':
         return 'Saving...';
@@ -53,9 +53,9 @@ export default function MiddlePanel({
       default:
         return '';
     }
-  };
+  }, [saveStatus]);
 
-  const getSaveStatusColor = () => {
+  const saveStatusColor = useMemo(() => {
     switch (saveStatus) {
       case 'saving':
         return 'blue.500';
@@ -66,7 +66,14 @@ export default function MiddlePanel({
       default:
         return 'gray.500';
     }
-  };
+  }, [saveStatus]);
+
+  const handleContentChange = useCallback(
+    (value: string | undefined) => {
+      onContentChange(value || '');
+    },
+    [onContentChange]
+  );
 
   return (
     <Box as="main" h="100%" display="flex" flexDirection="column">
@@ -82,8 +89,8 @@ export default function MiddlePanel({
           {note?.name || 'Select a note'}
         </Text>
         {saveStatus !== 'idle' && (
-          <Text fontSize="sm" color={getSaveStatusColor()}>
-            {getSaveStatusText()}
+          <Text fontSize="sm" color={saveStatusColor}>
+            {saveStatusText}
           </Text>
         )}
       </Flex>
@@ -93,7 +100,7 @@ export default function MiddlePanel({
         {note ? (
           <Editor
             value={note.data?.content === null ? welcomeContent : content}
-            onChange={(value) => onContentChange(value || '')}
+            onChange={handleContentChange}
             selectedLine={selectedLine}
             onEditorReady={onEditorReady}
             placeholder="Start writing your note..."
@@ -107,4 +114,6 @@ export default function MiddlePanel({
       </Box>
     </Box>
   );
-}
+});
+
+export default MiddlePanel;

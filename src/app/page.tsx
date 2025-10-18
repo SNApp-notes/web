@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
-import MainNotesLayout from '@/components/notes/MainNotesLayout';
 
 export default async function Dashboard() {
   // Check if user is authenticated
@@ -14,6 +13,7 @@ export default async function Dashboard() {
     redirect('/login');
   }
 
-  // Render the main notes application
-  return <MainNotesLayout />;
+  // With parallel routes, this page is rendered as the main content
+  // The @navigation, @sidebar, and @content slots handle the UI
+  return null;
 }

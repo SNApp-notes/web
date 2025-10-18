@@ -20,6 +20,7 @@ interface MainNotesClientProps {
 
 export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
   const router = useRouter();
+
   const {
     notes,
     selectedNoteId,
@@ -34,6 +35,7 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
 
   const editorRef = useRef<import('@/types/editor').EditorRef | null>(null);
   const [welcomeContent, setWelcomeContent] = useState<string>('');
+  const [currentLine, setCurrentLine] = useState<number | undefined>(lineNumber);
 
   // Load welcome content when component mounts
   useEffect(() => {
@@ -49,6 +51,58 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
     };
 
     loadWelcomeContent();
+  }, []);
+
+  // Sync currentLine with lineNumber prop changes
+  useEffect(() => {
+    setCurrentLine(lineNumber);
+  }, [lineNumber]);
+
+  // Monitor URL changes for line parameter
+  useEffect(() => {
+    const extractLineFromUrl = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const lineParam = urlParams.get('line');
+
+      if (lineParam) {
+        const parsedLine = parseInt(lineParam, 10);
+        if (!isNaN(parsedLine)) {
+          setCurrentLine(parsedLine);
+          return;
+        }
+      }
+
+      setCurrentLine(undefined);
+    };
+
+    // Extract line on mount and URL changes
+    extractLineFromUrl();
+
+    const handlePopState = () => {
+      extractLineFromUrl();
+    };
+
+    // Monitor navigation events
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+
+    window.history.pushState = function (...args) {
+      originalPushState.apply(this, args);
+      setTimeout(extractLineFromUrl, 0);
+    };
+
+    window.history.replaceState = function (...args) {
+      originalReplaceState.apply(this, args);
+      setTimeout(extractLineFromUrl, 0);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+    };
   }, []);
 
   const selectedNote = getSelectedNote();
@@ -93,7 +147,9 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
 
   const handleContentChange = (newContent: string) => {
     if (selectedNoteId) {
+      // Update local state immediately for responsiveness
       updateNoteContent(selectedNoteId, newContent);
+      // Manual save only - no automatic background saving
     }
   };
 
@@ -163,21 +219,23 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
     [updateNoteName]
   );
 
-  const handleLogout = () => {
-    // TODO: Implement logout logic
-    console.log('Logout clicked');
-  };
-
   const handleHeaderClick = (line: number) => {
-    // Update URL with line number
+    // Update current line state immediately for visual feedback
+    setCurrentLine(line);
+
     if (selectedNoteId) {
-      router.push(`/note/${selectedNoteId}?line=${line}`, { scroll: false });
+      const newUrl = `/note/${selectedNoteId}?line=${line}`;
+      window.history.pushState({ noteId: selectedNoteId, line }, '', newUrl);
     }
 
-    // Scroll to line in CodeMirror editor
     if (editorRef.current) {
       editorRef.current.scrollToLine(line);
     }
+  };
+
+  const handleLogout = () => {
+    // TODO: Implement logout logic
+    console.log('Logout clicked');
   };
 
   // Keyboard shortcuts
@@ -238,7 +296,7 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
           note={selectedNote}
           content={content}
           saveStatus={saveStatus}
-          selectedLine={lineNumber}
+          selectedLine={currentLine}
           onContentChange={handleContentChange}
           onSave={handleSave}
           onEditorReady={(editor) => {
@@ -247,7 +305,7 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
         />
         <RightPanel
           headers={headers}
-          currentLine={lineNumber}
+          currentLine={currentLine}
           onHeaderClick={handleHeaderClick}
         />
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo, useCallback } from 'react';
 import { Box, Button, Input, Stack, Text } from '@chakra-ui/react';
 import type { NoteTreeNode, TreeNode } from '@/types/tree';
 
@@ -16,7 +16,7 @@ interface LeftPanelProps {
   onRenameNote: (id: number, name: string) => Promise<void>;
 }
 
-export default function LeftPanel({
+const LeftPanel = memo(function LeftPanel({
   notes,
   selectedNoteId,
   onNoteSelect,
@@ -38,29 +38,35 @@ export default function LeftPanel({
   }, [notes, filter]);
 
   // Handle TreeNode selection
-  const handleTreeNodeSelect = (node: TreeNode) => {
-    onNoteSelect((node as NoteTreeNode).id);
-  };
+  const handleTreeNodeSelect = useCallback(
+    (node: TreeNode) => {
+      onNoteSelect((node as NoteTreeNode).id);
+    },
+    [onNoteSelect]
+  );
 
   // Handle TreeNode rename
-  const handleTreeNodeRename = async (node: TreeNode, newName: string) => {
-    await onRenameNote?.((node as NoteTreeNode).id, newName);
-  };
+  const handleTreeNodeRename = useCallback(
+    async (node: TreeNode, newName: string) => {
+      await onRenameNote?.((node as NoteTreeNode).id, newName);
+    },
+    [onRenameNote]
+  );
 
   // Handle TreeNode delete
-  const handleTreeNodeDelete = (node: TreeNode) => {
+  const handleTreeNodeDelete = useCallback((node: TreeNode) => {
     setDeleteDialog({ isOpen: true, note: node as NoteTreeNode });
-  };
+  }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (deleteDialog.note) {
       onDeleteNote?.(deleteDialog.note.id);
     }
-  };
+  }, [deleteDialog.note, onDeleteNote]);
 
-  const handleCloseDeleteDialog = () => {
+  const handleCloseDeleteDialog = useCallback(() => {
     setDeleteDialog({ isOpen: false, note: null });
-  };
+  }, []);
 
   return (
     <Box as="aside" h="100%" display="flex" flexDirection="column" p={6} bg="bg.subtle">
@@ -108,4 +114,6 @@ export default function LeftPanel({
       />
     </Box>
   );
-}
+});
+
+export default LeftPanel;

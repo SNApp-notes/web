@@ -3,6 +3,7 @@
 import { Flex, Button, Text, Box } from '@chakra-ui/react';
 import { FiSettings } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
+import { memo, useCallback } from 'react';
 import { signOutAction } from '@/app/actions/auth';
 
 interface TopNavigationBarProps {
@@ -10,13 +11,13 @@ interface TopNavigationBarProps {
   onLogout: () => void;
 }
 
-export default function TopNavigationBar({
+const TopNavigationBar = memo(function TopNavigationBar({
   hasUnsavedChanges,
   onLogout
 }: TopNavigationBarProps) {
   const router = useRouter();
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     if (hasUnsavedChanges) {
       const confirm = window.confirm(
         'You have unsaved changes. Are you sure you want to logout?'
@@ -30,7 +31,11 @@ export default function TopNavigationBar({
     } catch (error) {
       console.error('Logout failed:', error);
     }
-  };
+  }, [hasUnsavedChanges, onLogout]);
+
+  const handleSettingsClick = useCallback(() => {
+    router.push('/settings');
+  }, [router]);
 
   return (
     <Box as="header" borderBottom="1px solid" borderColor="border" bg="bg" px={4} py={2}>
@@ -50,7 +55,7 @@ export default function TopNavigationBar({
             p={3}
             size="sm"
             variant="ghost"
-            onClick={() => router.push('/settings')}
+            onClick={handleSettingsClick}
             aria-label="Settings"
           >
             <FiSettings />
@@ -63,4 +68,6 @@ export default function TopNavigationBar({
       </Flex>
     </Box>
   );
-}
+});
+
+export default TopNavigationBar;

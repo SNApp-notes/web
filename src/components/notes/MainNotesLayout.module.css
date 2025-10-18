@@ -18,6 +18,7 @@
 /* Panel base styles */
 .panels > * {
   overflow: hidden;
+  height: 100%;
 }
 
 /* Left panel styles */

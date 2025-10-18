@@ -1,6 +1,14 @@
 'use client';
 
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode
+} from 'react';
+import { usePathname } from 'next/navigation';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 
@@ -16,6 +24,8 @@ interface NotesContextValue {
   markNoteDirty: (noteId: number, dirty: boolean) => void;
   getSelectedNote: () => NoteTreeNode | null;
   getNote: (noteId: number) => NoteTreeNode | null;
+  selectNote: (noteId: number) => void;
+  syncUrlToState: () => void;
 }
 
 const NotesContext = createContext<NotesContextValue | undefined>(undefined);
@@ -44,6 +54,7 @@ export function NotesProvider({
     initialSelectedNoteId
   );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const pathname = usePathname();
 
   const updateNoteContent = (noteId: number, content: string) => {
     setNotes((prevNotes) =>
@@ -68,21 +79,24 @@ export function NotesProvider({
     );
   };
 
-  const markNoteDirty = (noteId: number, dirty: boolean) => {
-    setNotes((prevNotes) =>
-      prevNotes.map((note) =>
-        note.id === noteId
-          ? {
-              ...note,
-              data: {
-                ...note.data!,
-                dirty
+  const markNoteDirty = useCallback(
+    (noteId: number, dirty: boolean) => {
+      setNotes((prevNotes) =>
+        prevNotes.map((note) =>
+          note.id === noteId
+            ? {
+                ...note,
+                data: {
+                  ...note.data!,
+                  dirty
+                }
               }
-            }
-          : note
-      )
-    );
-  };
+            : note
+        )
+      );
+    },
+    [setNotes]
+  );
 
   const getSelectedNote = (): NoteTreeNode | null => {
     if (!selectedNoteId) return null;
@@ -92,6 +106,57 @@ export function NotesProvider({
   const getNote = (noteId: number): NoteTreeNode | null => {
     return notes.find((note) => note.id === noteId) || null;
   };
+
+  // URL synchronization - extract note ID from current URL
+  const syncUrlToState = useCallback(() => {
+    const noteMatch = pathname.match(/\/note\/(\d+)/);
+    const urlNoteId = noteMatch ? parseInt(noteMatch[1], 10) : null;
+
+    if (urlNoteId !== selectedNoteId) {
+      setSelectedNoteId(urlNoteId);
+    }
+  }, [pathname, selectedNoteId]);
+
+  // Instant note selection with History API
+  const selectNote = useCallback((noteId: number) => {
+    // Update URL instantly without triggering navigation
+    const newUrl = `/note/${noteId}`;
+    window.history.pushState(null, '', newUrl);
+
+    // Update state immediately
+    setSelectedNoteId(noteId);
+
+    // Dispatch custom event for parallel route components
+    window.dispatchEvent(
+      new CustomEvent('note-selected', {
+        detail: { noteId }
+      })
+    );
+  }, []);
+
+  // Sync URL to state on mount and URL changes
+  useEffect(() => {
+    syncUrlToState();
+  }, [syncUrlToState]);
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      syncUrlToState();
+      // Dispatch event to update parallel route components
+      const noteMatch = pathname.match(/\/note\/(\d+)/);
+      const noteId = noteMatch ? parseInt(noteMatch[1], 10) : null;
+
+      window.dispatchEvent(
+        new CustomEvent('note-selected', {
+          detail: { noteId }
+        })
+      );
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [syncUrlToState, pathname]);
 
   const value: NotesContextValue = {
     notes,
@@ -104,7 +169,9 @@ export function NotesProvider({
     updateNoteName,
     markNoteDirty,
     getSelectedNote,
-    getNote
+    getNote,
+    selectNote,
+    syncUrlToState
   };
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;

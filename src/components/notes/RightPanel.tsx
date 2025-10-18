@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Text, Input, Stack } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type { Header } from '@/types/notes';
 
 interface RightPanelProps {
@@ -10,16 +10,21 @@ interface RightPanelProps {
   onHeaderClick: (line: number) => void;
 }
 
-export default function RightPanel({
-  headers,
-  currentLine,
-  onHeaderClick
-}: RightPanelProps) {
+function RightPanel({ headers, currentLine, onHeaderClick }: RightPanelProps) {
   const [filter, setFilter] = useState('');
 
-  const filteredHeaders = headers.filter((header) =>
-    header.text.toLowerCase().includes(filter.toLowerCase())
-  );
+  // Debug logging - can be removed once confirmed working
+  console.log('RightPanel render: currentLine =', currentLine, `(${typeof currentLine})`);
+
+  const filteredHeaders = useMemo(() => {
+    return headers.filter((header) =>
+      header.text.toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [headers, filter]);
+
+  const handleFilterChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilter(e.target.value);
+  }, []);
 
   return (
     <Box as="aside" h="100%" display="flex" flexDirection="column" p={4} bg="bg.subtle">
@@ -31,7 +36,7 @@ export default function RightPanel({
         p={3}
         placeholder="Filter headers..."
         value={filter}
-        onChange={(e) => setFilter(e.target.value)}
+        onChange={handleFilterChange}
         size="sm"
         mb={4}
       />
@@ -71,3 +76,5 @@ export default function RightPanel({
     </Box>
   );
 }
+
+export default RightPanel;
