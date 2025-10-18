@@ -220,6 +220,7 @@ Acceptance Criteria:
 - Given an open note, when the user types in the middle panel, changes are
   reflected with syntax highlighting via CodeMirror.
 - Saves occur with Ctrl+S, with a brief "Saved" indicator.
+- Unsaved changes are indicated by an asterisk (*) next to the note name in the left panel.
 - Content persists across sessions and URL reflects current note.
 - Edge case: Large notes (>10KB) load and save without performance degradation
   (tested on supported browsers).
@@ -354,6 +355,8 @@ position, or requiring server round-trips. Acceptance Criteria:
   gracefully without race conditions or performance degradation.
 - Edge case: Notes list maintains scroll position even when switching between
   notes at different positions in a long list (500+ notes).
+
+
 
 ## 6. Success Metrics
 
