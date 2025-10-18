@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
@@ -35,6 +35,7 @@ export default function Editor({
   ...props
 }: EditorProps) {
   const viewRef = useRef<EditorView | null>(null);
+  const [contentLoaded, setContentLoaded] = useState(false);
 
   const { colorMode } = useColorMode();
   const themeExtension = colorMode === 'dark' ? basicDark : basicLight;
@@ -127,17 +128,19 @@ export default function Editor({
     [onEditorReady, scrollToLine]
   );
 
-  // Handle line scrolling when content is loaded and selectedLine changes
+  // Track when content is loaded (not just changed due to editing)
   useEffect(() => {
-    if (selectedLine && viewRef.current && value) {
-      // Add a small delay to ensure content is fully rendered
-      const timeoutId = setTimeout(() => {
-        scrollToLine(selectedLine);
-      }, 100);
-
-      return () => clearTimeout(timeoutId);
+    if (value && !contentLoaded) {
+      setContentLoaded(true);
     }
-  }, [selectedLine, value, scrollToLine]);
+  }, [value, contentLoaded]);
+
+  // Handle line scrolling when selectedLine changes or content is loaded
+  useEffect(() => {
+    if (selectedLine && viewRef.current && contentLoaded) {
+      scrollToLine(selectedLine);
+    }
+  }, [selectedLine, contentLoaded, scrollToLine]);
 
   return (
     <Box
