@@ -37,18 +37,10 @@ export default function ContentSlotDefault() {
     loadWelcomeContent();
   }, []);
 
-  // Listen for custom note selection events
+  // Clear current line when selected note changes
   useEffect(() => {
-    const handleNoteSelected = () => {
-      // Selection is already managed by NotesContext, just clear current line
-      setCurrentLine(undefined);
-    };
-
-    window.addEventListener('note-selected', handleNoteSelected as EventListener);
-    return () => {
-      window.removeEventListener('note-selected', handleNoteSelected as EventListener);
-    };
-  }, []);
+    setCurrentLine(undefined);
+  }, [selectedNoteId]);
 
   // Extract current line from URL - make this the authoritative source
   useEffect(() => {
@@ -78,32 +70,7 @@ export default function ContentSlotDefault() {
     // Extract line on mount and whenever URL changes
     extractLineFromUrl();
 
-    // Listen for URL changes (popstate for back/forward)
-    const handlePopState = () => {
-      extractLineFromUrl();
-    };
-
-    // Also listen for pushstate/replacestate (our own navigation)
-    const originalPushState = window.history.pushState;
-    const originalReplaceState = window.history.replaceState;
-
-    window.history.pushState = function (...args) {
-      originalPushState.apply(this, args);
-      setTimeout(extractLineFromUrl, 0); // Allow URL to update first
-    };
-
-    window.history.replaceState = function (...args) {
-      originalReplaceState.apply(this, args);
-      setTimeout(extractLineFromUrl, 0);
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      window.history.pushState = originalPushState;
-      window.history.replaceState = originalReplaceState;
-    };
+    // Listen for URL changes (handled by Next.js router now)
   }, []);
 
   const selectedNote = selectedNoteId ? getNote(selectedNoteId) : null;
@@ -145,14 +112,12 @@ export default function ContentSlotDefault() {
     // Update current line state immediately for visual feedback
     setCurrentLine(line);
 
-    if (selectedNoteId) {
-      const newUrl = `/note/${selectedNoteId}?line=${line}`;
-      window.history.pushState({ noteId: selectedNoteId, line }, '', newUrl);
-    }
-
     if (editorRef.current) {
       editorRef.current.scrollToLine(line);
     }
+
+    // TODO: Use Next.js router to update URL with line parameter
+    // For now, just update the line state without URL manipulation
   };
 
   // Unsaved changes warning (US-015)

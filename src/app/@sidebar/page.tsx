@@ -49,19 +49,13 @@ export default function SidebarPage() {
 
         // If we deleted the currently selected note, navigate home
         if (selectedNoteId === noteId) {
-          window.history.pushState({}, '', '/');
-          // Selection is automatically cleared when we navigate to '/'
-          window.dispatchEvent(
-            new CustomEvent('note-selected', {
-              detail: { noteId: null }
-            })
-          );
+          selectNote(null);
         }
       } catch (error) {
         console.error('Failed to delete note:', error);
       }
     },
-    [setNotes, selectedNoteId]
+    [setNotes, selectedNoteId, selectNote]
   );
 
   const handleRenameNote = useCallback(

@@ -8,7 +8,7 @@ import {
   useMemo,
   type ReactNode
 } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import { useNodeSelection } from '@/hooks/useNodeSelection';
@@ -50,6 +50,7 @@ export function NotesProvider({
   initialSelectedNoteId = null
 }: NotesProviderProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   // Use the hook that manages all the state
   const {
@@ -88,54 +89,26 @@ export function NotesProvider({
     }
   }, [pathname, selectedNoteId, updateSelection]);
 
-  // Instant note selection with History API
+  // Note selection with Next.js router
   const selectNote = useCallback(
     (noteId: number | null) => {
-      if (noteId === null) {
-        // Navigate to home page
-        window.history.pushState(null, '', '/');
-      } else {
-        // Update URL instantly without triggering navigation
-        const newUrl = `/note/${noteId}`;
-        window.history.pushState(null, '', newUrl);
-      }
-
       // Update state immediately
       updateSelection(noteId);
 
-      // Dispatch custom event for parallel route components
-      window.dispatchEvent(
-        new CustomEvent('note-selected', {
-          detail: { noteId }
-        })
-      );
+      // Navigate using Next.js router
+      if (noteId === null) {
+        router.push('/');
+      } else {
+        router.push(`/note/${noteId}`);
+      }
     },
-    [updateSelection]
+    [updateSelection, router]
   );
 
-  // Sync URL to state on mount and URL changes
+  // Sync URL to state on URL changes
   useEffect(() => {
     syncUrlToState();
   }, [syncUrlToState]);
-
-  // Handle browser back/forward
-  useEffect(() => {
-    const handlePopState = () => {
-      syncUrlToState();
-      // Dispatch event to update parallel route components
-      const noteMatch = pathname.match(/\/note\/(\d+)/);
-      const noteId = noteMatch ? parseInt(noteMatch[1], 10) : null;
-
-      window.dispatchEvent(
-        new CustomEvent('note-selected', {
-          detail: { noteId }
-        })
-      );
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [syncUrlToState, pathname]);
 
   const value: NotesContextValue = useMemo(
     () => ({

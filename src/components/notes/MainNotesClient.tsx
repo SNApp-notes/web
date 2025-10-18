@@ -60,50 +60,19 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
 
   // Monitor URL changes for line parameter
   useEffect(() => {
-    const extractLineFromUrl = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const lineParam = urlParams.get('line');
+    const urlParams = new URLSearchParams(window.location.search);
+    const lineParam = urlParams.get('line');
 
-      if (lineParam) {
-        const parsedLine = parseInt(lineParam, 10);
-        if (!isNaN(parsedLine)) {
-          setCurrentLine(parsedLine);
-          return;
-        }
+    if (lineParam) {
+      const parsedLine = parseInt(lineParam, 10);
+      if (!isNaN(parsedLine)) {
+        setCurrentLine(parsedLine);
+        return;
       }
+    }
 
-      setCurrentLine(undefined);
-    };
-
-    // Extract line on mount and URL changes
-    extractLineFromUrl();
-
-    const handlePopState = () => {
-      extractLineFromUrl();
-    };
-
-    // Monitor navigation events
-    const originalPushState = window.history.pushState;
-    const originalReplaceState = window.history.replaceState;
-
-    window.history.pushState = function (...args) {
-      originalPushState.apply(this, args);
-      setTimeout(extractLineFromUrl, 0);
-    };
-
-    window.history.replaceState = function (...args) {
-      originalReplaceState.apply(this, args);
-      setTimeout(extractLineFromUrl, 0);
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      window.history.pushState = originalPushState;
-      window.history.replaceState = originalReplaceState;
-    };
-  }, []);
+    setCurrentLine(undefined);
+  }, [lineNumber]); // Re-run when lineNumber prop changes
 
   const selectedNote = getSelectedNote();
   // Use the same logic as MiddlePanel to determine the actual content being displayed
@@ -228,22 +197,17 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
     [updateNoteName]
   );
 
-  const handleHeaderClick = useCallback(
-    (line: number) => {
-      // Update current line state immediately for visual feedback
-      setCurrentLine(line);
+  const handleHeaderClick = useCallback((line: number) => {
+    // Update current line state immediately for visual feedback
+    setCurrentLine(line);
 
-      if (selectedNoteId) {
-        const newUrl = `/note/${selectedNoteId}?line=${line}`;
-        window.history.pushState({ noteId: selectedNoteId, line }, '', newUrl);
-      }
+    if (editorRef.current) {
+      editorRef.current.scrollToLine(line);
+    }
 
-      if (editorRef.current) {
-        editorRef.current.scrollToLine(line);
-      }
-    },
-    [selectedNoteId]
-  );
+    // TODO: Use Next.js router to update URL with line parameter
+    // For now, just update the line state without URL manipulation
+  }, []);
 
   const handleLogout = () => {
     // TODO: Implement logout logic

@@ -11,8 +11,8 @@ export function useNodeSelection(
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
   const updateSelection = useCallback((newSelectedId: number | null) => {
-    setNotes((prevNotes) =>
-      prevNotes.map((node) => {
+    setNotes((prevNotes) => {
+      const newNotes = prevNotes.map((node) => {
         // If this is the old selected node, deselect it
         if (node.selected && node.id !== newSelectedId) {
           return { ...node, selected: false };
@@ -23,8 +23,11 @@ export function useNodeSelection(
         }
         // Otherwise return the same node reference
         return node;
-      })
-    );
+      });
+
+      return newNotes;
+    });
+
     setSelectedNoteId(newSelectedId);
   }, []);
 
