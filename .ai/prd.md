@@ -331,6 +331,30 @@ editor. Acceptance Criteria:
 - Edge case: The warning also appears when using browser back/forward buttons
   with unsaved changes.
 
+US-016 Title: As a user browsing many notes, I want instant note selection
+without interface delays so that I can navigate efficiently through my note
+collection. Description: Note selection from the left panel should be
+instantaneous without causing the entire interface to re-render, losing scroll
+position, or requiring server round-trips. Acceptance Criteria:
+
+- Given a notes list with 200+ notes, when the user clicks on any note in the
+  left panel, the note opens in the editor within 100ms without losing scroll
+  position in the notes list.
+- The notes list (left panel) never re-renders during note selection, preserving
+  user's current scroll position and filter state.
+- No server requests are made during note selection; all notes data is loaded
+  once and managed client-side for navigation performance.
+- URL updates to reflect selected note (/note/{id}) without triggering full
+  page navigation or component re-mounting.
+- The editor (middle panel) and outline (right panel) update instantly to show
+  the selected note's content and headers.
+- Navigation between notes preserves any active filters in both the notes list
+  and header outline without resetting search inputs.
+- Edge case: Rapid note selection (clicking multiple notes quickly) handles
+  gracefully without race conditions or performance degradation.
+- Edge case: Notes list maintains scroll position even when switching between
+  notes at different positions in a long list (500+ notes).
+
 ## 6. Success Metrics
 
 Success for the SNApp MVP is measured by user adoption and engagement with core
