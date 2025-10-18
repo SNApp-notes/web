@@ -15,7 +15,6 @@ export default function ContentSlotDefault() {
   const {
     getNote,
     selectedNoteId,
-    setSelectedNoteId,
     updateNoteContent,
     markNoteDirty,
     saveStatus,
@@ -40,17 +39,16 @@ export default function ContentSlotDefault() {
 
   // Listen for custom note selection events
   useEffect(() => {
-    const handleNoteSelected = (event: CustomEvent) => {
-      const { noteId } = event.detail;
-      setSelectedNoteId(noteId);
-      // Don't clear currentLine - let URL parameter handling take care of it
+    const handleNoteSelected = () => {
+      // Selection is already managed by NotesContext, just clear current line
+      setCurrentLine(undefined);
     };
 
     window.addEventListener('note-selected', handleNoteSelected as EventListener);
     return () => {
       window.removeEventListener('note-selected', handleNoteSelected as EventListener);
     };
-  }, [setSelectedNoteId]);
+  }, []);
 
   // Extract current line from URL - make this the authoritative source
   useEffect(() => {

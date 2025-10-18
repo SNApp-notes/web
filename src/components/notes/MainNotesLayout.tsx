@@ -15,6 +15,7 @@ function convertNoteToTreeNode(note: Note): NoteTreeNode {
   return {
     id: note.id,
     name: note.name,
+    selected: false,
     data: {
       content: note.content, // Preserve null for example notes
       dirty: false

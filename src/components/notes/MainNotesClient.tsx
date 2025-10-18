@@ -137,6 +137,7 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
       const newTreeNode: NoteTreeNode = {
         id: newNote.id,
         name: newNote.name,
+        selected: false,
         data: {
           content: newNote.content || '',
           dirty: false
@@ -297,7 +298,6 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
       <div className={styles.panels}>
         <LeftPanel
           notes={notes}
-          selectedNoteId={selectedNoteId}
           onNoteSelect={handleNoteSelect}
           onNewNote={handleNewNote}
           onDeleteNote={handleDeleteNote}

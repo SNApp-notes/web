@@ -13,9 +13,6 @@ interface RightPanelProps {
 function RightPanel({ headers, currentLine, onHeaderClick }: RightPanelProps) {
   const [filter, setFilter] = useState('');
 
-  // Debug logging - can be removed once confirmed working
-  console.log('RightPanel render: currentLine =', currentLine, `(${typeof currentLine})`);
-
   const filteredHeaders = useMemo(() => {
     return headers.filter((header) =>
       header.text.toLowerCase().includes(filter.toLowerCase())

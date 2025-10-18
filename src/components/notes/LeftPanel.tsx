@@ -9,7 +9,6 @@ import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface LeftPanelProps {
   notes: NoteTreeNode[];
-  selectedNoteId: number | null;
   onNoteSelect: (id: number) => void;
   onNewNote: () => void;
   onDeleteNote: (id: number) => void;
@@ -18,7 +17,6 @@ interface LeftPanelProps {
 
 const LeftPanel = memo(function LeftPanel({
   notes,
-  selectedNoteId,
   onNoteSelect,
   onNewNote,
   onDeleteNote,
@@ -96,7 +94,6 @@ const LeftPanel = memo(function LeftPanel({
             onNodeRename={handleTreeNodeRename}
             onNodeDelete={handleTreeNodeDelete}
             generateName={(node) => `${node.data?.dirty ? '* ' : ''}${node.name}`}
-            selectedNodeId={selectedNoteId?.toString()}
             title=""
           />
         )}

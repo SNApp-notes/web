@@ -3,7 +3,6 @@
 import {
   createContext,
   useContext,
-  useState,
   useEffect,
   useCallback,
   useMemo,
@@ -12,20 +11,20 @@ import {
 import { usePathname } from 'next/navigation';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
+import { useNodeSelection } from '@/hooks/useNodeSelection';
 
 interface NotesContextValue {
   notes: NoteTreeNode[];
   selectedNoteId: number | null;
   saveStatus: SaveStatus;
   setNotes: (notes: NoteTreeNode[] | ((prev: NoteTreeNode[]) => NoteTreeNode[])) => void;
-  setSelectedNoteId: (noteId: number | null) => void;
   setSaveStatus: (status: SaveStatus) => void;
   updateNoteContent: (noteId: number, content: string) => void;
   updateNoteName: (noteId: number, name: string) => void;
   markNoteDirty: (noteId: number, dirty: boolean) => void;
   getSelectedNote: () => NoteTreeNode | null;
   getNote: (noteId: number) => NoteTreeNode | null;
-  selectNote: (noteId: number) => void;
+  selectNote: (noteId: number | null) => void;
   syncUrlToState: () => void;
 }
 
@@ -50,73 +49,22 @@ export function NotesProvider({
   initialNotes = [],
   initialSelectedNoteId = null
 }: NotesProviderProps) {
-  const [notes, setNotes] = useState<NoteTreeNode[]>(initialNotes);
-  const [selectedNoteId, setSelectedNoteId] = useState<number | null>(
-    initialSelectedNoteId
-  );
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const pathname = usePathname();
 
-  const updateNoteContent = useCallback((noteId: number, content: string) => {
-    setNotes((prevNotes) => {
-      const noteIndex = prevNotes.findIndex((note) => note.id === noteId);
-      if (noteIndex === -1) return prevNotes;
+  // Use the hook that manages all the state
+  const {
+    notes,
+    selectedNoteId,
+    saveStatus,
+    setNotes,
+    setSaveStatus,
+    updateSelection,
+    updateDirtyFlag,
+    updateNoteContent,
+    updateNoteName
+  } = useNodeSelection(initialNotes, initialSelectedNoteId);
 
-      const currentNote = prevNotes[noteIndex];
-      // Don't update if content hasn't actually changed
-      if (currentNote.data?.content === content) return prevNotes;
-
-      // Create new array with only the changed note updated
-      const newNotes = [...prevNotes];
-      newNotes[noteIndex] = {
-        ...currentNote,
-        data: {
-          ...currentNote.data!,
-          content,
-          dirty: true
-        }
-      };
-      return newNotes;
-    });
-  }, []);
-
-  const updateNoteName = useCallback((noteId: number, name: string) => {
-    setNotes((prevNotes) => {
-      const noteIndex = prevNotes.findIndex((note) => note.id === noteId);
-      if (noteIndex === -1) return prevNotes;
-
-      const currentNote = prevNotes[noteIndex];
-      // Don't update if name hasn't actually changed
-      if (currentNote.name === name) return prevNotes;
-
-      // Create new array with only the changed note updated
-      const newNotes = [...prevNotes];
-      newNotes[noteIndex] = { ...currentNote, name };
-      return newNotes;
-    });
-  }, []);
-
-  const markNoteDirty = useCallback((noteId: number, dirty: boolean) => {
-    setNotes((prevNotes) => {
-      const noteIndex = prevNotes.findIndex((note) => note.id === noteId);
-      if (noteIndex === -1) return prevNotes;
-
-      const currentNote = prevNotes[noteIndex];
-      // Don't update if dirty state hasn't actually changed
-      if (currentNote.data?.dirty === dirty) return prevNotes;
-
-      // Create new array with only the changed note updated
-      const newNotes = [...prevNotes];
-      newNotes[noteIndex] = {
-        ...currentNote,
-        data: {
-          ...currentNote.data!,
-          dirty
-        }
-      };
-      return newNotes;
-    });
-  }, []);
+  const markNoteDirty = updateDirtyFlag;
 
   const getSelectedNote = useCallback((): NoteTreeNode | null => {
     if (!selectedNoteId) return null;
@@ -136,26 +84,34 @@ export function NotesProvider({
     const urlNoteId = noteMatch ? parseInt(noteMatch[1], 10) : null;
 
     if (urlNoteId !== selectedNoteId) {
-      setSelectedNoteId(urlNoteId);
+      updateSelection(urlNoteId);
     }
-  }, [pathname, selectedNoteId]);
+  }, [pathname, selectedNoteId, updateSelection]);
 
   // Instant note selection with History API
-  const selectNote = useCallback((noteId: number) => {
-    // Update URL instantly without triggering navigation
-    const newUrl = `/note/${noteId}`;
-    window.history.pushState(null, '', newUrl);
+  const selectNote = useCallback(
+    (noteId: number | null) => {
+      if (noteId === null) {
+        // Navigate to home page
+        window.history.pushState(null, '', '/');
+      } else {
+        // Update URL instantly without triggering navigation
+        const newUrl = `/note/${noteId}`;
+        window.history.pushState(null, '', newUrl);
+      }
 
-    // Update state immediately
-    setSelectedNoteId(noteId);
+      // Update state immediately
+      updateSelection(noteId);
 
-    // Dispatch custom event for parallel route components
-    window.dispatchEvent(
-      new CustomEvent('note-selected', {
-        detail: { noteId }
-      })
-    );
-  }, []);
+      // Dispatch custom event for parallel route components
+      window.dispatchEvent(
+        new CustomEvent('note-selected', {
+          detail: { noteId }
+        })
+      );
+    },
+    [updateSelection]
+  );
 
   // Sync URL to state on mount and URL changes
   useEffect(() => {
@@ -187,7 +143,6 @@ export function NotesProvider({
       selectedNoteId,
       saveStatus,
       setNotes,
-      setSelectedNoteId,
       setSaveStatus,
       updateNoteContent,
       updateNoteName,
@@ -201,6 +156,8 @@ export function NotesProvider({
       notes,
       selectedNoteId,
       saveStatus,
+      setNotes,
+      setSaveStatus,
       updateNoteContent,
       updateNoteName,
       markNoteDirty,

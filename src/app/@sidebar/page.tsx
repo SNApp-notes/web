@@ -7,14 +7,8 @@ import LeftPanel from '@/components/notes/LeftPanel';
 import type { NoteTreeNode } from '@/types/tree';
 
 export default function SidebarPage() {
-  const {
-    notes,
-    selectedNoteId,
-    setNotes,
-    updateNoteName,
-    selectNote,
-    setSelectedNoteId
-  } = useNotesContext();
+  const { notes, selectedNoteId, setNotes, updateNoteName, selectNote } =
+    useNotesContext();
 
   const handleNoteSelect = useCallback(
     (noteId: number) => {
@@ -31,6 +25,7 @@ export default function SidebarPage() {
       const newTreeNode: NoteTreeNode = {
         id: newNote.id,
         name: newNote.name,
+        selected: false,
         data: {
           content: newNote.content || '',
           dirty: false
@@ -55,7 +50,7 @@ export default function SidebarPage() {
         // If we deleted the currently selected note, navigate home
         if (selectedNoteId === noteId) {
           window.history.pushState({}, '', '/');
-          setSelectedNoteId(null);
+          // Selection is automatically cleared when we navigate to '/'
           window.dispatchEvent(
             new CustomEvent('note-selected', {
               detail: { noteId: null }
@@ -66,7 +61,7 @@ export default function SidebarPage() {
         console.error('Failed to delete note:', error);
       }
     },
-    [setNotes, selectedNoteId, setSelectedNoteId]
+    [setNotes, selectedNoteId]
   );
 
   const handleRenameNote = useCallback(
@@ -85,7 +80,6 @@ export default function SidebarPage() {
   return (
     <LeftPanel
       notes={notes}
-      selectedNoteId={selectedNoteId}
       onNoteSelect={handleNoteSelect}
       onNewNote={handleNewNote}
       onDeleteNote={handleDeleteNote}

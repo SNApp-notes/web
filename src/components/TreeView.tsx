@@ -18,7 +18,6 @@ interface TreeNodeComponentProps<T = unknown> {
   onNodeRename?: (node: TreeNode<T>, newName: string) => void;
   onNodeDelete?: (node: TreeNode<T>) => void;
   generateName?: (node: TreeNode<T>) => string;
-  selectedNodeId?: string;
   level?: number;
 }
 
@@ -28,7 +27,6 @@ const TreeNodeComponent = <T = unknown,>({
   onNodeRename,
   onNodeDelete,
   generateName,
-  selectedNodeId,
   level = 0
 }: TreeNodeComponentProps<T>) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -36,7 +34,7 @@ const TreeNodeComponent = <T = unknown,>({
   const [editingName, setEditingName] = useState(node.name);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isSelected = selectedNodeId ? selectedNodeId === node.id.toString() : false;
+  const isSelected = node.selected;
   const hasChildren = node.children && node.children.length > 0;
   const isCategory = hasChildren;
 
@@ -211,7 +209,6 @@ const TreeNodeComponent = <T = unknown,>({
               onNodeRename={onNodeRename}
               onNodeDelete={onNodeDelete}
               generateName={generateName}
-              selectedNodeId={selectedNodeId}
               level={level + 1}
             />
           ))}
@@ -227,7 +224,6 @@ const MemoizedTreeView = <T = unknown,>({
   onNodeRename,
   onNodeDelete,
   generateName,
-  selectedNodeId,
   title = 'Tree'
 }: TreeViewProps<T>) => {
   return (
@@ -257,7 +253,6 @@ const MemoizedTreeView = <T = unknown,>({
             onNodeRename={onNodeRename}
             onNodeDelete={onNodeDelete}
             generateName={generateName}
-            selectedNodeId={selectedNodeId}
           />
         ))}
       </VStack>
