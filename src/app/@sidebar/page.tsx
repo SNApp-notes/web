@@ -10,14 +10,6 @@ export default function SidebarPage() {
   const { notes, selectedNoteId, setNotes, updateNoteName, selectNote } =
     useNotesContext();
 
-  const handleNoteSelect = useCallback(
-    (noteId: number) => {
-      // Use the context method for consistent behavior
-      selectNote(noteId);
-    },
-    [selectNote]
-  );
-
   const handleNewNote = useCallback(async () => {
     try {
       const newNote = await createNote('New Note');
@@ -33,11 +25,11 @@ export default function SidebarPage() {
       };
 
       setNotes((prevNotes: NoteTreeNode[]) => [newTreeNode, ...prevNotes]);
-      handleNoteSelect(newNote.id);
+      selectNote(newNote.id);
     } catch (error) {
       console.error('Failed to create note:', error);
     }
-  }, [setNotes, handleNoteSelect]);
+  }, [setNotes, selectNote]);
 
   const handleDeleteNote = useCallback(
     async (noteId: number) => {
@@ -74,7 +66,7 @@ export default function SidebarPage() {
   return (
     <LeftPanel
       notes={notes}
-      onNoteSelect={handleNoteSelect}
+      onNoteSelect={selectNote}
       onNewNote={handleNewNote}
       onDeleteNote={handleDeleteNote}
       onRenameNote={handleRenameNote}
