@@ -100,7 +100,7 @@ const TreeNodeComponent = <T = unknown,>({
 
   // Scroll selected node into view
   useEffect(() => {
-    if (isSelected && !hasChildren && nodeRef.current) {
+    if (isSelected && !hasChildren && nodeRef.current && nodeRef.current.scrollIntoView) {
       nodeRef.current.scrollIntoView({
         block: 'nearest',
         inline: 'nearest'
