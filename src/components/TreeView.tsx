@@ -33,6 +33,7 @@ const TreeNodeComponent = <T = unknown,>({
   const [isEditing, setIsEditing] = useState(false);
   const [editingName, setEditingName] = useState(node.name);
   const inputRef = useRef<HTMLInputElement>(null);
+  const nodeRef = useRef<HTMLDivElement>(null);
 
   const isSelected = node.selected;
   const hasChildren = node.children && node.children.length > 0;
@@ -97,6 +98,16 @@ const TreeNodeComponent = <T = unknown,>({
     }
   }, [isEditing]);
 
+  // Scroll selected node into view
+  useEffect(() => {
+    if (isSelected && !hasChildren && nodeRef.current) {
+      nodeRef.current.scrollIntoView({
+        block: 'nearest',
+        inline: 'nearest'
+      });
+    }
+  }, [isSelected, hasChildren]);
+
   const handleArrowClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     handleToggle();
@@ -110,6 +121,7 @@ const TreeNodeComponent = <T = unknown,>({
   return (
     <VStack align="stretch" gap={0}>
       <HStack
+        ref={nodeRef}
         cursor="pointer"
         onClick={hasChildren ? handleToggle : handleNodeSelect}
         bg={isSelected ? 'blue.solid' : 'transparent'}

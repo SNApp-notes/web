@@ -11,11 +11,11 @@ interface MainNotesLayoutProps {
 }
 
 // Convert Prisma Note to NoteTreeNode
-function convertNoteToTreeNode(note: Note): NoteTreeNode {
+function convertNoteToTreeNode(note: Note, selectedNoteId?: number): NoteTreeNode {
   return {
     id: note.id,
     name: note.name,
-    selected: false,
+    selected: note.id === selectedNoteId,
     data: {
       content: note.content, // Preserve null for example notes
       dirty: false
@@ -31,7 +31,9 @@ export default async function MainNotesLayout({
   const notes = await getNotes();
 
   // Convert to TreeNodes
-  const treeNodes: NoteTreeNode[] = notes.map(convertNoteToTreeNode);
+  const treeNodes: NoteTreeNode[] = notes.map((note) =>
+    convertNoteToTreeNode(note, selectedNoteId)
+  );
 
   return (
     <NotesProvider
