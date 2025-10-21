@@ -96,7 +96,7 @@ const MiddlePanel = memo(function MiddlePanel({
       </Flex>
 
       {/* Editor area */}
-      <Box flex={1}>
+      <Box flex={1} overflow="hidden" position="relative" minH={0}>
         {note ? (
           <Editor
             value={note.data?.content === null ? welcomeContent : content}
@@ -104,7 +104,6 @@ const MiddlePanel = memo(function MiddlePanel({
             selectedLine={selectedLine}
             onEditorReady={onEditorReady}
             placeholder="Start writing your note..."
-            height="100%"
           />
         ) : (
           <Flex h="100%" align="center" justify="center">

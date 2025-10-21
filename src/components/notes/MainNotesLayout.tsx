@@ -34,13 +34,13 @@ export default async function MainNotesLayout({
   const treeNodes: NoteTreeNode[] = notes.map(convertNoteToTreeNode);
 
   return (
-    <div className={styles.layout}>
-      <NotesProvider
-        initialNotes={treeNodes}
-        initialSelectedNoteId={selectedNoteId || null}
-      >
+    <NotesProvider
+      initialNotes={treeNodes}
+      initialSelectedNoteId={selectedNoteId || null}
+    >
+      <div className={styles.layout}>
         <MainNotesClient lineNumber={lineNumber} />
-      </NotesProvider>
-    </div>
+      </div>
+    </NotesProvider>
   );
 }

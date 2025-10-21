@@ -19,6 +19,7 @@
 .panels > * {
   overflow: hidden;
   height: 100%;
+  min-height: 0; /* Important: allows flex children to shrink below content size */
 }
 
 /* Left panel styles */
@@ -26,9 +27,12 @@
   border-right: 1px solid var(--chakra-colors-border);
 }
 
-/* Middle panel styles */
+/* Middle panel styles - allow scrolling within constrained area */
 .panels > :nth-child(2) {
   border-right: 1px solid var(--chakra-colors-border);
+  overflow: hidden; /* Keep container constrained */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Right panel styles */

@@ -5,7 +5,6 @@ import CodeMirror from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { basicLight, basicDark } from '@uiw/codemirror-theme-basic';
-import { Box } from '@chakra-ui/react';
 import { useColorMode } from '@/components/ui/color-mode';
 import { EditorView } from '@codemirror/view';
 import type { EditorProps, EditorRef } from '@/types/editor';
@@ -14,25 +13,10 @@ const Editor = memo(function Editor({
   value = '',
   onChange,
   placeholder,
-  height = '400px',
-  width = '100%',
   readOnly = false,
   selectedLine,
-  basicSetup = {
-    lineNumbers: true,
-    highlightActiveLine: true,
-    highlightSelectionMatches: true,
-    searchKeymap: true,
-    foldGutter: true,
-    dropCursor: false,
-    allowMultipleSelections: false,
-    bracketMatching: true,
-    closeBrackets: true,
-    autocompletion: true
-  },
   className,
-  onEditorReady,
-  ...props
+  onEditorReady
 }: EditorProps) {
   const viewRef = useRef<EditorView | null>(null);
   const [contentLoaded, setContentLoaded] = useState(false);
@@ -43,31 +27,34 @@ const Editor = memo(function Editor({
     [colorMode]
   );
 
-  // Create a theme for full height when height is 100%
-  const fullHeightTheme = useMemo(
+  // Create a theme for proper scrolling and height handling
+  const editorTheme = useMemo(
     () =>
-      height === '100%'
-        ? EditorView.theme({
-            '&': {
-              height: '100%',
-              maxHeight: '100%'
-            },
-            '.cm-scroller': {
-              overflow: 'auto',
-              maxHeight: '100%'
-            },
-            '.cm-focused': {
-              outline: 'none'
-            },
-            '.cm-content': {
-              minHeight: '100%'
-            },
-            '.cm-editor': {
-              height: '100%'
-            }
-          })
-        : [],
-    [height]
+      EditorView.theme({
+        '&': {
+          height: '100%',
+          maxHeight: '100%',
+          overflow: 'hidden'
+        },
+        '&.cm-focused': {
+          outline: 'none'
+        },
+        '.cm-scroller': {
+          fontSize: '16px',
+          fontFamily: 'monospace',
+          overflow: 'auto !important',
+          maxHeight: '100%'
+        },
+        '.cm-content': {
+          padding: '8px',
+          minHeight: '100%'
+        },
+        '.cm-editor': {
+          height: '100%',
+          overflow: 'hidden'
+        }
+      }),
+    []
   );
 
   const extensions = useMemo(
@@ -76,9 +63,10 @@ const Editor = memo(function Editor({
         base: markdownLanguage,
         codeLanguages: languages
       }),
-      ...(Array.isArray(fullHeightTheme) ? fullHeightTheme : [fullHeightTheme])
+      EditorView.lineWrapping,
+      editorTheme
     ],
-    [fullHeightTheme]
+    [editorTheme]
   );
 
   const scrollToLine = useCallback(
@@ -152,34 +140,33 @@ const Editor = memo(function Editor({
   }, [selectedLine, contentLoaded, scrollToLine]);
 
   return (
-    <Box
+    <CodeMirror
+      value={value}
+      height="100%"
+      placeholder={placeholder}
+      editable={!readOnly}
+      onChange={onChange}
+      extensions={extensions}
+      basicSetup={{
+        lineNumbers: true,
+        highlightActiveLine: true,
+        highlightSelectionMatches: true,
+        searchKeymap: true,
+        foldGutter: true,
+        dropCursor: false,
+        allowMultipleSelections: false,
+        bracketMatching: true,
+        closeBrackets: true,
+        autocompletion: true
+      }}
+      theme={themeExtension}
+      onCreateEditor={handleEditorMount}
       className={className}
-      width={width}
-      height={height === '100%' ? '100%' : 'auto'}
-      display="flex"
-      flexDirection="column"
-      {...props}
-    >
-      <CodeMirror
-        value={value}
-        height={height}
-        placeholder={placeholder}
-        editable={!readOnly}
-        onChange={onChange}
-        extensions={extensions}
-        basicSetup={basicSetup}
-        theme={themeExtension}
-        onCreateEditor={handleEditorMount}
-        style={
-          height === '100%'
-            ? {
-                height: '100%',
-                flex: 1
-              }
-            : undefined
-        }
-      />
-    </Box>
+      style={{
+        width: '100%',
+        height: '100%'
+      }}
+    />
   );
 });
 
