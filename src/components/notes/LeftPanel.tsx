@@ -66,6 +66,11 @@ const LeftPanel = memo(function LeftPanel({
     setDeleteDialog({ isOpen: false, note: null });
   }, []);
 
+  const generateName = useCallback(
+    (node: NoteTreeNode) => `${node.data?.dirty ? '* ' : ''}${node.name}`,
+    []
+  );
+
   return (
     <Box as="aside" h="100%" display="flex" flexDirection="column" p={6} bg="bg.subtle">
       <Stack gap={4} align="stretch">
@@ -93,7 +98,7 @@ const LeftPanel = memo(function LeftPanel({
             onNodeSelect={handleTreeNodeSelect}
             onNodeRename={handleTreeNodeRename}
             onNodeDelete={handleTreeNodeDelete}
-            generateName={(node) => `${node.data?.dirty ? '* ' : ''}${node.name}`}
+            generateName={generateName}
             title=""
           />
         )}

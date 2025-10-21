@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { Box, VStack, HStack, Text, Input, IconButton } from '@chakra-ui/react';
 import {
   FiFolder,
@@ -8,7 +9,7 @@ import {
   FiChevronDown,
   FiTrash2
 } from 'react-icons/fi';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import clsx from 'clsx';
 import type { TreeNode, TreeViewProps } from '@/types/tree';
 
@@ -214,7 +215,7 @@ const TreeNodeComponent = <T = unknown,>({
       {hasChildren && isExpanded && (
         <VStack align="stretch" gap={0}>
           {node.children?.map((child) => (
-            <TreeNodeComponent
+            <MemoizedTreeNodeComponent
               key={child.id}
               node={child}
               onNodeSelect={onNodeSelect}
@@ -230,7 +231,12 @@ const TreeNodeComponent = <T = unknown,>({
   );
 };
 
-const MemoizedTreeView = <T = unknown,>({
+// Memoized version to prevent unnecessary re-renders
+const MemoizedTreeNodeComponent = memo(TreeNodeComponent) as <T = unknown>(
+  props: TreeNodeComponentProps<T>
+) => React.ReactElement;
+
+const TreeViewComponent = <T = unknown,>({
   data,
   onNodeSelect,
   onNodeRename,
@@ -258,7 +264,7 @@ const MemoizedTreeView = <T = unknown,>({
       )}
       <VStack align="stretch" gap={1} p={2}>
         {data.map((node) => (
-          <TreeNodeComponent
+          <MemoizedTreeNodeComponent
             key={node.id}
             node={node}
             onNodeSelect={onNodeSelect}
@@ -271,6 +277,10 @@ const MemoizedTreeView = <T = unknown,>({
     </Box>
   );
 };
+
+const MemoizedTreeView = memo(TreeViewComponent) as <T = unknown>(
+  props: TreeViewProps<T>
+) => React.ReactElement;
 
 export const TreeView = MemoizedTreeView;
 export default TreeView;
