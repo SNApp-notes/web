@@ -1,6 +1,7 @@
 # 10xDevs Project
 
 [![Test](https://github.com/jcubic/10xDevs/actions/workflows/test.yml/badge.svg?branch=master&v=1)](https://github.com/jcubic/10xDevs/actions/workflows/test.yml)
+[![Style](https://github.com/jcubic/10xDevs/actions/workflows/style.yml/badge.svg?branch=master&v=1)](https://github.com/jcubic/10xDevs/actions/workflows/style.yml)
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/10xDevs/badge.svg?branch=master&v=1)](https://coveralls.io/github/jcubic/10xDevs?branch=master)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
