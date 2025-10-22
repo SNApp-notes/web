@@ -13,7 +13,8 @@
     "test:run": "vitest run",
     "test:coverage": "vitest --coverage",
     "parser": "peggy --format es src/lib/parser/grammar.peggy -o src/lib/parser/parser.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "migrate": "node migration.js"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.27.1",
@@ -49,6 +50,7 @@
     "peggy": "^5.0.6",
     "prettier": "^3.6.2",
     "prisma": "^6.17.1",
+    "sqlite3": "^5.1.7",
     "typescript": "^5",
     "vitest": "^3.2.4"
   },
