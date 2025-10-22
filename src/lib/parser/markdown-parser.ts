@@ -8,25 +8,20 @@ import { parse, type MarkdownNode, type HeaderNode } from './index';
 export function extractHeaders(content: string): Header[] {
   if (!content) return [];
 
-  try {
-    const nodes: MarkdownNode[] = parse(content);
-    const headers: Header[] = [];
+  const nodes: MarkdownNode[] = parse(content);
+  const headers: Header[] = [];
 
-    nodes.forEach((node, index) => {
-      if (node.type === 'header') {
-        const headerNode = node as HeaderNode;
-        headers.push({
-          id: `header-${index}-${headerNode.level}`,
-          text: headerNode.content.replace(/^#+\s*/, '').trim(),
-          content: headerNode.content.trim(),
-          line: headerNode.loc.start.line
-        });
-      }
-    });
+  nodes.forEach((node, index) => {
+    if (node.type === 'header') {
+      const headerNode = node as HeaderNode;
+      headers.push({
+        id: `header-${index}-${headerNode.level}`,
+        text: headerNode.content.replace(/^#+\s*/, '').trim(),
+        content: headerNode.content.trim(),
+        line: headerNode.loc.start.line
+      });
+    }
+  });
 
-    return headers;
-  } catch (error) {
-    console.error('Failed to parse markdown content:', error);
-    return [];
-  }
+  return headers;
 }
