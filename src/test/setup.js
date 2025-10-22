@@ -6,7 +6,9 @@ document.createRange = () => {
   range.getClientRects = () => ({
     item: () => null,
     length: 0,
-    [Symbol.iterator]: function* () {}
+    [Symbol.iterator]: function* () {
+      yield* [];
+    }
   });
   return range;
 };
