@@ -99,7 +99,29 @@ test('component renders correctly', () => {
 - Use `userEvent` for realistic user interactions
 - Follow testing-library principles: "The more your tests resemble the way your software is used, the more confidence they can give you"
 
-## Next.js 15+ Features & Breaking Changes
+## Next.js 16 Features & Breaking Changes
+
+### Parallel Routes Requirement (CRITICAL for Next.js 16)
+
+- **REQUIRED**: Every parallel route slot (e.g., `@sidebar`, `@content`) MUST have a `default.tsx` file
+- The `default.tsx` file serves as a fallback when Next.js cannot recover the active state
+- Without `default.tsx`, builds will fail with "Missing required default.js file" error
+- Example structure:
+  ```
+  src/app/
+    @sidebar/
+      default.tsx  ← Required!
+      page.tsx
+    @content/
+      default.tsx  ← Required!
+      page.tsx
+  ```
+- Simple fallback pattern:
+  ```tsx
+  export default function SlotDefault() {
+    return null; // or render fallback UI
+  }
+  ```
 
 ### Async Request APIs (Breaking Changes)
 
@@ -128,6 +150,7 @@ test('component renders correctly', () => {
 
 - Use `npx @next/codemod@canary upgrade latest` for automatic updates
 - Temporary compatibility modes available with warning messages
+- **Note**: Migration tool may not automatically create `default.tsx` files for parallel routes
 
 ## Chakra UI v3 Breaking Changes & Features
 
