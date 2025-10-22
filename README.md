@@ -4,7 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/jcubic/10xDevs/badge.svg?branch=master)](https://coveralls.io/github/jcubic/10xDevs?branch=master)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-A Next.js application for online training by 10xDevs, featuring SNApp – a minimal viable product
+A Next.js application for online training 10xDevs, featuring SNApp – a minimal viable product
 (MVP) for a web-based note-taking app.
 
 ## Table of Contents
