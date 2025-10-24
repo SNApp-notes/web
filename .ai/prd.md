@@ -356,6 +356,37 @@ position, or requiring server round-trips. Acceptance Criteria:
 - Edge case: Notes list maintains scroll position even when switching between
   notes at different positions in a long list (500+ notes).
 
+US-017 Title: As a user who forgot their password, I want to reset it securely
+so that I can regain access to my account. Description: Users can initiate a
+password reset flow by providing their email address, receiving a secure reset
+link, and setting a new password. Since the development environment doesn't send
+actual emails, the reset link is logged to the console for testing purposes.
+Acceptance Criteria:
+
+- Given an unauthenticated user on the login page, when they click "Forgot
+  Password?", they are redirected to a password reset request page (`/forgot-password`).
+- When the user enters their registered email address and submits the form, a
+  "Check Your Email" success message displays with the provided email address.
+- In production, a password reset email is sent containing a secure link that
+  expires in 1 hour.
+- In development environment, the password reset link is logged to the server
+  console for testing purposes, following the same pattern as email verification.
+- When the user clicks the reset link (from email or console), they are
+  redirected to a password reset form (`/reset-password?token={token}`) where
+  they can enter a new password.
+- The reset form requires password confirmation (matching passwords) and
+  validates minimum password strength (8+ characters).
+- Upon successful password reset, the user sees a success message and is
+  automatically redirected to the login page after 3 seconds.
+- The user can then sign in with their new password using the existing
+  email/password authentication flow.
+- Invalid, expired, or already-used reset tokens show an error page with an
+  option to request a new reset link.
+- Edge case: Multiple reset requests with the same email invalidate previous
+  tokens and generate a new one.
+- Edge case: Reset tokens are single-use and cannot be reused even if not
+  expired.
+
 
 
 ## 6. Success Metrics
