@@ -1,0 +1,18 @@
+{
+  "all": true,
+  "include": ["src/**/*.{ts,tsx}"],
+  "exclude": [
+    "src/test/**/*",
+    "**/*.test.{ts,tsx}",
+    "**/*.spec.{ts,tsx}",
+    "**/*.d.ts",
+    "**/*.config.*"
+  ],
+  "reporter": ["lcov", "text", "html", "json"],
+  "report-dir": "coverage/merged",
+  "temp-dir": ".nyc_output",
+  "extension": [".ts", ".tsx"],
+  "cache": false,
+  "sourceMap": true,
+  "instrument": true
+}

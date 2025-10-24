@@ -1,19 +1,19 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../prisma-e2e/types"
 }
 
 datasource db {
-  provider          = "mysql"
-  url               = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./test.db"
 }
 
 model User {
   id            String    @id
-  name          String    @db.Text
+  name          String
   email         String    @unique
   emailVerified Boolean   @default(false)
-  image         String?   @db.Text
+  image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @default(now()) @updatedAt
   accounts      Account[]
@@ -29,39 +29,37 @@ model Session {
   token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  ipAddress String?  @db.Text
-  userAgent String?  @db.Text
+  ipAddress String?
+  userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId], map: "session_userId_fkey")
   @@map("session")
 }
 
 model Account {
   id                    String    @id
-  accountId             String    @db.Text
-  providerId            String    @db.Text
+  accountId             String
+  providerId            String
   userId                String
-  accessToken           String?   @db.Text
-  refreshToken          String?   @db.Text
-  idToken               String?   @db.Text
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
-  scope                 String?   @db.Text
-  password              String?   @db.Text
+  scope                 String?
+  password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId], map: "account_userId_fkey")
   @@map("account")
 }
 
 model Verification {
   id         String   @id
-  identifier String   @db.Text
-  value      String   @db.Text
+  identifier String
+  value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
@@ -72,12 +70,11 @@ model Verification {
 model Note {
   id        Int      @id @default(autoincrement())
   name      String
-  content   String?  @db.LongText
+  content   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
   @@map("note")
 }

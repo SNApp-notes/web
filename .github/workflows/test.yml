@@ -21,10 +21,62 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests with coverage
+      - name: Run unit/integration tests with coverage
         run: npm run test:coverage
 
-      - name: Upload coverage to Coveralls
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build Next.js app
+        run: npm run build
+        env:
+          DATABASE_URL: 'file:./test.db'
+          BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
+          BETTER_AUTH_URL: 'http://localhost:3000'
+
+      - name: Start Next.js server with coverage
+        run: npm start &
+        env:
+          COVERAGE: 'true'
+          DATABASE_URL: 'file:./test.db'
+          BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
+          BETTER_AUTH_URL: 'http://localhost:3000'
+          PORT: 3000
+
+      - name: Wait for server to be ready
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+
+      - name: Run E2E tests with coverage
+        run: npm run test:e2e:coverage
+        env:
+          COVERAGE: 'true'
+          BASE_URL: 'http://localhost:3000'
+
+      - name: Convert Vitest coverage to NYC format
+        run: |
+          mkdir -p .nyc_output
+          npx c8 report --reporter=json --report-dir=.nyc_output/unit
+          if [ -d coverage/unit ]; then
+            cp coverage/unit/coverage-final.json .nyc_output/unit.json 2>/dev/null || true
+          fi
+
+      - name: Merge coverage reports
+        run: |
+          mkdir -p coverage/merged
+          if [ -d .nyc_output ] && [ "$(ls -A .nyc_output)" ]; then
+            npx nyc merge .nyc_output coverage/merged/coverage.json
+            npx nyc report --reporter=lcov --reporter=text --temp-dir=.nyc_output --report-dir=coverage/merged
+          else
+            echo "No E2E coverage found, using unit coverage only"
+            mkdir -p coverage/merged
+            if [ -f coverage/unit/lcov.info ]; then
+              cp coverage/unit/lcov.info coverage/merged/lcov.info
+            fi
+          fi
+
+      - name: Upload merged coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: ./coverage/merged/lcov.info

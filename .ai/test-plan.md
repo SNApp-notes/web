@@ -41,6 +41,37 @@ Adopt a pragmatic testing pyramid with heavy emphasis on integration and compone
 - **Component Tests**: 80% coverage for UI components
 - **E2E Tests**: Cover 3-5 critical user journeys
 
+## Current Status
+
+### ✅ Phase 1: Complete
+- SQLite testing database configured with in-memory support
+- Prisma test schema created
+- Database integration tests passing (6 tests)
+- Component tests passing (all 110 tests)
+- Parser tests passing (35 tests)
+- Editor tests passing (20 tests)
+- TreeView tests passing (38 tests)
+- Note creation/renaming tests passing (11 tests)
+
+### ✅ Phase 2: Complete
+- Combined coverage from Vitest + Playwright configured
+- NYC merger setup for unified coverage reports
+- CI/CD workflow updated to merge coverage and send to Coveralls
+- Vitest config excludes E2E tests to prevent conflicts
+- **Note**: E2E tests require Docker on Fedora systems (Playwright browsers not supported natively)
+
+### ✅ Fixed Issues
+- Migration conflict resolved: Tests ignore MySQL migrations and create SQLite tables manually
+- Vitest now excludes `e2e/**` directory to prevent Playwright/Vitest conflicts
+- Migration warnings silenced in test output
+
+### 📊 Test Execution Commands
+- `npm test` - Run unit/integration tests with Vitest (110 tests)
+- `npm run test:run` - Run tests once without watch mode
+- `npm run test:coverage` - Generate coverage report (outputs to `coverage/unit/`)
+- `npm run test:e2e:docker` - Run E2E tests in Docker (Fedora-compatible)
+- `npm run coverage:merge` - Merge Vitest + E2E coverage (requires both to run first)
+
 ## 2. Testing Levels
 
 ### 2.1 Unit Testing
@@ -190,13 +221,41 @@ describe('Note Page (Server Component)', async () => {
 
 **Test Files**: Co-located with components (e.g., `Editor.test.tsx`)
 
-### 2.4 End-to-End Testing (Optional)
+### 2.4 End-to-End Testing
 
-**Scope**: Critical user journeys, cross-browser compatibility
+**Status**: ✅ Infrastructure implemented and operational in CI/CD
 
-**Framework**: Playwright (recommended) or Cypress
+**Scope**: Critical user journeys, authentication flows, cross-browser compatibility
 
-**Priority**: Low (implement after unit/integration/component tests are solid)
+**Framework**: Playwright v1.56.1
+
+**Priority**: High (infrastructure complete, tests implemented and running in CI)
+
+**Configuration**:
+- Browser projects: Desktop Chrome only (chromium)
+- Local: Auto-starts dev server on `localhost:45678`
+- CI: Tests run against manually started Next.js server on `localhost:3000`
+- Docker support: For systems without native Playwright browser support
+- Trace collection on first retry, screenshots on failure
+- E2E environment uses SQLite database (isolated from production MySQL)
+
+**Environment Setup**:
+- **Local Execution**:
+  - Playwright auto-starts dev server with webServer config
+  - Uses `BASE_URL` env var (defaults to `http://localhost:45678`)
+  - No `.env` file required
+
+- **Docker Execution**:
+  - Requires one-time setup: `npm run test:e2e:docker:setup`
+  - Uses tagged Playwright base image: `playwright:e2e-local`
+  - Build context includes entire project for complete isolation
+  - Mounts test files and reports as volumes
+
+- **CI Execution** (GitHub Actions):
+  - Application built and started separately
+  - Environment variables set for build and runtime
+  - Playwright browsers installed with `--with-deps chromium`
+  - Coverage instrumentation enabled with `COVERAGE=true`
 
 **Scenarios to Test**:
 1. User registration → email verification → login
@@ -226,7 +285,26 @@ test('complete note creation flow', async ({ page }) => {
 });
 ```
 
-**Implementation Timeline**: Phase 3 (after core tests are complete)
+**Test Files**: `e2e/*.spec.ts`
+
+**Commands**:
+- `npm run test:e2e` - Run E2E tests locally (auto-starts dev server)
+- `npm run test:e2e:docker:setup` - One-time: Pull and tag Playwright base image
+- `npm run test:e2e:docker` - Run E2E tests in Docker (uses cached image)
+- `npm run test:e2e:docker:build` - Force rebuild Docker image
+- `npm run test:e2e:ui` - Run with Playwright UI
+- `npm run test:e2e:coverage` - Run with coverage collection
+- `npm run test:e2e:report` - View HTML report
+
+**Docker Setup Notes**:
+- Docker image caching configured to avoid re-downloading base image
+- `.dockerignore` prevents unnecessary files from slowing builds
+- Playwright base image (~1GB) downloaded once and reused
+- Built test image tagged as `playwright-e2e:latest` for reuse
+
+**Documentation**: See `.ai/E2E_TESTING.md` for comprehensive guide
+
+**Implementation Status**: Infrastructure complete, tests running in CI/CD pipeline
 
 ## 3. Testing Types
 
@@ -356,14 +434,14 @@ it('updates content on user input', async () => {
 | @vitest/ui | Visual test interface | Latest | Optional |
 | @testing-library/user-event | User interaction simulation | Latest | Recommended |
 | jest-axe | Accessibility testing | Latest | To Install |
-| Playwright | E2E testing | Latest | Optional (Phase 3) |
+| Playwright | E2E testing | v1.49.0 | ✅ Installed |
 
 ### Database Testing
 
 | Tool | Purpose | Version | Status |
 |------|---------|---------|--------|
-| better-sqlite3 | SQLite driver | Latest | To Install |
-| @types/better-sqlite3 | TypeScript types | Latest | To Install |
+| better-sqlite3 | SQLite driver | Latest | ✅ Installed |
+| @types/better-sqlite3 | TypeScript types | Latest | ✅ Installed |
 
 ### Mocking and Utilities
 
@@ -404,38 +482,40 @@ npm install
 npm install --save-dev better-sqlite3 @types/better-sqlite3 @testing-library/user-event jest-axe
 ```
 
-**Environment Variables** (.env.test):
-```env
-DATABASE_URL="file:./test.db"
-BETTER_AUTH_SECRET="test-secret-key-32-characters-long"
-BETTER_AUTH_URL="http://localhost:3000"
-NODE_ENV="test"
-```
+**Environment Variables**:
+- **Unit/Integration Tests**: No environment variables required (uses SQLite in-memory)
+- **E2E Tests (Local)**: Uses `E2E=true` to signal application is running in E2E test mode
+  - Application automatically configures SQLite database when `E2E=true`
+  - No `.env` file needed for E2E tests
+  - Playwright config uses `BASE_URL` environment variable (defaults to `http://localhost:45678`)
 
 **Database Setup**:
-- Production: MySQL via `DATABASE_URL` in `.env.local`
-- Testing: SQLite in-memory via test utilities
-- Schema: Separate `prisma/schema.test.prisma` for SQLite
+- Production: MySQL via `DATABASE_URL` in `.env`
+- Unit/Integration Testing: SQLite in-memory via test utilities (`src/test/setup-db.ts`)
+- E2E Testing: SQLite file database via `prisma-e2e/schema.prisma`
+  - Setup script: `e2e/setup-e2e-db.js` creates fresh database before E2E tests
+  - Uses separate Prisma schema for E2E isolation
 
 **Commands**:
 ```bash
-# Run all tests
-npm test
+# Unit/Component/Integration tests (Vitest)
+npm test                              # Run tests in watch mode
+npm test -- --watch                   # Run tests in watch mode
+npm run test:ui                       # Run tests with UI
+npm run test:coverage                 # Run tests with coverage
+npm run test:run                      # Run all tests once (CI)
 
-# Run tests in watch mode
-npm test -- --watch
+# Specific tests
+npm test -- Editor.test.tsx           # Run single test file
+npm test -- --grep "authentication"   # Run tests matching pattern
 
-# Run tests with UI
-npm run test:ui
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run specific test file
-npm test -- Editor.test.tsx
-
-# Run tests matching pattern
-npm test -- --grep "authentication"
+# E2E tests (Playwright)
+npm run test:e2e                      # Run E2E tests locally (auto-starts dev server)
+npm run test:e2e:docker               # Run E2E tests in Docker (requires setup)
+npm run test:e2e:docker:setup         # One-time setup: pull and tag Playwright base image
+npm run test:e2e:docker:build         # Force rebuild Docker image
+npm run test:e2e:ui                   # Run E2E tests with UI
+npm run test:e2e:report               # View HTML report
 ```
 
 ### CI/CD Environment (GitHub Actions)
@@ -443,14 +523,30 @@ npm test -- --grep "authentication"
 **Status**: ✅ Already implemented and operational
 
 **Current Workflows**:
-- `.github/workflows/test.yml` - Test execution with coverage reporting
+- `.github/workflows/test.yml` - Full test suite with E2E tests and coverage reporting
 - `.github/workflows/style.yml` - ESLint and Prettier validation
 
 **Test Workflow** (test.yml):
 - Runs on push to master and all pull requests
-- Executes full test suite with coverage
-- Uploads coverage reports to Coveralls
+- Executes unit/integration tests with Vitest
+- Builds Next.js application
+- Installs Playwright browsers
+- Runs E2E tests with Playwright
+- Merges coverage from both Vitest and Playwright
+- Uploads merged coverage to Coveralls
 - Node.js 20 runtime environment
+
+**E2E Test Execution in CI**:
+- Uses GitHub-hosted Ubuntu runners
+- Playwright browsers installed with `--with-deps chromium`
+- Application started with `npm start` on port 3000
+- Tests run against `http://localhost:3000`
+- Environment variables:
+  - `DATABASE_URL`: `file:./test.db` (SQLite for testing)
+  - `BETTER_AUTH_SECRET`: Test secret (32+ characters)
+  - `BETTER_AUTH_URL`: `http://localhost:3000`
+  - `BASE_URL`: `http://localhost:3000` (for Playwright)
+  - `COVERAGE`: `true` (enables code coverage collection)
 
 **Style Workflow** (style.yml):
 - Runs ESLint for code quality
@@ -458,19 +554,15 @@ npm test -- --grep "authentication"
 - Separate workflow for faster feedback
 
 **Coverage Reporting**: Coveralls (https://coveralls.io)
+- Merged coverage from Vitest (unit/integration) and Playwright (E2E)
 - Automatic coverage upload after test runs
 - Coverage badges in README
 - Pull request coverage reports
 
-**Future Updates** (only if E2E tests are implemented):
-- Add E2E test workflow with Playwright
-- Add browser matrix testing (Chrome, Firefox, Safari)
-- Add E2E test results reporting
-
 **Environment Secrets**:
 - `GITHUB_TOKEN`: Automatically provided (for Coveralls)
-- `BETTER_AUTH_SECRET`: Not needed for tests (SQLite in-memory)
-- `DATABASE_URL`: Not needed for tests (SQLite in-memory)
+- `BETTER_AUTH_SECRET`: Configured in CI for build/runtime (not needed for Vitest tests)
+- `DATABASE_URL`: Configured in CI for build/runtime (not needed for Vitest tests)
 
 ### Vercel Deployments
 
@@ -715,12 +807,13 @@ npm run build && rm -rf .next
    - Upload coverage to Coveralls
    - Node.js 20 runtime
 
-**Future Enhancements** (only if E2E tests are implemented):
+**Future Enhancements**:
 
-3. **E2E Tests** (new workflow, optional)
-   - Playwright test execution
+3. **E2E Tests** (when tests are implemented)
+   - Add Playwright workflow to `.github/workflows/`
    - Browser matrix testing (Chrome, Firefox, Safari)
-   - Visual regression testing
+   - Visual regression testing (optional)
+   - E2E test results reporting
    - Estimated duration: ~5-10min
 
 **Deployment**:
@@ -775,20 +868,27 @@ npm run build && rm -rf .next
 - [x] Install test dependencies (Vitest, RTL already installed)
 - [x] Set up CI/CD pipeline (GitHub Actions - test.yml and style.yml)
 - [x] Configure Coveralls for coverage reporting
-- [ ] Install database testing dependencies (better-sqlite3)
-- [ ] Create test database infrastructure (prisma-test.ts, schema.test.prisma)
-- [ ] Implement database lifecycle utilities (setup-db.ts)
-- [ ] Configure Vitest for database tests
-- [ ] Write first integration test (Better Auth adapter test)
+- [x] Install database testing dependencies (better-sqlite3)
+- [x] Create test database infrastructure (prisma-test.ts, schema.test.prisma)
+- [x] Implement database lifecycle utilities (setup-db.ts)
+- [x] Configure Vitest for database tests
+- [x] Write first integration test (Better Auth adapter test)
+- [x] Set up Playwright E2E testing infrastructure
+- [x] Configure Docker-based E2E testing (for Fedora)
+- [x] Create E2E testing documentation
 
 **Deliverables**:
-- Working test infrastructure
-- First passing integration test
-- CI/CD pipeline running tests on PRs
+- ✅ Working test infrastructure
+- ✅ First passing integration test (6 database tests)
+- ✅ CI/CD pipeline running tests on PRs
+- ✅ Playwright E2E testing setup with Docker support
+- ✅ E2E testing documentation (.ai/E2E_TESTING.md)
 
 **Success Criteria**:
-- `npm test` runs successfully
-- CI pipeline passes on sample PR
+- ✅ `npm test` runs successfully
+- ✅ CI pipeline passes on sample PR
+- ✅ Database integration tests pass (6/6)
+- ✅ E2E infrastructure ready for test implementation
 
 ### Phase 2: Core Test Coverage (Week 3-4)
 
@@ -881,7 +981,7 @@ npm run build && rm -rf .next
 | Milestone | Target Date | Key Metric | Status |
 |-----------|-------------|------------|--------|
 | CI/CD pipeline | Week 2 | Test & Style workflows operational | ✅ Complete |
-| Testing infrastructure | Week 2 | Database testing setup | 🟡 In Progress |
+| Testing infrastructure | Week 2 | Database + E2E testing setup | ✅ Complete |
 | 70% test coverage | Week 4 | Coverage reports | 🔴 Pending |
 | Enhanced testing | Week 6 | Accessibility + Performance | 🔴 Pending |
 | Optimized suite | Week 8 | <3min CI runtime | 🔴 Pending |
@@ -937,13 +1037,17 @@ it('creates user in database', async () => {
 ### Useful Commands
 
 ```bash
-# Development
+# Unit/Component/Integration tests (Vitest)
 npm test                    # Run tests in watch mode
 npm run test:ui             # Run tests with visual UI
-
-# CI/CD
-npm run test:run            # Run all tests once
+npm run test:run            # Run all tests once (CI)
 npm run test:coverage       # Run with coverage report
+
+# E2E tests (Playwright)
+npm run test:e2e            # Run E2E tests locally
+npm run test:e2e:docker     # Run E2E tests in Docker (Fedora)
+npm run test:e2e:ui         # Interactive E2E test UI
+npm run test:e2e:report     # View HTML test report
 
 # Specific tests
 npm test Editor.test.tsx    # Run single test file

@@ -76,7 +76,7 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
       };
     }
   } catch (error) {
-    console.error('Sign up error:', error);
+    console.error(`Sign up failed for user: ${email}`, error);
     return {
       message: 'An unexpected error occurred. Please try again.'
     };
@@ -147,7 +147,7 @@ export async function signInAction(
       };
     }
   } catch (error) {
-    console.error('Sign in error:', error);
+    console.error(`Sign in failed for user: ${email}`);
     return {
       message: 'An unexpected error occurred. Please try again.'
     };
@@ -164,7 +164,7 @@ export async function signOutAction() {
       headers: headersList
     });
   } catch (error) {
-    console.error('Sign out error:', error);
+    console.error('Sign out failed - session cleanup error');
   }
   redirect('/login');
 }

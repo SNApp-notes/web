@@ -1,0 +1,18 @@
+services:
+  playwright:
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile
+      tags:
+        - playwright-e2e:latest
+    volumes:
+      - ./report:/app/report:z
+      - ./results:/app/results:z
+      - ./playwright.config.ts:/app/playwright.config.ts:z
+      - .:/app/e2e:z
+    environment:
+      - BASE_URL=${BASE_URL:-http://host.docker.internal:45678}
+      - CI=true
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    network_mode: bridge

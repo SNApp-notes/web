@@ -10,6 +10,9 @@
 - `npm run test:run` - Run tests once
 - `npm run test:ui` - Run tests with UI (requires @vitest/ui)
 - `npm run test:coverage` - Run tests with coverage report
+- `npm run test:e2e` - Run E2E tests locally (requires dev server running)
+- `npm run test:e2e:docker` - Run E2E tests in Docker with isolated environment
+- `npm run test:e2e:ui` - Run E2E tests with Playwright UI
 
 ## Build & Development Workflow
 
@@ -57,7 +60,9 @@ Next.js, TypeScript, Chakra UI v3, CodeMirror 6, Prisma, MySQL, Better Auth, CSS
 - `src/app/` - Next.js app router pages
 - `src/components/ui/` - Generic UI components
 - `src/test/` - Test utilities and setup files
-- `prisma/` - Database schema
+- `prisma-main/` - MySQL database schema (production/development)
+- `prisma-e2e/` - SQLite database schema (testing)
+- `e2e/` - End-to-end tests with Playwright
 - Use path alias `@/*` for src imports
 
 ## Git Workflow
@@ -72,12 +77,37 @@ Next.js, TypeScript, Chakra UI v3, CodeMirror 6, Prisma, MySQL, Better Auth, CSS
 - **Vitest**: Fast unit test runner with hot reload
 - **React Testing Library**: Component testing with user-centric approach
 - **jsdom**: Browser environment simulation for React components
+- **Playwright**: E2E testing framework with cross-browser support
+
+### Database Setup
+
+**Two-Schema Approach:**
+
+- **`prisma-main/`**: MySQL schema for production and development
+- **`prisma-e2e/`**: SQLite schema for all testing (unit + E2E)
+
+**Environment Detection:**
+
+- `NODE_ENV === 'test'` → Uses SQLite (`prisma-e2e` schema)
+- Otherwise → Uses MySQL (`prisma-main` schema)
+
+**Test Databases:**
+
+- `test-vitest.db` - Vitest unit tests
+- `test-e2e.db` - Playwright E2E tests (inside Docker)
+
+**Key Files:**
+
+- `src/lib/prisma.ts` - Unified Prisma client that switches between MySQL and SQLite
+- `src/lib/auth.ts` - Better Auth configuration that adapts to database type
+- `src/test/setup-db.ts` - Vitest database setup and cleanup
 
 ### Test Structure
 
 - Place test files next to components: `Component.test.tsx`
 - Use `src/test/utils.tsx` for custom render with Chakra Provider
 - Setup file: `src/test/setup.ts` (imported by vitest.config.ts)
+- E2E tests in `e2e/` directory with separate Docker setup
 
 ### Test Utilities
 
@@ -98,6 +128,36 @@ test('component renders correctly', () => {
 - Test components in isolation with mock props
 - Use `userEvent` for realistic user interactions
 - Follow testing-library principles: "The more your tests resemble the way your software is used, the more confidence they can give you"
+- Database tests automatically use SQLite via `NODE_ENV=test` environment variable
+- E2E tests run in isolated Docker environment with clean database state
+
+### E2E Testing with Playwright
+
+**Setup:**
+
+- E2E tests located in `e2e/` directory
+- Configuration: `e2e/playwright.config.ts`
+- Docker setup: `e2e/docker-compose.yml` and `e2e/Dockerfile`
+
+**Running E2E Tests:**
+
+```bash
+# Local (requires dev server on port 3000)
+npm run test:e2e
+
+# Docker (isolated, recommended for CI)
+npm run test:e2e:docker
+
+# UI mode for debugging
+npm run test:e2e:ui
+```
+
+**Best Practices:**
+
+- Use `test.beforeEach()` to set up clean database state
+- Use page object pattern for complex interactions
+- Test critical user flows end-to-end
+- Prefer E2E tests for authentication, data persistence, and multi-page workflows
 
 ## Next.js 16 Features & Breaking Changes
 
