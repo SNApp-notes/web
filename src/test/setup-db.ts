@@ -20,7 +20,7 @@ export async function setupTestDatabase(): Promise<void> {
 
   execSync(`npx prisma db push --skip-generate --schema=${schemaPath}`, {
     env: { ...process.env },
-    stdio: 'inherit'
+    stdio: 'pipe'
   });
 
   prisma = new e2eClient();
