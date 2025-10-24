@@ -57,12 +57,16 @@ export const auth = betterAuth({
       });
     }
   },
-  socialProviders: {
-    github: {
-      clientId: process.env.GITHUB_CLIENT_ID as string,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET as string
-    }
-  },
+  ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
+    ? {
+        socialProviders: {
+          github: {
+            clientId: process.env.GITHUB_CLIENT_ID,
+            clientSecret: process.env.GITHUB_CLIENT_SECRET
+          }
+        }
+      }
+    : {}),
   database: prismaAdapter(prisma, {
     provider: process.env.NODE_ENV === 'test' ? 'sqlite' : 'mysql',
     usePlural: false
