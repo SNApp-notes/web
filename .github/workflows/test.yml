@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 jobs:
-  test-lint:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -38,14 +38,14 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
 
       - name: Build Next.js app
-        run: npm run build
+        run: npx next build --turbopack
         env:
           DATABASE_URL: 'file:./test.db'
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
           BETTER_AUTH_URL: 'http://localhost:3000'
 
       - name: Start Next.js server with coverage
-        run: npm start &
+        run: npm run dev:coverage &
         env:
           COVERAGE: 'true'
           DATABASE_URL: 'file:./test.db'
@@ -63,16 +63,52 @@ jobs:
           COVERAGE: 'true'
           BASE_URL: 'http://localhost:3000'
 
+      - name: Display E2E coverage report
+        if: always()
+        run: |
+          if [ -d .nyc_output ] && [ "$(ls -A .nyc_output)" ]; then
+            echo "E2E Coverage Report:"
+            npx nyc report --reporter=text --temp-dir=.nyc_output
+          else
+            echo "No E2E coverage collected"
+          fi
+
       - name: Prepare coverage reports
         run: |
-          mkdir -p coverage/merged
-          # Use unit coverage as base (Vitest already generates lcov.info)
-          if [ -f coverage/unit/lcov.info ]; then
-            cp coverage/unit/lcov.info coverage/merged/lcov.info
-            echo "Unit coverage copied to merged"
+          mkdir -p coverage/merged coverage/e2e
+
+          # Convert E2E coverage from NYC format to lcov
+          if [ -d .nyc_output ] && [ "$(ls -A .nyc_output)" ]; then
+            echo "Converting E2E coverage to lcov format..."
+            npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=.nyc_output
+            echo "E2E coverage converted"
           else
+            echo "No E2E coverage found in .nyc_output/"
+            mkdir -p coverage/e2e
+            touch coverage/e2e/lcov.info
+          fi
+
+          # Ensure unit coverage exists
+          if [ ! -f coverage/unit/lcov.info ]; then
             echo "Warning: No unit coverage found"
-            touch coverage/merged/lcov.info
+            mkdir -p coverage/unit
+            touch coverage/unit/lcov.info
+          fi
+
+          # Merge coverage files by concatenation
+          echo "Merging coverage reports..."
+          cat coverage/unit/lcov.info coverage/e2e/lcov.info > coverage/merged/lcov.info
+
+          echo "Coverage merge complete"
+
+      - name: Display merged coverage summary
+        if: always()
+        run: |
+          if [ -f coverage/merged/lcov.info ] && [ -s coverage/merged/lcov.info ]; then
+            echo "Merged Coverage Summary:"
+            npx lcov-summary coverage/merged/lcov.info
+          else
+            echo "No merged coverage summary available"
           fi
 
       - name: Upload merged coverage to Coveralls

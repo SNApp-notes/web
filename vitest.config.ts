@@ -27,6 +27,7 @@ export default defineConfig({
         '.next/',
         'build/',
         'dist/',
+        'src/types/**',
         '**/*.test.*',
         '**/*.spec.*'
       ],

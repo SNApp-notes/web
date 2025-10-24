@@ -10,9 +10,11 @@ services:
       - ./results:/app/results:z
       - ./playwright.config.ts:/app/playwright.config.ts:z
       - .:/app/e2e:z
+      - ../.nyc_output:/app/.nyc_output:z
     environment:
       - BASE_URL=${BASE_URL:-http://host.docker.internal:45678}
       - CI=true
+      - COVERAGE=${COVERAGE:-false}
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     network_mode: bridge
