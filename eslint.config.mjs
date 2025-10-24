@@ -8,13 +8,10 @@ const eslintConfig = defineConfig([
   globalIgnores([
     'node_modules/**',
     '.next/**',
-    'out/**',
-    'build/**',
     'coverage/**',
     'next-env.d.ts',
-    'prisma/generated/**',
-    'prisma/migrations/**',
-    'migration.js'
+    'prisma-*',
+    '**/**.js'
   ]),
   {
     rules: {

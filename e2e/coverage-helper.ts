@@ -8,7 +8,7 @@ export async function collectCoverage(page: Page, testName: string) {
   }
 
   const coverage = await page.evaluate(() => {
-    return (window as any).__coverage__;
+    return (window as unknown).__coverage__;
   });
 
   if (coverage) {
