@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import type { Note } from '@prisma/client';
+import type { Note } from '../../../prisma-main/types';
 import { headers } from 'next/headers';
 
 export async function getNotes(): Promise<Note[]> {
@@ -85,7 +85,7 @@ export async function createNote(baseName: string = 'New Note'): Promise<Note> {
           const match = note.name.match(new RegExp(`^${sanitizedBaseName}\\s(\\d+)$`));
           return match ? parseInt(match[1]) : note.name === sanitizedBaseName ? 0 : -1;
         })
-        .filter((counter) => counter >= 0);
+        .filter((counter: number) => counter >= 0);
 
       const highestCounter = counters.length > 0 ? Math.max(...counters) : 0;
       const nextCounter = highestCounter + 1;
