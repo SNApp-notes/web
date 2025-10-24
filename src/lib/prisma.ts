@@ -1,11 +1,14 @@
 import { PrismaClient as mainClient } from '../../prisma-main/types';
 import { PrismaClient as e2eClient } from '../../prisma-e2e/types';
 
+const getPrismaMain = () => new mainClient();
+const getPrismaE2E = () => new e2eClient();
+
 const getPrisma = () =>
-  process.env.NODE_ENV === 'test' ? new e2eClient() : new mainClient();
+  process.env.NODE_ENV === 'test' ? getPrismaE2E() : getPrismaMain();
 
 const globalForPrisma = global as unknown as {
-  prisma: ReturnType<typeof getPrisma>;
+  prisma: ReturnType<typeof getPrismaMain>;
 };
 
 const prisma = globalForPrisma.prisma || getPrisma();

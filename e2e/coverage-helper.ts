@@ -2,13 +2,17 @@ import type { Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
+declare global {
+    interface Window { __coverage__: unknown }
+}
+
 export async function collectCoverage(page: Page, testName: string) {
   if (process.env.COVERAGE !== 'true') {
     return;
   }
 
   const coverage = await page.evaluate(() => {
-    return (window as unknown).__coverage__;
+    return window.__coverage__;
   });
 
   if (coverage) {
