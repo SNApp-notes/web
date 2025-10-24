@@ -1,5 +1,5 @@
 // Re-export Prisma types
-export type { Note, User } from '@prisma/client';
+export type { Note, User } from '@/lib/prisma';
 
 // Tree node data types
 export interface NoteData {

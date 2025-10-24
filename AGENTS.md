@@ -65,6 +65,14 @@ Next.js, TypeScript, Chakra UI v3, CodeMirror 6, Prisma, MySQL, Better Auth, CSS
 - `e2e/` - End-to-end tests with Playwright
 - Use path alias `@/*` for src imports
 
+### Prisma Type Imports
+
+- **Import Prisma types from `@/lib/prisma`**, not from `@prisma/client` or prisma schema directories
+- All Prisma types are re-exported from `src/lib/prisma.ts` for centralized type management
+- Example: `import prisma, { type Note, type User } from '@/lib/prisma'`
+- **Never import directly** from `../../prisma-main/types` or `../../prisma-e2e/types`
+- This ensures type consistency across test and production environments
+
 ## Git Workflow
 
 - **Default branch**: `master` (not `main`)

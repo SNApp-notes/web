@@ -28,7 +28,9 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Build Next.js app
-        run: npm run build
+        run: |
+          set -e
+          npm run build
         env:
           DATABASE_URL: 'file:./test.db'
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'

@@ -1,8 +1,7 @@
 'use server';
 
 import { auth } from '@/lib/auth';
-import prisma from '@/lib/prisma';
-import type { Note } from '../../../prisma-main/types';
+import prisma, { type Note } from '@/lib/prisma';
 import { headers } from 'next/headers';
 
 export async function getNotes(): Promise<Note[]> {

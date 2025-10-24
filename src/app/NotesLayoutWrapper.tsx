@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import type { Note } from '@prisma/client';
+import type { Note } from '@/lib/prisma';
 import type { NoteTreeNode } from '@/types/tree';
 import { getNotes } from '@/app/actions/notes';
 import { NotesProvider } from '@/components/notes/NotesContext';

@@ -1,4 +1,4 @@
-import type { Note } from '@prisma/client';
+import type { Note } from '@/lib/prisma';
 import type { NoteTreeNode } from '@/types/tree';
 import { getNotes } from '@/app/actions/notes';
 import { NotesProvider } from './NotesContext';
