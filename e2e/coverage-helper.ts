@@ -3,7 +3,9 @@ import fs from 'fs';
 import path from 'path';
 
 declare global {
-    interface Window { __coverage__: unknown }
+  interface Window {
+    __coverage__: unknown;
+  }
 }
 
 export async function collectCoverage(page: Page, testName: string) {
