@@ -14,6 +14,7 @@
 /coverage
 /prisma-*/types/
 /prisma-e2e/test.db
+/prisma-e2e/test.db-journal
 /e2e/results/
 /e2e/report/
 /playwright/.cache/

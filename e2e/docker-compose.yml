@@ -1,16 +1,17 @@
 services:
   playwright:
     build:
-      context: ..
-      dockerfile: e2e/Dockerfile
+      context: .
       tags:
         - playwright-e2e:latest
     volumes:
       - ./report:/app/report:z
       - ./results:/app/results:z
       - ./playwright.config.ts:/app/playwright.config.ts:z
+      - ./global-teardown.ts:/app/global-teardown.ts:z
       - .:/app/e2e:z
       - ../.nyc_output:/app/.nyc_output:z
+      - ../prisma-e2e:/app/prisma-e2e:z
     environment:
       - BASE_URL=${BASE_URL:-http://host.docker.internal:45678}
       - CI=true

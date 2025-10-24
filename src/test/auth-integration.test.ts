@@ -17,6 +17,10 @@ vi.mock('next/navigation', () => ({
   })
 }));
 
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn()
+}));
+
 vi.mock('next/headers', () => ({
   headers: vi.fn(async () => new Headers())
 }));
