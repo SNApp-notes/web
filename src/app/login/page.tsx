@@ -52,6 +52,15 @@ export default async function Login() {
 
         <SignInForm />
 
+        <Text textAlign="center" color="fg.muted" fontSize="sm">
+          <Link
+            href="/forgot-password"
+            style={{ color: 'var(--chakra-colors-blue-500)' }}
+          >
+            Forgot Password?
+          </Link>
+        </Text>
+
         <HStack gap={4} align="center" width="full">
           <Separator />
           <Text color="fg.muted" fontSize="sm" flexShrink={0}>
