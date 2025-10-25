@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 jobs:
-  test:
+  unit-integration-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -23,6 +23,27 @@ jobs:
 
       - name: Run unit/integration tests with coverage
         run: npm run test:coverage
+
+      - name: Upload unit coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-coverage
+          path: coverage/unit/
+          retention-days: 1
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -73,26 +94,65 @@ jobs:
             echo "No E2E coverage collected"
           fi
 
-      - name: Prepare coverage reports
+      - name: Convert E2E coverage to lcov
         run: |
-          mkdir -p coverage/merged coverage/e2e
-
-          # Convert E2E coverage from NYC format to lcov
+          mkdir -p coverage/e2e
           if [ -d .nyc_output ] && [ "$(ls -A .nyc_output)" ]; then
             echo "Converting E2E coverage to lcov format..."
             npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=.nyc_output
             echo "E2E coverage converted"
           else
             echo "No E2E coverage found in .nyc_output/"
-            mkdir -p coverage/e2e
             touch coverage/e2e/lcov.info
           fi
 
-          # Ensure unit coverage exists
+      - name: Upload E2E coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-coverage
+          path: coverage/e2e/
+          retention-days: 1
+
+  merge-coverage:
+    runs-on: ubuntu-latest
+    needs: [unit-integration-tests, e2e-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download unit coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-coverage
+          path: coverage/unit/
+
+      - name: Download E2E coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-coverage
+          path: coverage/e2e/
+
+      - name: Merge coverage reports
+        run: |
+          mkdir -p coverage/merged
+
+          # Ensure coverage files exist
           if [ ! -f coverage/unit/lcov.info ]; then
             echo "Warning: No unit coverage found"
-            mkdir -p coverage/unit
             touch coverage/unit/lcov.info
+          fi
+
+          if [ ! -f coverage/e2e/lcov.info ]; then
+            echo "Warning: No E2E coverage found"
+            touch coverage/e2e/lcov.info
           fi
 
           # Merge coverage files by concatenation
