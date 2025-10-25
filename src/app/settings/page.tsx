@@ -14,19 +14,39 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { ColorModeButton } from '@/components/ui/color-mode';
-import { requestAccountDeletionAction, FormDataState } from '@/app/actions/auth';
+import {
+  requestAccountDeletionAction,
+  changePasswordAction,
+  getUserAuthMethod,
+  FormDataState
+} from '@/app/actions/auth';
 import { Toaster, toaster } from '@/components/ui/toaster';
 
 function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showDeleteForm, setShowDeleteForm] = useState<boolean>(false);
+  const [showPasswordForm, setShowPasswordForm] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isPasswordLoading, setIsPasswordLoading] = useState<boolean>(false);
+  const [hasPassword, setHasPassword] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormDataState>({
     email: '',
     errors: undefined,
     message: ''
   });
+  const [passwordFormData, setPasswordFormData] = useState<FormDataState>({
+    errors: undefined,
+    message: ''
+  });
+
+  useEffect(() => {
+    async function checkAuthMethod() {
+      const result = await getUserAuthMethod();
+      setHasPassword(result.hasPassword);
+    }
+    checkAuthMethod();
+  }, []);
 
   // Handle URL parameters for error/success messages
   useEffect(() => {
@@ -89,20 +109,17 @@ function SettingsContent() {
         });
         setShowDeleteForm(false);
         setFormData({ email: '', errors: undefined, message: '' });
-      } else {
+      } else if (result.message) {
         setFormData((prev: FormDataState) => ({
           ...prev,
           errors: result.errors,
-          message: result.message || ''
+          message: result.message
         }));
-
-        if (result.message && !result.errors) {
-          toaster.create({
-            title: 'Error',
-            description: result.message,
-            type: 'error'
-          });
-        }
+        toaster.create({
+          title: 'Error',
+          description: result.message,
+          type: 'error'
+        });
       }
     } catch (error) {
       toaster.create({
@@ -112,6 +129,40 @@ function SettingsContent() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePasswordChangeSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const target = event.currentTarget;
+    setIsPasswordLoading(true);
+    setPasswordFormData({ errors: undefined, message: '' });
+
+    const formDataObj = new FormData(target);
+
+    const result = await changePasswordAction(passwordFormData, formDataObj);
+
+    setIsPasswordLoading(false);
+    if (result.success) {
+      toaster.create({
+        title: 'Password Changed',
+        description: result.message,
+        type: 'success',
+        duration: 5000
+      });
+      setShowPasswordForm(false);
+      setPasswordFormData({ errors: undefined, message: '' });
+      target.reset();
+    } else {
+      setPasswordFormData({
+        errors: result.errors,
+        message: result.message
+      });
+      toaster.create({
+        title: 'Error',
+        description: result.message,
+        type: 'error'
+      });
     }
   };
 
@@ -148,6 +199,133 @@ function SettingsContent() {
               </Flex>
             </Card.Body>
           </Card.Root>
+
+          {/* Password Change - Only for email/password users */}
+          {hasPassword && (
+            <Card.Root p={3}>
+              <Card.Header>
+                <Card.Title>Password</Card.Title>
+                <Card.Description>Change your account password</Card.Description>
+              </Card.Header>
+              <Card.Body>
+                {!showPasswordForm ? (
+                  <Flex justify="space-between" align="center">
+                    <Box>
+                      <Text fontWeight="medium" mb={1}>
+                        Change Password
+                      </Text>
+                      <Text fontSize="sm" color="fg.muted">
+                        Update your password to keep your account secure
+                      </Text>
+                    </Box>
+                    <Button
+                      p={3}
+                      colorPalette="blue"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowPasswordForm(true)}
+                    >
+                      Change Password
+                    </Button>
+                  </Flex>
+                ) : (
+                  <Stack gap={4}>
+                    <Box>
+                      <Text fontWeight="medium" mb={1}>
+                        Change Your Password
+                      </Text>
+                      <Text fontSize="sm" color="fg.muted" mb={3}>
+                        Enter your current password and choose a new one.
+                      </Text>
+                    </Box>
+
+                    <form onSubmit={handlePasswordChangeSubmit}>
+                      <Stack gap={4}>
+                        <Field.Root invalid={!!passwordFormData.errors?.currentPassword}>
+                          <Field.Label htmlFor="currentPassword">
+                            Current Password
+                          </Field.Label>
+                          <Input
+                            p={3}
+                            id="currentPassword"
+                            name="currentPassword"
+                            type="password"
+                            placeholder="Enter your current password"
+                            required
+                          />
+                          {passwordFormData.errors?.currentPassword && (
+                            <Field.ErrorText>
+                              {passwordFormData.errors.currentPassword[0]}
+                            </Field.ErrorText>
+                          )}
+                        </Field.Root>
+
+                        <Field.Root invalid={!!passwordFormData.errors?.newPassword}>
+                          <Field.Label htmlFor="newPassword">New Password</Field.Label>
+                          <Input
+                            p={3}
+                            id="newPassword"
+                            name="newPassword"
+                            type="password"
+                            placeholder="Enter your new password (min 8 characters)"
+                            required
+                          />
+                          {passwordFormData.errors?.newPassword && (
+                            <Field.ErrorText>
+                              {passwordFormData.errors.newPassword[0]}
+                            </Field.ErrorText>
+                          )}
+                        </Field.Root>
+
+                        <Field.Root invalid={!!passwordFormData.errors?.confirmPassword}>
+                          <Field.Label htmlFor="confirmPassword">
+                            Confirm New Password
+                          </Field.Label>
+                          <Input
+                            p={3}
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type="password"
+                            placeholder="Confirm your new password"
+                            required
+                          />
+                          {passwordFormData.errors?.confirmPassword && (
+                            <Field.ErrorText>
+                              {passwordFormData.errors.confirmPassword[0]}
+                            </Field.ErrorText>
+                          )}
+                        </Field.Root>
+
+                        <Flex gap={2} justify="flex-end">
+                          <Button
+                            p={3}
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setShowPasswordForm(false);
+                              setPasswordFormData({ errors: undefined, message: '' });
+                            }}
+                            disabled={isPasswordLoading}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            p={3}
+                            type="submit"
+                            colorPalette="blue"
+                            loading={isPasswordLoading}
+                            loadingText="Changing..."
+                          >
+                            Change Password
+                          </Button>
+                        </Flex>
+                      </Stack>
+                    </form>
+                  </Stack>
+                )}
+              </Card.Body>
+            </Card.Root>
+          )}
 
           {/* Account Management */}
           <Card.Root p={3}>

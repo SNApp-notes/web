@@ -280,3 +280,141 @@ export async function requestAccountDeletionAction(
     };
   }
 }
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters long'),
+  confirmPassword: z.string().min(1, 'Please confirm your new password')
+});
+
+export async function getUserAuthMethod() {
+  try {
+    const headersList = await headers();
+    const session = await auth.api.getSession({
+      headers: headersList
+    });
+
+    if (!session?.user) {
+      return { hasPassword: false };
+    }
+
+    const account = await prisma.account.findFirst({
+      where: {
+        userId: session.user.id,
+        providerId: 'credential'
+      }
+    });
+
+    return {
+      hasPassword: !!account?.password
+    };
+  } catch (error) {
+    console.error('Error checking user auth method:', error);
+    return { hasPassword: false };
+  }
+}
+
+export async function changePasswordAction(
+  _prevState: FormDataState,
+  formData: FormData
+) {
+  const validatedFields = changePasswordSchema.safeParse({
+    currentPassword: formData.get('currentPassword'),
+    newPassword: formData.get('newPassword'),
+    confirmPassword: formData.get('confirmPassword')
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Please check your input'
+    };
+  }
+
+  const { currentPassword, newPassword, confirmPassword } = validatedFields.data;
+
+  if (newPassword !== confirmPassword) {
+    return {
+      errors: { confirmPassword: ['Passwords do not match'] },
+      message: 'Passwords do not match'
+    };
+  }
+
+  if (currentPassword === newPassword) {
+    return {
+      errors: { newPassword: ['New password must be different from current password'] },
+      message: 'New password must be different from current password'
+    };
+  }
+
+  try {
+    const headersList = await headers();
+    const session = await auth.api.getSession({
+      headers: headersList
+    });
+
+    if (!session?.user) {
+      return {
+        message: 'You must be logged in to change your password'
+      };
+    }
+
+    const account = await prisma.account.findFirst({
+      where: {
+        userId: session.user.id,
+        providerId: 'credential'
+      }
+    });
+
+    if (!account || !account.password) {
+      return {
+        message: 'Password change is only available for email/password accounts'
+      };
+    }
+
+    const result = await auth.api.changePassword({
+      body: {
+        currentPassword,
+        newPassword,
+        revokeOtherSessions: false
+      },
+      headers: headersList,
+      asResponse: true
+    });
+
+    if (!result.ok) {
+      const errorText = await result.text();
+      let errorMessage = 'Failed to change password. Please try again.';
+
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.message) {
+          if (errorData.message.includes('Invalid password')) {
+            errorMessage = 'Current password is incorrect';
+          } else {
+            errorMessage = errorData.message;
+          }
+        }
+      } catch {
+        // Use default error message
+      }
+
+      return {
+        message: errorMessage,
+        errors:
+          errorMessage === 'Current password is incorrect'
+            ? { currentPassword: [errorMessage] }
+            : undefined
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Password changed successfully'
+    };
+  } catch (error) {
+    return {
+      message: 'An unexpected error occurred. Please try again.'
+    };
+  }
+}

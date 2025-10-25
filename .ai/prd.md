@@ -387,6 +387,35 @@ Acceptance Criteria:
 - Edge case: Reset tokens are single-use and cannot be reused even if not
   expired.
 
+US-018 Title: As an authenticated user, I want to change my password from the
+settings page so that I can maintain account security. Description: Users with
+email/password accounts can update their password directly from the settings
+page without needing to use the forgot password flow. GitHub OAuth users do not
+see this option since their authentication is managed by GitHub. Acceptance
+Criteria:
+
+- Given an authenticated user with email/password account on the settings page,
+  when they access settings, a "Change Password" section is visible with fields
+  for current password, new password, and confirm new password.
+- Users authenticated via GitHub OAuth do not see the "Change Password" section
+  in settings since their password is managed by GitHub.
+- When the user enters their current password correctly and provides a new
+  password (8+ characters) with matching confirmation, the password is updated
+  successfully.
+- Upon successful password change, a success message displays confirming the
+  update, and the user remains authenticated with their current session.
+- If the current password is incorrect, an error message displays "Current
+  password is incorrect" and the form does not submit.
+- If the new password is less than 8 characters, an error message displays
+  "Password must be at least 8 characters long."
+- If the new password and confirmation do not match, an error message displays
+  "Passwords do not match."
+- After changing password, the user can immediately sign in with the new
+  password on other devices or browsers.
+- Edge case: If the user enters the same password as their current password, an
+  error message displays "New password must be different from current password."
+- Edge case: Form validation prevents submission with empty fields and displays
+  appropriate error messages for each required field.
 
 
 ## 6. Success Metrics
