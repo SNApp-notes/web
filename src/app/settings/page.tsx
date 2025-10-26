@@ -90,10 +90,8 @@ function SettingsContent() {
   const handleDeleteAccount = async () => {
     setIsLoading(true);
 
-    const formDataObj = new FormData();
-
     try {
-      const result = await requestAccountDeletionAction({}, formDataObj);
+      const result = await requestAccountDeletionAction();
 
       if (result.success) {
         if (result.requiresConfirmation && result.confirmationUrl) {
