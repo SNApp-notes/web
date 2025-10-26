@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:coverage": "next dev --webpack",
-    "build": "next build --turbopack && ([ \"$NODE_ENV\" = \"production\" ] && prisma migrate deploy || true)",
+    "build": "next build --turbopack && ([ \"$NODE_ENV\" = \"production\" ] && prisma migrate deploy --schema ./prisma-main/schema.prisma || true)",
     "start": "next start",
     "lint": "eslint",
     "prisma:generate": "npx prisma generate --schema ./prisma-main/schema.prisma && npx prisma generate --schema ./prisma-e2e/schema.prisma",
