@@ -57,6 +57,13 @@ export function NotesProvider({
     updateNoteName
   } = useNodeSelection(initialNotes, initialSelectedNoteId);
 
+  // Sync notes state when initialNotes prop changes (e.g., after redirect)
+  useEffect(() => {
+    if (initialNotes.length > 0 && notes.length === 0) {
+      setNotes(initialNotes);
+    }
+  }, [initialNotes, notes.length, setNotes]);
+
   const markNoteDirty = updateDirtyFlag;
 
   const getSelectedNote = useCallback((): NoteTreeNode | null => {

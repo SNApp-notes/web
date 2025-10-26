@@ -5,39 +5,24 @@ import prisma, { type Note } from '@/lib/prisma';
 import { headers } from 'next/headers';
 
 export async function getNotes(): Promise<Note[]> {
-  try {
-    const headersList = await headers();
-    const session = await auth.api.getSession({
-      headers: headersList
-    });
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
 
-    if (!session?.user?.id) {
-      throw new Error('Unauthorized');
-    }
-
-    const notes = await prisma.note.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    // If user has no notes, create welcome note automatically
-    if (notes.length === 0) {
-      try {
-        const welcomeNote = await createWelcomeNoteForUser(session.user.id);
-        if (welcomeNote) {
-          return [welcomeNote];
-        }
-      } catch (error) {
-        console.error('Error creating welcome note:', error);
-        // Continue without welcome note if creation fails
-      }
-    }
-
-    return notes;
-  } catch (error) {
-    console.error('Error fetching notes:', error);
-    throw new Error('Failed to fetch notes');
+  if (!session?.user) {
+    return [];
   }
+
+  const notes = await prisma.note.findMany({
+    where: {
+      userId: session.user.id
+    },
+    orderBy: {
+      createdAt: 'asc'
+    }
+  });
+
+  return notes;
 }
 
 // Sanitize note name for display and storage
@@ -232,30 +217,29 @@ export async function createExampleNote(): Promise<Note> {
   }
 }
 
-// Create welcome note for new users during signup process
 export async function createWelcomeNoteForUser(userId: string): Promise<Note | null> {
   try {
-    // Check if user already has notes
-    const existingNotes = await prisma.note.findMany({
-      where: { userId }
-    });
+    return await prisma.$transaction(async (tx) => {
+      const existingNotes = await tx.note.findMany({
+        where: { userId }
+      });
 
-    if (existingNotes.length > 0) {
-      return null; // User already has notes
-    }
-
-    const welcomeNote = await prisma.note.create({
-      data: {
-        name: 'Welcome to SNApp',
-        content: null, // null content triggers onboarding display
-        userId
+      if (existingNotes.length > 0) {
+        return null;
       }
-    });
 
-    return welcomeNote;
+      const welcomeNote = await tx.note.create({
+        data: {
+          name: 'Welcome to SNApp',
+          content: null,
+          userId
+        }
+      });
+
+      return welcomeNote;
+    });
   } catch (error) {
     console.error('Error creating welcome note for new user:', error);
-    // Don't throw error here - we don't want to fail signup if note creation fails
     return null;
   }
 }

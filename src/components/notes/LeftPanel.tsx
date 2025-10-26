@@ -30,9 +30,10 @@ const LeftPanel = memo(function LeftPanel({
 
   // Filter and prepare notes for TreeView
   const treeData = useMemo<NoteTreeNode[]>(() => {
-    return notes
+    const filtered = notes
       .filter((note) => note.name.toLowerCase().includes(filter.toLowerCase()))
       .sort((a, b) => a.id - b.id);
+    return filtered;
   }, [notes, filter]);
 
   // Handle TreeNode selection
@@ -96,6 +97,7 @@ const LeftPanel = memo(function LeftPanel({
         w="100%"
         borderTop="1px solid"
         borderColor="border"
+        data-testid="note-list"
       >
         {treeData.length === 0 ? (
           <Text textAlign="center" color="fg.muted" fontSize="sm" mt={4}>

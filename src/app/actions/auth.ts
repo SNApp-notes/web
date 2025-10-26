@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import { sendEmail } from '@/lib/email';
@@ -44,12 +45,12 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
 
   const { email, password, name } = validatedFields.data;
 
-  let result;
+  let userId: string;
 
   try {
     const headersList = await headers();
 
-    result = await auth.api.signUpEmail({
+    const result = await auth.api.signUpEmail({
       body: {
         email,
         password,
@@ -60,12 +61,13 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
       asResponse: true
     });
 
+    const responseText = await result.text();
+
     if (!result.ok) {
-      const errorText = await result.text();
       let errorMessage = 'Failed to create account. Please try again.';
 
       try {
-        const errorData = JSON.parse(errorText);
+        const errorData = JSON.parse(responseText);
         if (errorData.message) {
           errorMessage = errorData.message;
         }
@@ -77,6 +79,16 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
         message: errorMessage
       };
     }
+
+    // Parse successful response to get user ID
+    const responseData = JSON.parse(responseText);
+    userId = responseData.user?.id;
+
+    if (!userId) {
+      return {
+        message: 'Failed to create account. Please try again.'
+      };
+    }
   } catch (error) {
     console.error(`Sign up failed for user: ${email}`, error);
     return {
@@ -85,10 +97,32 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
   }
 
   // Handle success case outside of try-catch to avoid catching redirect errors
-  const isDevelopment = process.env.NODE_ENV !== 'production';
+  const isProduction = process.env.NODE_ENV === 'production';
 
-  if (isDevelopment) {
-    // In development, redirect immediately as email verification is disabled
+  if (!isProduction) {
+    // In development and test, create welcome note before redirecting
+    try {
+      await prisma.$transaction(async (tx) => {
+        const existingNotes = await tx.note.findMany({
+          where: { userId }
+        });
+
+        if (existingNotes.length === 0) {
+          await tx.note.create({
+            data: {
+              name: 'Welcome to SNApp',
+              content: null,
+              userId
+            }
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Error creating welcome note:', error);
+    }
+
+    // Revalidate the home page to ensure the new welcome note is loaded
+    revalidatePath('/');
     redirect('/');
   } else {
     // In production, show success message for email verification

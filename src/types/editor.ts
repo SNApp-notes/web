@@ -26,6 +26,7 @@ export interface EditorProps {
   };
   className?: string;
   onEditorReady?: (editorRef: EditorRef) => void;
+  onSave?: () => void;
 }
 
 export interface EditorRef {

@@ -23,6 +23,7 @@ const MiddlePanel = memo(function MiddlePanel({
   saveStatus,
   selectedLine,
   onContentChange,
+  onSave,
   onEditorReady
 }: MiddlePanelProps) {
   const [welcomeContent, setWelcomeContent] = useState<string>('');
@@ -103,6 +104,7 @@ const MiddlePanel = memo(function MiddlePanel({
             onChange={handleContentChange}
             selectedLine={selectedLine}
             onEditorReady={onEditorReady}
+            onSave={onSave}
             placeholder="Start writing your note..."
           />
         ) : (

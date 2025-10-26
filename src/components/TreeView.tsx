@@ -125,6 +125,7 @@ const TreeNodeComponent = <T = unknown,>({
     <VStack align="stretch" gap={0}>
       <HStack
         ref={nodeRef}
+        role="treeitem"
         cursor="pointer"
         onClick={hasChildren ? handleToggle : handleNodeSelect}
         bg={isSelected ? 'blue.solid' : 'transparent'}
@@ -138,7 +139,7 @@ const TreeNodeComponent = <T = unknown,>({
         outline={isSelected && !hasChildren ? '2px solid' : 'none'}
         outlineColor="blue.500"
         outlineOffset="2px"
-        className={clsx('tree-node', {
+        className={clsx('tree-item', 'tree-node', {
           'tree-node-selected': isSelected,
           'tree-node-expandable': hasChildren,
           'tree-node-leaf': !hasChildren

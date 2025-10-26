@@ -14,7 +14,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { basicLight, basicDark } from '@uiw/codemirror-theme-basic';
 import { useColorMode } from '@/components/ui/color-mode';
-import { EditorView } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 import type { EditorProps, EditorRef } from '@/types/editor';
 
 const Editor = memo(
@@ -26,7 +26,8 @@ const Editor = memo(
       readOnly = false,
       selectedLine,
       className,
-      onEditorReady
+      onEditorReady,
+      onSave
     },
     ref
   ) {
@@ -76,9 +77,21 @@ const Editor = memo(
           codeLanguages: languages
         }),
         EditorView.lineWrapping,
-        editorTheme
+        editorTheme,
+        keymap.of([
+          {
+            key: 'Mod-s',
+            run: () => {
+              if (onSave) {
+                onSave();
+                return true;
+              }
+              return false;
+            }
+          }
+        ])
       ],
-      [editorTheme]
+      [editorTheme, onSave]
     );
 
     const scrollToLine = useCallback(
