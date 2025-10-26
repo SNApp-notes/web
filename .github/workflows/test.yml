@@ -104,9 +104,8 @@ jobs:
       - name: Build Next.js app
         run: npx next build --turbopack
         env:
-          NODE_ENV: 'test'
+          CI: 'true'
           COVERAGE: 'true'
-          DATABASE_URL: 'file:./dummy.db'
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
           BETTER_AUTH_URL: 'http://localhost:3000'
 
@@ -116,9 +115,8 @@ jobs:
           npm run start > logs/next-server.log 2>&1 &
           echo $! > logs/next-server.pid
         env:
-          NODE_ENV: 'test'
+          CI: 'true'
           COVERAGE: 'true'
-          DATABASE_URL: 'file:./dummy.db'
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
           BETTER_AUTH_URL: 'http://localhost:3000'
           PORT: 3000
