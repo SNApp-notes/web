@@ -17,13 +17,13 @@ a {
 
 /* 80 characters line in Editor */
 .cm-content::before {
-    width: calc(80ch + 6px);
-    content: '';
-    display: block;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    border-right: 1px solid #aaa;
-    z-index: 1000;
-    pointer-events: none;
+  width: calc(80ch + 6px);
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-right: 1px solid #aaa;
+  z-index: 1000;
+  pointer-events: none;
 }

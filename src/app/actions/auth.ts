@@ -205,10 +205,7 @@ export async function signOutAction() {
   redirect('/login');
 }
 
-export async function requestAccountDeletionAction(
-  _prevState: FormDataState,
-  _formData: FormData
-) {
+export async function requestAccountDeletionAction() {
   try {
     const headersList = await headers();
     const session = await auth.api.getSession({
