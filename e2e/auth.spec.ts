@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 import { collectCoverage } from './coverage-helper';
 
 test.describe('Home Page', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test('should redirect to login when not authenticated', async ({ page }) => {
     await page.goto('/');
 
@@ -13,6 +15,8 @@ test.describe('Home Page', () => {
 });
 
 test.describe('Authentication', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test('should navigate to register page from login page', async ({ page }) => {
     await page.goto('/login');
 
@@ -56,6 +60,8 @@ test.describe('Authentication', () => {
 });
 
 test.describe('Welcome Note Creation', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test.beforeEach(async ({ page, context }) => {
     await context.clearCookies();
     await page.goto('/register');

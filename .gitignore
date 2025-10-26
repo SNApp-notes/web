@@ -17,6 +17,7 @@
 /prisma-e2e/test.db-journal
 /e2e/results/
 /e2e/report/
+/e2e/.auth/
 /playwright/.cache/
 /.nyc_output
 test-e2e.db

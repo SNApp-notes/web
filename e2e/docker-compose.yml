@@ -7,6 +7,7 @@ services:
     volumes:
       - ./report:/app/report:z
       - ./results:/app/results:z
+      - ./.auth:/app/.auth:z
       - ./playwright.config.ts:/app/playwright.config.ts:z
       - ./global-teardown.ts:/app/global-teardown.ts:z
       - .:/app/e2e:z

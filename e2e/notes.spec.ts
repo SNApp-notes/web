@@ -2,23 +2,30 @@ import { test, expect } from '@playwright/test';
 import { collectCoverage } from './coverage-helper';
 
 test.describe('Notes Application', () => {
-  test.skip('should create a new note when authenticated', async ({ page }) => {
-    await page.goto('/register');
+  test('should create a new note when authenticated', async ({ page }) => {
+    await page.goto('/');
 
-    await page.getByPlaceholder('Full Name').fill('Test User');
-    await page.getByPlaceholder('Email').fill('testuser@example.com');
-    await page.getByPlaceholder(/password/i).fill('password123');
-    await page.getByRole('button', { name: 'Create Account' }).click();
+    await expect(page.locator('[data-testid="note-list"]')).toBeVisible({
+      timeout: 10000
+    });
 
-    await page.waitForURL('/');
+    // Count existing notes
+    const initialNoteCount = await page.locator('.tree-node-label').count();
 
     const newNoteButton = page.getByRole('button', { name: /new note/i });
     await expect(newNoteButton).toBeVisible();
 
     await newNoteButton.click();
 
-    const noteTitle = page.getByPlaceholder(/note title/i);
-    await expect(noteTitle).toBeVisible();
+    // Wait for a new note to appear
+    await expect(page.locator('.tree-node-label')).toHaveCount(initialNoteCount + 1, {
+      timeout: 10000
+    });
+
+    // Verify the new note exists with default name
+    await expect(page.locator('[data-testid="note-list"]')).toContainText('New Note', {
+      timeout: 5000
+    });
 
     await collectCoverage(page, 'create-note-authenticated');
   });
