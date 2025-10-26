@@ -7,7 +7,7 @@ export * from '../../prisma-main/types';
 const getPrismaMain = () => new mainClient();
 const getPrismaE2E = () => new e2eClient();
 
-const getPrisma = () => process.env.CI ? getPrismaE2E() : getPrismaMain();
+const getPrisma = () => (process.env.CI ? getPrismaE2E() : getPrismaMain());
 
 const globalForPrisma = global as unknown as {
   prisma: ReturnType<typeof getPrismaMain>;
