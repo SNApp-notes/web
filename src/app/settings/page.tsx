@@ -21,20 +21,17 @@ import {
   FormDataState
 } from '@/app/actions/auth';
 import { Toaster, toaster } from '@/components/ui/toaster';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [showDeleteForm, setShowDeleteForm] = useState<boolean>(false);
   const [showPasswordForm, setShowPasswordForm] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState<boolean>(false);
   const [hasPassword, setHasPassword] = useState<boolean>(false);
-  const [formData, setFormData] = useState<FormDataState>({
-    email: '',
-    errors: undefined,
-    message: ''
-  });
+  const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [deletionUrl, setDeletionUrl] = useState<string>('');
   const [passwordFormData, setPasswordFormData] = useState<FormDataState>({
     errors: undefined,
     message: ''
@@ -90,31 +87,27 @@ function SettingsContent() {
     }
   }, [searchParams]);
 
-  const handleDeleteSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleDeleteAccount = async () => {
     setIsLoading(true);
-    setFormData((prev: FormDataState) => ({ ...prev, errors: undefined, message: '' }));
 
-    const formDataObj = new FormData(event.currentTarget);
+    const formDataObj = new FormData();
 
     try {
-      const result = await requestAccountDeletionAction(formData, formDataObj);
+      const result = await requestAccountDeletionAction({}, formDataObj);
 
       if (result.success) {
-        toaster.create({
-          title: 'Confirmation Email Sent',
-          description: result.message,
-          type: 'success',
-          duration: 10000
-        });
-        setShowDeleteForm(false);
-        setFormData({ email: '', errors: undefined, message: '' });
+        if (result.requiresConfirmation && result.confirmationUrl) {
+          setDeletionUrl(result.confirmationUrl);
+          setShowDeleteDialog(true);
+        } else {
+          toaster.create({
+            title: 'Confirmation Email Sent',
+            description: result.message,
+            type: 'success',
+            duration: 10000
+          });
+        }
       } else if (result.message) {
-        setFormData((prev: FormDataState) => ({
-          ...prev,
-          errors: result.errors,
-          message: result.message
-        }));
         toaster.create({
           title: 'Error',
           description: result.message,
@@ -129,6 +122,12 @@ function SettingsContent() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleConfirmDeletion = () => {
+    if (deletionUrl) {
+      window.location.href = deletionUrl;
     }
   };
 
@@ -334,88 +333,43 @@ function SettingsContent() {
               <Card.Description>Manage your account settings and data</Card.Description>
             </Card.Header>
             <Card.Body>
-              {!showDeleteForm ? (
-                <Flex justify="space-between" align="center">
-                  <Box>
-                    <Text fontWeight="medium" mb={1} color="red.500">
-                      Delete Account
-                    </Text>
-                    <Text fontSize="sm" color="fg.muted">
-                      Permanently delete your account and all notes
-                    </Text>
-                  </Box>
-                  <Button
-                    p={3}
-                    colorPalette="red"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowDeleteForm(true)}
-                  >
+              <Flex justify="space-between" align="center">
+                <Box>
+                  <Text fontWeight="medium" mb={1} color="red.500">
                     Delete Account
-                  </Button>
-                </Flex>
-              ) : (
-                <Stack gap={4}>
-                  <Box>
-                    <Text fontWeight="medium" mb={1} color="red.500">
-                      Confirm Account Deletion
-                    </Text>
-                    <Text fontSize="sm" color="fg.muted" mb={3}>
-                      This action cannot be undone. Please enter your email address to
-                      confirm account deletion.
-                    </Text>
-                  </Box>
-
-                  <form onSubmit={handleDeleteSubmit}>
-                    <Stack gap={4}>
-                      <Field.Root invalid={!!formData.errors?.email}>
-                        <Field.Label htmlFor="email">Email Address</Field.Label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          placeholder="Enter your email to confirm"
-                          required
-                          value={formData.email}
-                          onChange={(e) =>
-                            setFormData((prev) => ({ ...prev, email: e.target.value }))
-                          }
-                        />
-                        {formData.errors?.email && (
-                          <Field.ErrorText>{formData.errors.email[0]}</Field.ErrorText>
-                        )}
-                      </Field.Root>
-
-                      <Flex gap={2} justify="flex-end">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setShowDeleteForm(false);
-                            setFormData({ email: '', errors: undefined, message: '' });
-                          }}
-                          disabled={isLoading}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          colorPalette="red"
-                          loading={isLoading}
-                          loadingText="Sending Email..."
-                        >
-                          Send Deletion Email
-                        </Button>
-                      </Flex>
-                    </Stack>
-                  </form>
-                </Stack>
-              )}
+                  </Text>
+                  <Text fontSize="sm" color="fg.muted">
+                    Permanently delete your account and all notes. A confirmation email
+                    will be sent.
+                  </Text>
+                </Box>
+                <Button
+                  p={3}
+                  colorPalette="red"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteAccount}
+                  loading={isLoading}
+                  loadingText="Sending..."
+                >
+                  Delete Account
+                </Button>
+              </Flex>
             </Card.Body>
           </Card.Root>
         </Stack>
       </Box>
       <Toaster />
+      <ConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleConfirmDeletion}
+        title="Confirm Account Deletion"
+        message="This action cannot be undone. Are you sure you want to permanently delete your account and all your notes?"
+        confirmText="Delete My Account"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </Box>
   );
 }

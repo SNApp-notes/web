@@ -47,7 +47,7 @@ export function ConfirmationDialog({
               </Button>
               <Button
                 p={3}
-                colorScheme={variant === 'danger' ? 'red' : 'orange'}
+                colorPalette={variant === 'danger' ? 'red' : 'orange'}
                 onClick={handleConfirm}
               >
                 {confirmText}

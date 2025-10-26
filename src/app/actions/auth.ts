@@ -13,6 +13,8 @@ export type FormDataState = {
   message?: string;
   success?: boolean;
   email?: string;
+  requiresConfirmation?: boolean;
+  confirmationUrl?: string;
 };
 
 const signUpSchema = z.object({
@@ -169,27 +171,11 @@ export async function signOutAction() {
   redirect('/login');
 }
 
-const deleteAccountSchema = z.object({
-  email: z.string().email('Please enter a valid email address')
-});
-
 export async function requestAccountDeletionAction(
   _prevState: FormDataState,
-  formData: FormData
+  _formData: FormData
 ) {
-  const validatedFields = deleteAccountSchema.safeParse({
-    email: formData.get('email')
-  });
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Invalid email address'
-    };
-  }
-
   try {
-    // Get the current session to verify user
     const headersList = await headers();
     const session = await auth.api.getSession({
       headers: headersList
@@ -201,18 +187,17 @@ export async function requestAccountDeletionAction(
       };
     }
 
-    // Verify email matches the current user's email
-    if (session.user.email !== validatedFields.data.email) {
+    if (!session.user.email) {
       return {
-        message: 'Email address does not match your account'
+        message: 'No email address found for your account'
       };
     }
 
-    // Generate a secure deletion token
-    const deletionToken = randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const isDevelopment = process.env.NODE_ENV !== 'production';
 
-    // Store the deletion token in the verification table
+    const deletionToken = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
     await prisma.verification.create({
       data: {
         id: `delete_${deletionToken}`,
@@ -222,8 +207,16 @@ export async function requestAccountDeletionAction(
       }
     });
 
-    // Send deletion confirmation email
     const confirmationUrl = `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/auth/delete-account?token=${deletionToken}`;
+
+    if (isDevelopment) {
+      return {
+        success: true,
+        requiresConfirmation: true,
+        confirmationUrl,
+        message: 'In development mode, use the confirmation dialog to proceed.'
+      };
+    }
 
     await sendEmail({
       to: session.user.email,
