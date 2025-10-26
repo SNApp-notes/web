@@ -67,7 +67,7 @@ jobs:
 
       - name: Get Playwright version
         id: playwright-version
-        run: echo "version=$(npm list @playwright/test --depth=0 --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').dependencies['@playwright/test'].version)")" >> $GITHUB_ENV
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
@@ -106,6 +106,7 @@ jobs:
         env:
           NODE_ENV: 'test'
           COVERAGE: 'true'
+          DATABASE_URL: 'file:./dummy.db'
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
           BETTER_AUTH_URL: 'http://localhost:3000'
 
@@ -117,6 +118,7 @@ jobs:
         env:
           NODE_ENV: 'test'
           COVERAGE: 'true'
+          DATABASE_URL: 'file:./dummy.db'
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
           BETTER_AUTH_URL: 'http://localhost:3000'
           PORT: 3000
