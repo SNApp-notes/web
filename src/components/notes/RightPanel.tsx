@@ -24,23 +24,31 @@ function RightPanel({ headers, currentLine, onHeaderClick }: RightPanelProps) {
   }, []);
 
   return (
-    <Box as="aside" h="100%" display="flex" flexDirection="column" p={4} bg="bg.subtle">
-      <Text fontSize="md" fontWeight="semibold" mb={4}>
-        Headers
-      </Text>
+    <Box as="aside" h="100%" display="flex" flexDirection="column" bg="bg.subtle">
+      <Stack gap={4} align="stretch" mx={6} mt={6} mb={0}>
+        <Text fontSize="md" fontWeight="semibold">
+          Headers
+        </Text>
 
-      <Input
-        p={3}
-        placeholder="Filter headers..."
-        value={filter}
-        onChange={handleFilterChange}
-        size="sm"
-        mb={4}
-      />
+        <Input
+          p={3}
+          placeholder="Filter headers..."
+          value={filter}
+          onChange={handleFilterChange}
+          size="sm"
+        />
+      </Stack>
 
-      <Box flex={1} overflow="auto">
+      <Box
+        flex={1}
+        mt={4}
+        overflow="auto"
+        w="100%"
+        borderTop="1px solid"
+        borderColor="border"
+      >
         {filteredHeaders.length === 0 ? (
-          <Text textAlign="center" color="fg.muted" fontSize="sm">
+          <Text textAlign="center" color="fg.muted" fontSize="sm" mt={4}>
             {headers.length === 0 ? 'No headers found' : 'No matching headers'}
           </Text>
         ) : (

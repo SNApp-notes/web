@@ -72,8 +72,8 @@ const LeftPanel = memo(function LeftPanel({
   );
 
   return (
-    <Box as="aside" h="100%" display="flex" flexDirection="column" p={6} bg="bg.subtle">
-      <Stack gap={4} align="stretch">
+    <Box as="aside" h="100%" display="flex" flexDirection="column" bg="bg.subtle">
+      <Stack gap={4} align="stretch" mx={6} mt={6} mb={0}>
         <Button colorPalette="blue" variant="solid" onClick={onNewNote}>
           New Note
         </Button>
@@ -87,7 +87,14 @@ const LeftPanel = memo(function LeftPanel({
         />
       </Stack>
 
-      <Box flex={1} mt={4} overflow="auto">
+      <Box
+        flex={1}
+        mt={4}
+        overflow="auto"
+        w="100%"
+        borderTop="1px solid"
+        borderColor="border"
+      >
         {treeData.length === 0 ? (
           <Text textAlign="center" color="fg.muted" fontSize="sm" mt={4}>
             {notes.length === 0 ? 'No notes yet' : 'No matching notes'}
