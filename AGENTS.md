@@ -10,8 +10,9 @@
 - `npm run test:run` - Run tests once
 - `npm run test:ui` - Run tests with UI (requires @vitest/ui)
 - `npm run test:coverage` - Run tests with coverage report
-- `npm run test:e2e` - Run E2E tests locally (requires dev server running)
-- `npm run test:e2e:docker` - Run E2E tests in Docker with isolated environment
+- `npm run test:e2e` - Run E2E tests locally (NOT SUPPORTED on Fedora - use Docker instead)
+- `npm run test:e2e:docker` - Run E2E tests in Docker with isolated environment (REQUIRED on Fedora)
+- `npm run test:e2e:docker:build` - Rebuild Docker image for E2E tests (run after modifying Dockerfile or docker-compose.yml)
 - `npm run test:e2e:ui` - Run E2E tests with Playwright UI
 
 ## Build & Development Workflow
@@ -141,6 +142,12 @@ test('component renders correctly', () => {
 
 ### E2E Testing with Playwright
 
+**Platform Requirements:**
+
+- **Fedora/Unsupported OS**: Must use Docker (`npm run test:e2e:docker`)
+- Playwright binaries not available for Fedora - Docker is the only supported option
+- Always run `npm run test:e2e:docker:build` after modifying `e2e/Dockerfile` or `e2e/docker-compose.yml`
+
 **Setup:**
 
 - E2E tests located in `e2e/` directory
@@ -150,13 +157,16 @@ test('component renders correctly', () => {
 **Running E2E Tests:**
 
 ```bash
-# Local (requires dev server on port 3000)
-npm run test:e2e
-
-# Docker (isolated, recommended for CI)
+# Docker (REQUIRED on Fedora)
 npm run test:e2e:docker
 
-# UI mode for debugging
+# Rebuild Docker image after modifying Docker files
+npm run test:e2e:docker:build
+
+# Local (NOT SUPPORTED on Fedora)
+npm run test:e2e
+
+# UI mode for debugging (NOT SUPPORTED on Fedora)
 npm run test:e2e:ui
 ```
 
