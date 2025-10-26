@@ -55,25 +55,80 @@ test.describe('Authentication', () => {
   });
 });
 
-test.describe('Notes Application', () => {
-  test.skip('should create a new note when authenticated', async ({ page }) => {
+test.describe('Welcome Note Creation', () => {
+  test.beforeEach(async ({ page, context }) => {
+    await context.clearCookies();
     await page.goto('/register');
+  });
 
-    await page.getByPlaceholder('Full Name').fill('Test User');
-    await page.getByPlaceholder('Email').fill('testuser@example.com');
-    await page.getByPlaceholder(/password/i).fill('password123');
-    await page.getByRole('button', { name: 'Create Account' }).click();
+  test('should create exactly one welcome note for new user on signup', async ({
+    page
+  }) => {
+    const timestamp = Date.now();
+    const email = `test-welcome-${timestamp}@example.com`;
 
-    await page.waitForURL('/');
+    await page.fill('input[name="name"]', 'Welcome Test User');
+    await page.fill('input[name="email"]', email);
+    await page.fill('input[name="password"]', 'TestPassword123!');
+    await page.click('button[type="submit"]');
 
-    const newNoteButton = page.getByRole('button', { name: /new note/i });
-    await expect(newNoteButton).toBeVisible();
+    await page.waitForURL('/', { timeout: 10000 });
 
-    await newNoteButton.click();
+    await page.waitForSelector('[data-testid="note-list"]', { timeout: 10000 });
 
-    const noteTitle = page.getByPlaceholder(/note title/i);
-    await expect(noteTitle).toBeVisible();
+    await page.waitForSelector('[data-testid="note-list"] .tree-item', {
+      timeout: 10000
+    });
 
-    await collectCoverage(page, 'create-note-authenticated');
+    const noteItems = await page.locator('[data-testid="note-list"] .tree-item').all();
+
+    expect(noteItems.length).toBe(1);
+
+    const noteName = await noteItems[0].textContent();
+    expect(noteName).toContain('Welcome');
+
+    await collectCoverage(page, 'create-one-note');
+  });
+
+  test('should not create duplicate welcome notes on page refresh', async ({ page }) => {
+    const timestamp = Date.now();
+    const email = `test-no-dupe-${timestamp}@example.com`;
+
+    await page.fill('input[name="name"]', 'No Dupe Test User');
+    await page.fill('input[name="email"]', email);
+    await page.fill('input[name="password"]', 'TestPassword123!');
+    await page.click('button[type="submit"]');
+
+    await page.waitForURL('/', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="note-list"] .tree-item', {
+      timeout: 10000
+    });
+
+    const initialNotes = await page.locator('[data-testid="note-list"] .tree-item').all();
+
+    expect(initialNotes.length).toBe(1);
+
+    await page.reload();
+    await page.waitForSelector('[data-testid="note-list"] .tree-item', {
+      timeout: 10000
+    });
+
+    const notesAfterRefresh = await page
+      .locator('[data-testid="note-list"] .tree-item')
+      .all();
+
+    expect(notesAfterRefresh.length).toBe(1);
+
+    await page.reload();
+    await page.waitForSelector('[data-testid="note-list"] .tree-item', {
+      timeout: 10000
+    });
+
+    const notesAfterSecondRefresh = await page
+      .locator('[data-testid="note-list"] .tree-item')
+      .all();
+
+    expect(notesAfterSecondRefresh.length).toBe(1);
+    await collectCoverage(page, 'no-duplicated-note');
   });
 });
