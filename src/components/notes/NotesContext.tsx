@@ -5,7 +5,7 @@ import {
   useContext,
   useEffect,
   useCallback,
-  useMemo,
+  useRef,
   type ReactNode
 } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -25,7 +25,6 @@ interface NotesContextValue {
   getSelectedNote: () => NoteTreeNode | null;
   getNote: (noteId: number) => NoteTreeNode | null;
   selectNote: (noteId: number | null) => void;
-  syncUrlToState: () => void;
 }
 
 const NotesContext = createContext<NotesContextValue | undefined>(undefined);
@@ -79,16 +78,6 @@ export function NotesProvider({
     [notes]
   );
 
-  // URL synchronization - extract note ID from current URL
-  const syncUrlToState = useCallback(() => {
-    const noteMatch = pathname.match(/\/note\/(\d+)/);
-    const urlNoteId = noteMatch ? parseInt(noteMatch[1], 10) : null;
-
-    if (urlNoteId !== selectedNoteId) {
-      updateSelection(urlNoteId);
-    }
-  }, [pathname, selectedNoteId, updateSelection]);
-
   // Note selection with Next.js router
   const selectNote = useCallback(
     (noteId: number | null) => {
@@ -107,39 +96,27 @@ export function NotesProvider({
 
   // Sync URL to state on URL changes
   useEffect(() => {
-    syncUrlToState();
-  }, [syncUrlToState]);
+    const noteMatch = pathname.match(/\/note\/(\d+)/);
+    const urlNoteId = noteMatch ? parseInt(noteMatch[1], 10) : null;
 
-  const value: NotesContextValue = useMemo(
-    () => ({
-      notes,
-      selectedNoteId,
-      saveStatus,
-      setNotes,
-      setSaveStatus,
-      updateNoteContent,
-      updateNoteName,
-      markNoteDirty,
-      getSelectedNote,
-      getNote,
-      selectNote,
-      syncUrlToState
-    }),
-    [
-      notes,
-      selectedNoteId,
-      saveStatus,
-      setNotes,
-      setSaveStatus,
-      updateNoteContent,
-      updateNoteName,
-      markNoteDirty,
-      getSelectedNote,
-      getNote,
-      selectNote,
-      syncUrlToState
-    ]
-  );
+    if (urlNoteId !== null) {
+      updateSelection(urlNoteId);
+    }
+  }, [pathname, updateSelection]);
+
+  const value: NotesContextValue = {
+    notes,
+    selectedNoteId,
+    saveStatus,
+    setNotes,
+    setSaveStatus,
+    updateNoteContent,
+    updateNoteName,
+    markNoteDirty,
+    getSelectedNote,
+    getNote,
+    selectNote
+  };
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;
 }
