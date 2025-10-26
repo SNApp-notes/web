@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useCallback,
-  useRef,
-  type ReactNode
-} from 'react';
+import { createContext, useContext, useEffect, useCallback, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';

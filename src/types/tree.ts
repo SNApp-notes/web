@@ -22,6 +22,7 @@ export interface TreeViewProps<T = unknown> {
   onNodeExpand?: (node: TreeNode<T>) => void;
   onNodeCollapse?: (node: TreeNode<T>) => void;
   generateName?: (node: TreeNode<T>) => string;
+  generateTitle?: (node: TreeNode<T>) => string;
   expandedNodeIds?: string[];
   title?: string;
 }

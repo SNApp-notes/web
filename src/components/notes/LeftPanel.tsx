@@ -71,6 +71,8 @@ const LeftPanel = memo(function LeftPanel({
     []
   );
 
+  const generateTitle = useCallback((node: NoteTreeNode) => `/note/${node.id}`, []);
+
   return (
     <Box as="aside" h="100%" display="flex" flexDirection="column" bg="bg.subtle">
       <Stack gap={4} align="stretch" mx={6} mt={6} mb={0}>
@@ -106,6 +108,7 @@ const LeftPanel = memo(function LeftPanel({
             onNodeRename={handleTreeNodeRename}
             onNodeDelete={handleTreeNodeDelete}
             generateName={generateName}
+            generateTitle={generateTitle}
             title=""
           />
         )}

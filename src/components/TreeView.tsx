@@ -19,6 +19,7 @@ interface TreeNodeComponentProps<T = unknown> {
   onNodeRename?: (node: TreeNode<T>, newName: string) => void;
   onNodeDelete?: (node: TreeNode<T>) => void;
   generateName?: (node: TreeNode<T>) => string;
+  generateTitle?: (node: TreeNode<T>) => string;
   level?: number;
 }
 
@@ -28,6 +29,7 @@ const TreeNodeComponent = <T = unknown,>({
   onNodeRename,
   onNodeDelete,
   generateName,
+  generateTitle,
   level = 0
 }: TreeNodeComponentProps<T>) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -191,6 +193,7 @@ const TreeNodeComponent = <T = unknown,>({
             className="tree-node-label"
             onDoubleClick={handleDoubleClick}
             cursor="pointer"
+            title={generateTitle ? generateTitle(node) : undefined}
           >
             {generateName ? generateName(node) : node.name}
           </Text>
@@ -222,6 +225,7 @@ const TreeNodeComponent = <T = unknown,>({
               onNodeRename={onNodeRename}
               onNodeDelete={onNodeDelete}
               generateName={generateName}
+              generateTitle={generateTitle}
               level={level + 1}
             />
           ))}
@@ -242,6 +246,7 @@ const TreeViewComponent = <T = unknown,>({
   onNodeRename,
   onNodeDelete,
   generateName,
+  generateTitle,
   title = 'Tree'
 }: TreeViewProps<T>) => {
   return (
@@ -271,6 +276,7 @@ const TreeViewComponent = <T = unknown,>({
             onNodeRename={onNodeRename}
             onNodeDelete={onNodeDelete}
             generateName={generateName}
+            generateTitle={generateTitle}
           />
         ))}
       </VStack>
