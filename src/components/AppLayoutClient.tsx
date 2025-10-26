@@ -1,6 +1,7 @@
 'use client';
 
 import styles from './notes/MainNotesLayout.module.css';
+import Footer from './Footer';
 
 interface AppLayoutClientProps {
   navigation?: React.ReactNode;
@@ -23,6 +24,7 @@ export default function AppLayoutClient({
         {content}
       </div>
       {children}
+      <Footer />
     </div>
   );
 }
