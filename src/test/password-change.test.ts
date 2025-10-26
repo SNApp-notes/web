@@ -45,12 +45,16 @@ describe('Password Change Functionality', () => {
   });
 
   afterEach(async () => {
-    await prisma.account.deleteMany({
-      where: { userId: testUserId }
-    });
-    await prisma.user.delete({
-      where: { id: testUserId }
-    });
+    try {
+      await prisma.account.deleteMany({
+        where: { userId: testUserId }
+      });
+      await prisma.user.delete({
+        where: { id: testUserId }
+      });
+    } catch (error) {
+      // User may not exist if test didn't use it
+    }
   });
 
   it('should detect email/password authentication method', async () => {
