@@ -43,10 +43,10 @@ function convertHeadersToMarkdown(content) {
 
   // Regex to match the legacy header format
   // Matches lines with dashes, then :: Header, then more dashes
-  const headerRegex = /^-{10,}\s*::\s*(.+?)\s*-{10,}$/gm;
+  const headerRegex = /^(-{10,})\s*::\s*(.+?)\s*-{10,}$/gm;
 
-  return content.replace(headerRegex, (_match, headerText) => {
-    return `## ${headerText.trim()}`;
+  return content.replace(headerRegex, (_match, sep, headerText) => {
+    return `${sep}\n## ${headerText.trim()}\n${sep}`;
   });
 }
 
