@@ -74,8 +74,6 @@ jobs:
           npx prisma generate --schema=prisma-e2e/schema.prisma
           echo "Creating E2E test database..."
           npx prisma migrate deploy --schema=prisma-e2e/schema.prisma
-        env:
-          DATABASE_URL: 'file:./test.db'
 
       - name: Cache Next files
         uses: actions/cache@v4
@@ -90,15 +88,15 @@ jobs:
       - name: Build Next.js app
         run: npx next build --turbopack
         env:
-          DATABASE_URL: 'file:./test.db'
+          NODE_ENV: 'test'
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
           BETTER_AUTH_URL: 'http://localhost:3000'
 
       - name: Start Next.js server with coverage
         run: npm run dev:coverage &
         env:
+          NODE_ENV: 'test'
           COVERAGE: 'true'
-          DATABASE_URL: 'file:./test.db'
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
           BETTER_AUTH_URL: 'http://localhost:3000'
           PORT: 3000
@@ -110,6 +108,7 @@ jobs:
       - name: Run E2E tests with coverage
         run: npm run test:e2e:coverage
         env:
+          NODE_ENV: 'test'
           COVERAGE: 'true'
           BASE_URL: 'http://localhost:3000'
 
