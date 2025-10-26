@@ -109,7 +109,10 @@ jobs:
           BETTER_AUTH_URL: 'http://localhost:3000'
 
       - name: Start Next.js server with coverage
-        run: npm run dev:coverage &
+        run: |
+          mkdir -p logs
+          npm run dev:coverage > logs/next-server.log 2>&1 &
+          echo $! > logs/next-server.pid
         env:
           NODE_ENV: 'test'
           COVERAGE: 'true'
@@ -120,6 +123,15 @@ jobs:
       - name: Wait for server to be ready
         run: |
           timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+          echo "Server is ready"
+
+      - name: Display server startup logs
+        if: always()
+        run: |
+          if [ -f logs/next-server.log ]; then
+            echo "=== Next.js Server Startup Logs ==="
+            head -n 50 logs/next-server.log
+          fi
 
       - name: Run E2E tests with coverage
         run: npm run test:e2e:coverage
@@ -127,6 +139,21 @@ jobs:
           NODE_ENV: 'test'
           COVERAGE: 'true'
           BASE_URL: 'http://localhost:3000'
+
+      - name: Stop Next.js server
+        if: always()
+        run: |
+          if [ -f logs/next-server.pid ]; then
+            kill $(cat logs/next-server.pid) || true
+          fi
+
+      - name: Upload server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-server-logs
+          path: logs/
+          retention-days: 7
 
       - name: Upload E2E test artifacts
         if: always()
