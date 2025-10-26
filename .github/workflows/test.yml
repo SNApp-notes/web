@@ -105,13 +105,14 @@ jobs:
         run: npx next build --turbopack
         env:
           NODE_ENV: 'test'
+          COVERAGE: 'true'
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
           BETTER_AUTH_URL: 'http://localhost:3000'
 
       - name: Start Next.js server with coverage
         run: |
           mkdir -p logs
-          npm run dev:coverage > logs/next-server.log 2>&1 &
+          npm run start > logs/next-server.log 2>&1 &
           echo $! > logs/next-server.pid
         env:
           NODE_ENV: 'test'
