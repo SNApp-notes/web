@@ -64,6 +64,7 @@ function RightPanel({ headers, currentLine, onHeaderClick }: RightPanelProps) {
                 px={2}
                 py={2}
                 onClick={() => onHeaderClick(header.line)}
+                title={`Jump to line ${header.line}`}
               >
                 <Text
                   fontSize="sm"
