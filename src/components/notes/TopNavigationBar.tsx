@@ -57,11 +57,18 @@ const TopNavigationBar = memo(function TopNavigationBar({
             variant="ghost"
             onClick={handleSettingsClick}
             aria-label="Settings"
+            data-testid="user-menu-button"
           >
             <FiSettings />
           </Button>
 
-          <Button p={3} size="sm" variant="ghost" onClick={handleLogout}>
+          <Button
+            p={3}
+            size="sm"
+            variant="ghost"
+            onClick={handleLogout}
+            data-testid="sign-out-button"
+          >
             Logout
           </Button>
         </Flex>

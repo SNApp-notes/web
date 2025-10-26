@@ -20,7 +20,7 @@ export default function SignInForm() {
   return (
     <>
       {state.message && (
-        <Alert.Root status="error" p={3}>
+        <Alert.Root status="error" p={3} data-testid="login-error">
           <Alert.Indicator />
           <Alert.Content>
             <Alert.Description>{state.message}</Alert.Description>
