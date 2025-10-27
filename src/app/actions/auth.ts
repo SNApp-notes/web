@@ -91,8 +91,9 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
     }
   } catch (error) {
     console.error(`Sign up failed for user: ${email}`, error);
+    const message = (error as { message: string }).message;
     return {
-      message: 'An unexpected error occurred. Please try again.'
+      message: `An unexpected error occurred. Please try again. Reason: ${message}`
     };
   }
 
