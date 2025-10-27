@@ -27,11 +27,15 @@ export async function setupTestDatabase(): Promise<void> {
 }
 
 export async function cleanDatabase(): Promise<void> {
-  await prisma.note.deleteMany();
-  await prisma.session.deleteMany();
-  await prisma.account.deleteMany();
-  await prisma.verification.deleteMany();
-  await prisma.user.deleteMany();
+  try {
+    await prisma.note.deleteMany();
+    await prisma.session.deleteMany();
+    await prisma.account.deleteMany();
+    await prisma.verification.deleteMany();
+    await prisma.user.deleteMany();
+  } catch(e) {
+    // ignore missing tables
+  }
 }
 
 beforeAll(async () => {
