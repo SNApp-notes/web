@@ -6,7 +6,9 @@
     "**/*.test.{ts,tsx}",
     "**/*.spec.{ts,tsx}",
     "**/*.d.ts",
-    "**/*.config.*"
+    "**/*.config.*",
+    "prisma-main/**/*",
+    "prisma-e2e/**/*"
   ],
   "reporter": ["lcov", "text", "html", "json"],
   "report-dir": "coverage/merged",

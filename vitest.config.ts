@@ -30,7 +30,9 @@ export default defineConfig({
         'dist/',
         'src/types/**',
         '**/*.test.*',
-        '**/*.spec.*'
+        '**/*.spec.*',
+        'prisma-main/**/*',
+        'prisma-e2e/**/*'
       ],
       include: ['src/**/*.{ts,tsx}', '!src/test/**/*']
     }
