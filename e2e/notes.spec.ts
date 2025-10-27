@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { collectCoverage } from './coverage-helper';
+import { collectCoverage } from './helpers/coverage';
 
 test.describe('Notes Application', () => {
   test('should create a new note when authenticated', async ({ page }) => {
