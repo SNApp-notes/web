@@ -27,3 +27,12 @@ a {
   z-index: 1000;
   pointer-events: none;
 }
+
+/* make Editor gutter stable */
+.cm-lineNumbers {
+  min-width: 5ch;
+}
+
+.cm-foldGutter {
+  width: 18px;
+}
