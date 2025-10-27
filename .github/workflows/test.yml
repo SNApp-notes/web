@@ -103,7 +103,7 @@ jobs:
           BETTER_AUTH_URL: 'http://localhost:45678'
 
       - name: Upload E2E artifacts to storage
-        if: steps.e2e-tests.outputs.UPLOAD_ARTIFACTS == 'true'
+        if: always() && steps.e2e-tests.outputs.UPLOAD_ARTIFACTS == 'true'
         uses: actions/upload-artifact@v5
         with:
           name: e2e-test-results
