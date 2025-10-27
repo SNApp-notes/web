@@ -7,7 +7,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: undefined,
+  workers: 1,
   reporter: [['list'], ['html', { outputFolder: 'report', open: 'never' }]],
   globalTeardown: require.resolve('./global-teardown.ts'),
   use: {
