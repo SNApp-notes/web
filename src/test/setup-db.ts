@@ -5,7 +5,7 @@ import fs from 'fs';
 import { PrismaClient as e2eClient } from '../../prisma-e2e/types';
 
 const schemaPath = path.resolve(__dirname, '../../prisma-e2e/schema.prisma');
-const dbFile = path.resolve(__dirname, '../../test-vitest.db');
+const dbFile = path.resolve(__dirname, '../../prisma-e2e/test.db');
 
 let prisma: e2eClient;
 
