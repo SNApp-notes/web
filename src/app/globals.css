@@ -36,3 +36,11 @@ a {
 .cm-foldGutter {
   width: 18px;
 }
+
+.cm-editor.cm-focused .cm-selectionBackground,
+.cm-editor .cm-line::selection,
+.cm-editor .cm-selectionLayer .cm-selectionBackground,
+.cm-editor .cm-content ::selection {
+  background: var(--chakra-colors-blue-solid) !important;
+  color: white;
+}
