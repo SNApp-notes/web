@@ -117,7 +117,7 @@ export const auth = betterAuth({
       }
     : {}),
   database: prismaAdapter(prisma, {
-    provider: process.env.NODE_ENV === 'test' ? 'sqlite' : 'mysql',
+    provider: process.env.CI ? 'sqlite' : 'mysql',
     usePlural: false
   })
 });
