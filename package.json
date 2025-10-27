@@ -15,7 +15,7 @@
     "test:ui": "CI=true vitest --ui",
     "test:run": "CI=true vitest run",
     "test:coverage": "CI=true vitest --coverage",
-    "test:e2e": "node e2e/setup-e2e-db.js && concurrently -k -s first \"CI=true npm run dev:coverage -- --port 45678\" \"playwright test --config e2e/playwright.config.ts\"",
+    "test:e2e": "node e2e/setup-e2e-db.js && concurrently -k -s first \"CI=true next dev --webpack --port 45678\" \"playwright test --config e2e/playwright.config.ts\"",
     "test:e2e:coverage": "node e2e/setup-e2e-db.js && concurrently -k -s first \"CI=true COVERAGE=true npm run dev:coverage -- --port 45678\" \"COVERAGE=true playwright test --config e2e/playwright.config.ts\"",
     "test:e2e:ui": "playwright test --config e2e/playwright.config.ts --ui",
     "test:e2e:docker:setup": "docker pull mcr.microsoft.com/playwright:v1.56.1-jammy && docker tag mcr.microsoft.com/playwright:v1.56.1-jammy playwright:e2e-local",
