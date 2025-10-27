@@ -1,27 +1,24 @@
 import { beforeAll, afterAll, beforeEach, vi } from 'vitest';
-import { execSync } from 'child_process';
-import path from 'path';
 import fs from 'fs';
 import { PrismaClient as e2eClient } from '../../prisma-e2e/types';
-
-const schemaPath = path.resolve(__dirname, '../../prisma-e2e/schema.prisma');
-const dbFile = path.resolve(__dirname, '../../prisma-e2e/test.db');
+import { TEMPLATE_DB_PATH, TEST_DB_PATH } from './constants';
 
 let prisma: e2eClient;
 
 vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
 export async function setupTestDatabase(): Promise<void> {
-  process.env.DATABASE_URL = `file:${dbFile}`;
+  process.env.DATABASE_URL = `file:${TEST_DB_PATH}`;
 
-  if (fs.existsSync(dbFile)) {
-    fs.unlinkSync(dbFile);
+  if (!fs.existsSync(TEMPLATE_DB_PATH)) {
+    throw new Error('Template database not found. Global setup may have failed.');
   }
 
-  execSync(`npx prisma db push --skip-generate --schema=${schemaPath}`, {
-    env: { ...process.env },
-    stdio: 'pipe'
-  });
+  if (fs.existsSync(TEST_DB_PATH)) {
+    fs.unlinkSync(TEST_DB_PATH);
+  }
+
+  fs.copyFileSync(TEMPLATE_DB_PATH, TEST_DB_PATH);
 
   prisma = new e2eClient();
 }
