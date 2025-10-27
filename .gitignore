@@ -13,17 +13,13 @@
 # testing
 /coverage
 /prisma-*/types/
-/prisma-e2e/test.db
+/prisma-e2e/*.db
 /prisma-e2e/test.db-journal
 /e2e/results/
 /e2e/report/
 /e2e/.auth/
 /playwright/.cache/
 /.nyc_output
-test-e2e.db
-test-e2e.db-journal
-test-vitest.db
-test-vitest.db-journal
 
 # next.js
 /.next/

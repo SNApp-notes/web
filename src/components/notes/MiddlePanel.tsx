@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Text, Flex } from '@chakra-ui/react';
-import { useState, useEffect, memo, useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import type { EditorRef } from '@/types/editor';
@@ -26,23 +26,6 @@ const MiddlePanel = memo(function MiddlePanel({
   onSave,
   onEditorReady
 }: MiddlePanelProps) {
-  const [welcomeContent, setWelcomeContent] = useState<string>('');
-
-  // Load welcome content when component mounts
-  useEffect(() => {
-    const loadWelcomeContent = async () => {
-      try {
-        const response = await fetch('/samples/welcome.md');
-        const text = await response.text();
-        setWelcomeContent(text);
-      } catch (error) {
-        console.error('Failed to load welcome content:', error);
-        setWelcomeContent('# Welcome to SNApp\n\nStart writing your note...');
-      }
-    };
-
-    loadWelcomeContent();
-  }, []);
   const saveStatusText = useMemo(() => {
     switch (saveStatus) {
       case 'saving':
@@ -100,7 +83,7 @@ const MiddlePanel = memo(function MiddlePanel({
       <Box flex={1} overflow="hidden" position="relative" minH={0}>
         {note ? (
           <Editor
-            value={note.data?.content === null ? welcomeContent : content}
+            value={content}
             onChange={handleContentChange}
             selectedLine={selectedLine}
             onEditorReady={onEditorReady}

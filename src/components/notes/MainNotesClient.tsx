@@ -33,24 +33,7 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
   } = useNotesContext();
 
   const editorRef = useRef<import('@/types/editor').EditorRef | null>(null);
-  const [welcomeContent, setWelcomeContent] = useState<string>('');
   const [currentLine, setCurrentLine] = useState<number | undefined>(lineNumber);
-
-  // Load welcome content when component mounts
-  useEffect(() => {
-    const loadWelcomeContent = async () => {
-      try {
-        const response = await fetch('/samples/welcome.md');
-        const text = await response.text();
-        setWelcomeContent(text);
-      } catch (error) {
-        console.error('Failed to load welcome content:', error);
-        setWelcomeContent('# Welcome to SNApp\n\nStart writing your note...');
-      }
-    };
-
-    loadWelcomeContent();
-  }, []);
 
   // Sync currentLine with lineNumber prop changes
   useEffect(() => {
@@ -74,11 +57,8 @@ export default function MainNotesClient({ lineNumber }: MainNotesClientProps) {
   }, [lineNumber]); // Re-run when lineNumber prop changes
 
   const selectedNote = getSelectedNote();
-  // Use the same logic as MiddlePanel to determine the actual content being displayed
-  const content =
-    selectedNote?.data?.content === null
-      ? welcomeContent
-      : selectedNote?.data?.content || '';
+  // Content is now populated server-side, no null values expected
+  const content = selectedNote?.data?.content || '';
   const hasUnsavedChanges = selectedNote?.data?.dirty || false;
 
   // Extract headers from current content (the actual content being displayed)

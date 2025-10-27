@@ -8,7 +8,6 @@ import MiddlePanel from '@/components/notes/MiddlePanel';
 import RightPanel from '@/components/notes/RightPanel';
 
 export default function ContentSlotDefault() {
-  const [welcomeContent, setWelcomeContent] = useState<string>('');
   const [currentLine, setCurrentLine] = useState<number | undefined>(undefined);
   const editorRef = useRef<import('@/types/editor').EditorRef | null>(null);
 
@@ -20,22 +19,6 @@ export default function ContentSlotDefault() {
     saveStatus,
     setSaveStatus
   } = useNotesContext();
-
-  // Load welcome content
-  useEffect(() => {
-    const loadWelcomeContent = async () => {
-      try {
-        const response = await fetch('/samples/welcome.md');
-        const text = await response.text();
-        setWelcomeContent(text);
-      } catch (error) {
-        console.error('Failed to load welcome content:', error);
-        setWelcomeContent('# Welcome to SNApp\n\nStart writing your note...');
-      }
-    };
-
-    loadWelcomeContent();
-  }, []);
 
   // Clear current line when selected note changes
   useEffect(() => {
@@ -74,10 +57,8 @@ export default function ContentSlotDefault() {
   }, []);
 
   const selectedNote = selectedNoteId ? getNote(selectedNoteId) : null;
-  const content =
-    selectedNote?.data?.content === null
-      ? welcomeContent
-      : selectedNote?.data?.content || '';
+  // Content is now populated server-side, no null values expected
+  const content = selectedNote?.data?.content || '';
   const hasUnsavedChanges = selectedNote?.data?.dirty || false;
 
   // Extract headers from current content

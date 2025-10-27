@@ -3,6 +3,27 @@
 import { auth } from '@/lib/auth';
 import prisma, { type Note } from '@/lib/prisma';
 import { headers } from 'next/headers';
+import { readFile } from 'fs/promises';
+import { join } from 'path';
+
+// Cache for welcome content to avoid reading file on every request
+let welcomeContentCache: string | null = null;
+
+async function getWelcomeContent(): Promise<string> {
+  if (welcomeContentCache !== null) {
+    return welcomeContentCache;
+  }
+
+  try {
+    const filePath = join(process.cwd(), 'public', 'samples', 'welcome.md');
+    welcomeContentCache = await readFile(filePath, 'utf-8');
+    return welcomeContentCache;
+  } catch (error) {
+    console.error('Failed to read welcome.md:', error);
+    welcomeContentCache = '# Welcome to SNApp\n\nStart writing your note...';
+    return welcomeContentCache;
+  }
+}
 
 export async function getNotes(): Promise<Note[]> {
   const session = await auth.api.getSession({
@@ -22,7 +43,19 @@ export async function getNotes(): Promise<Note[]> {
     }
   });
 
-  return notes;
+  // Replace null content with welcome content from filesystem
+  const welcomeContent = await getWelcomeContent();
+  const notesWithContent = notes.map((note) => {
+    if (note.content === null) {
+      return {
+        ...note,
+        content: welcomeContent
+      };
+    }
+    return note;
+  });
+
+  return notesWithContent;
 }
 
 // Sanitize note name for display and storage
