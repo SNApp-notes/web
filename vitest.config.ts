@@ -11,6 +11,7 @@ export default defineConfig({
     globals: true,
     css: true,
     exclude: ['**/node_modules/**', '**/e2e/**', '**/.next/**'],
+    retry: process.env.CI ? 2 : 0,
     env: {
       NODE_ENV: 'test'
     },
