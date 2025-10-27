@@ -16,7 +16,7 @@ a {
 }
 
 /* 80 characters line in Editor */
-.cm-content::before {
+.cm-editor .cm-content::before {
   width: calc(80ch + 6px);
   content: '';
   display: block;
@@ -26,6 +26,10 @@ a {
   border-right: 1px solid #aaa;
   z-index: 1000;
   pointer-events: none;
+}
+
+.cm-editor .cm-content {
+  position: relative;
 }
 
 /* make Editor gutter stable */
