@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { collectCoverage } from './helpers/coverage';
-import { createTestUser, signOutUser, loginUser,  } from './helpers/auth';
+import { createTestUser, signOutUser, loginUser } from './helpers/auth';
 
 test.describe('Home Page', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
@@ -139,8 +139,6 @@ test.describe('Welcome Note Creation', () => {
     await collectCoverage(page, 'no-duplicated-note');
   });
 });
-
-
 
 test.describe('Sign In Flow', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
