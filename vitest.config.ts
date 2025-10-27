@@ -34,7 +34,8 @@ export default defineConfig({
         '**/*.spec.*',
         'prisma-main/**/*',
         'prisma-e2e/**/*',
-        'src/lib/parser/parser.js'
+        'src/lib/parser/parser.js',
+        'src/lib/email.ts'
       ],
       include: ['src/**/*.{ts,tsx}', '!src/test/**/*']
     }

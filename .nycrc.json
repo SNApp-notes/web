@@ -9,7 +9,8 @@
     "**/*.config.*",
     "prisma-main/**/*",
     "prisma-e2e/**/*",
-    "src/lib/parser/parser.js"
+    "src/lib/parser/parser.js",
+    "src/lib/email.ts"
   ],
   "reporter": ["lcov", "text", "html", "json"],
   "report-dir": "coverage/merged",
