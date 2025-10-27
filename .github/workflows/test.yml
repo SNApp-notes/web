@@ -205,3 +205,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ./coverage/merged/lcov.info
+
+      - name: Purge README images
+        uses: kevincobain2000/action-camo-purge@v1
