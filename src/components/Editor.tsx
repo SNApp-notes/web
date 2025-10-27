@@ -180,6 +180,7 @@ const Editor = memo(
         placeholder={placeholder}
         editable={!readOnly}
         onChange={onChange}
+        autoFocus={true}
         extensions={extensions}
         basicSetup={{
           lineNumbers: true,
