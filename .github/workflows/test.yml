@@ -84,77 +84,14 @@ jobs:
         run: npx playwright install-deps chromium
         if: steps.playwright-cache.outputs.cache-hit == 'true'
 
-      - name: Set up E2E database
-        run: |
-          echo "Generating Prisma client for E2E tests (SQLite)..."
-          npx prisma generate --schema=prisma-e2e/schema.prisma
-          echo "Creating E2E test database..."
-          npx prisma migrate deploy --schema=prisma-e2e/schema.prisma
-
-      - name: Cache Next files
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            ${{ github.workspace }}/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
-
-      - name: Build Next.js app
-        run: npx next build --turbopack
-        env:
-          CI: 'true'
-          COVERAGE: 'true'
-          BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
-          BETTER_AUTH_URL: 'http://localhost:3000'
-
-      - name: Start Next.js server with coverage
-        run: |
-          mkdir -p logs
-          npm run start > logs/next-server.log 2>&1 &
-          echo $! > logs/next-server.pid
-        env:
-          CI: 'true'
-          COVERAGE: 'true'
-          BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
-          BETTER_AUTH_URL: 'http://localhost:3000'
-          PORT: 3000
-
-      - name: Wait for server to be ready
-        run: |
-          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
-          echo "Server is ready"
-
-      - name: Display server startup logs
-        if: always()
-        run: |
-          if [ -f logs/next-server.log ]; then
-            echo "=== Next.js Server Startup Logs ==="
-            head -n 50 logs/next-server.log
-          fi
-
-      - name: Run E2E tests with coverage
+      - name: Set up E2E database and run tests
         run: npm run test:e2e:coverage
         env:
-          NODE_ENV: 'test'
+          CI: 'true'
           COVERAGE: 'true'
-          BASE_URL: 'http://localhost:3000'
-
-      - name: Stop Next.js server
-        if: always()
-        run: |
-          if [ -f logs/next-server.pid ]; then
-            kill $(cat logs/next-server.pid) || true
-          fi
-
-      - name: Upload server logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: next-server-logs
-          path: logs/
-          retention-days: 7
+          BASE_URL: 'http://localhost:45678'
+          BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
+          BETTER_AUTH_URL: 'http://localhost:45678'
 
       - name: Upload E2E test artifacts
         if: always()
@@ -171,7 +108,7 @@ jobs:
             echo "E2E Coverage Report:"
             npx nyc report --reporter=text --temp-dir=.nyc_output
           else
-            echo "No E2E coverage collected"
+            echo "No E2E coverage collected (requires webpack mode, not available in CI)"
           fi
 
       - name: Convert E2E coverage to lcov
@@ -182,7 +119,7 @@ jobs:
             npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=.nyc_output
             echo "E2E coverage converted"
           else
-            echo "No E2E coverage found in .nyc_output/"
+            echo "No E2E coverage found (webpack mode not used in CI)"
             touch coverage/e2e/lcov.info
           fi
 
