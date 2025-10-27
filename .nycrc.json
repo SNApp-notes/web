@@ -8,7 +8,8 @@
     "**/*.d.ts",
     "**/*.config.*",
     "prisma-main/**/*",
-    "prisma-e2e/**/*"
+    "prisma-e2e/**/*",
+    "src/lib/parser/parser.js"
   ],
   "reporter": ["lcov", "text", "html", "json"],
   "report-dir": "coverage/merged",
