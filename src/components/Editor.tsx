@@ -9,7 +9,7 @@ import {
   useMemo,
   forwardRef
 } from 'react';
-import CodeMirror from '@uiw/react-codemirror';
+import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { basicLight, basicDark } from '@uiw/codemirror-theme-basic';
@@ -31,8 +31,9 @@ const Editor = memo(
     },
     ref
   ) {
-    const viewRef = useRef<EditorView | null>(null);
+    const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
     const [contentLoaded, setContentLoaded] = useState(false);
+    const [viewReady, setViewReady] = useState(false);
 
     const { colorMode } = useColorMode();
     const themeExtension = useMemo(
@@ -94,70 +95,75 @@ const Editor = memo(
       [editorTheme, onSave]
     );
 
-    const scrollToLine = useCallback(
-      (line: number) => {
-        if (!viewRef.current) {
-          return;
-        }
+    const scrollToLine = useCallback((line: number) => {
+      const view = codeMirrorRef.current?.view;
+      if (!view) {
+        return;
+      }
 
-        const doc = viewRef.current.state.doc;
-        // Check if the requested line exists in the document
-        if (line > doc.lines || line < 1) {
-          console.warn(`Cannot scroll to line ${line}: document has ${doc.lines} lines`);
-          return;
-        }
+      const doc = view.state.doc;
+      // Check if the requested line exists in the document
+      if (line > doc.lines || line < 1) {
+        console.warn(`Cannot scroll to line ${line}: document has ${doc.lines} lines`);
+        return;
+      }
 
-        try {
-          const { from: position } = doc.line(line);
-          viewRef.current.dispatch({
-            selection: { anchor: position, head: position },
-            scrollIntoView: true
-          });
-          viewRef.current.focus();
-        } catch (error) {
-          console.warn(`Cannot scroll to line ${line}:`, error);
-        }
-      },
-      [viewRef]
-    );
+      try {
+        const { from: position } = doc.line(line);
+        view.dispatch({
+          selection: { anchor: position, head: position },
+          scrollIntoView: true
+        });
+        view.focus();
+      } catch (error) {
+        console.warn(`Cannot scroll to line ${line}:`, error);
+      }
+    }, []);
 
-    const handleEditorMount = useCallback(
-      (view: EditorView) => {
-        viewRef.current = view;
+    // This callback is called when the editor view is created
+    // We use it to signal that the ref is now populated
+    const handleCreateEditor = useCallback(() => {
+      setViewReady(true);
+    }, []);
 
-        const editorRef: EditorRef = {
-          focus: () => view?.focus(),
-          blur: () => view?.contentDOM?.blur(),
-          getValue: () => view?.state?.doc?.toString() || '',
-          setValue: (newValue: string) => {
-            if (view) {
-              view.dispatch({
-                changes: {
-                  from: 0,
-                  to: view.state.doc.length,
-                  insert: newValue
-                }
-              });
-            }
-          },
-          scrollToLine
-        };
+    // Expose EditorRef to parent component when view becomes available
+    useEffect(() => {
+      if (!viewReady) {
+        return;
+      }
 
-        // Forward ref to parent
-        if (ref) {
-          if (typeof ref === 'function') {
-            ref(editorRef);
-          } else {
-            ref.current = editorRef;
+      const editorRef: EditorRef = {
+        focus: () => codeMirrorRef.current?.view?.focus(),
+        blur: () => codeMirrorRef.current?.view?.contentDOM?.blur(),
+        getValue: () => codeMirrorRef.current?.view?.state?.doc?.toString() || '',
+        setValue: (newValue: string) => {
+          const view = codeMirrorRef.current?.view;
+          if (view) {
+            view.dispatch({
+              changes: {
+                from: 0,
+                to: view.state.doc.length,
+                insert: newValue
+              }
+            });
           }
-        }
+        },
+        scrollToLine
+      };
 
-        if (onEditorReady) {
-          onEditorReady(editorRef);
+      // Forward ref to parent
+      if (ref) {
+        if (typeof ref === 'function') {
+          ref(editorRef);
+        } else {
+          ref.current = editorRef;
         }
-      },
-      [onEditorReady, scrollToLine, ref]
-    );
+      }
+
+      if (onEditorReady) {
+        onEditorReady(editorRef);
+      }
+    }, [viewReady, onEditorReady, scrollToLine, ref]);
 
     // Track when content is loaded (not just changed due to editing)
     useEffect(() => {
@@ -168,13 +174,15 @@ const Editor = memo(
 
     // Handle line scrolling when selectedLine changes or content is loaded
     useEffect(() => {
-      if (selectedLine && viewRef.current && contentLoaded) {
+      const view = codeMirrorRef.current?.view;
+      if (selectedLine && view && contentLoaded) {
         scrollToLine(selectedLine);
       }
     }, [selectedLine, contentLoaded, scrollToLine]);
 
     return (
       <CodeMirror
+        ref={codeMirrorRef}
         value={value}
         height="100%"
         placeholder={placeholder}
@@ -195,7 +203,7 @@ const Editor = memo(
           autocompletion: true
         }}
         theme={themeExtension}
-        onCreateEditor={handleEditorMount}
+        onCreateEditor={handleCreateEditor}
         className={className}
         style={{
           width: '100%',
