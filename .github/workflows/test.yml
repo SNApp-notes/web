@@ -85,16 +85,7 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
 
       - name: Set up E2E database and run tests
-        id: e2e-tests
-        run: |
-          npm run test:e2e:coverage
-          if [ -d e2e/results ] && [ "$(ls e2e/results)" ]; then
-            echo "E2E test artifacts found, uploading..."
-            echo "UPLOAD_ARTIFACTS=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "No E2E test artifacts to upload"
-            echo "UPLOAD_ARTIFACTS=false" >> "$GITHUB_OUTPUT"
-          fi
+        run: npm run test:e2e:coverage
         env:
           CI: 'true'
           COVERAGE: 'true'
@@ -102,9 +93,21 @@ jobs:
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
           BETTER_AUTH_URL: 'http://localhost:45678'
 
-      - name: Upload E2E artifacts to storage
-        if: always() && steps.e2e-tests.outputs.UPLOAD_ARTIFACTS == 'true'
-        uses: actions/upload-artifact@v5
+      - name: Check for E2E test artifacts
+        if: always()
+        id: check-artifacts
+        run: |
+          if [ -d e2e/results ] && [ "$(ls e2e/results)" ]; then
+            echo "E2E test artifacts found"
+            echo "has_artifacts=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No E2E test artifacts found"
+            echo "has_artifacts=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload E2E test artifacts
+        if: always() && steps.check-artifacts.outputs.has_artifacts == 'true'
+        uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
           path: e2e/results/
