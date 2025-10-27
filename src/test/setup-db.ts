@@ -33,7 +33,7 @@ export async function cleanDatabase(): Promise<void> {
     await prisma.account.deleteMany();
     await prisma.verification.deleteMany();
     await prisma.user.deleteMany();
-  } catch(e) {
+  } catch (e) {
     // ignore missing tables
   }
 }
