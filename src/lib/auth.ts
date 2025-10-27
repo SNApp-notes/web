@@ -29,7 +29,17 @@ export const auth = betterAuth({
       await sendEmail({
         to: user.email,
         subject: 'Reset Your Password - SNApp',
-        text: 'Check HTML email',
+        text: `
+Hi ${user.name || 'there'},
+
+We received a request to reset your password. Click the link below to create a new password:
+
+${url}
+
+This link will expire in 1 hour for security reasons.
+
+If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
+        `.trim(),
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #2D3748; text-align: center;">Reset Your Password</h1>
@@ -73,7 +83,19 @@ export const auth = betterAuth({
       await sendEmail({
         to: user.email,
         subject: 'Verify your email address - SNApp',
-        text: 'Check HTML email',
+        text: `
+Hi ${user.name || 'there'},
+
+Welcome to SNApp! Thank you for signing up.
+
+Please verify your email address by clicking the link below:
+
+${url}
+
+This link will expire in 24 hours for security reasons.
+
+If you didn't create an account with SNApp, you can safely ignore this email.
+        `.trim(),
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #2D3748; text-align: center;">Welcome to SNApp!</h1>
