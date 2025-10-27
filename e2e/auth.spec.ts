@@ -15,6 +15,72 @@ test.describe('Home Page', () => {
   });
 });
 
+test.describe('Settings Route Protection', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('should redirect unauthenticated users to login from /settings', async ({
+    page
+  }) => {
+    await page.goto('/settings');
+
+    await expect(page).toHaveURL(/.*login/);
+
+    await collectCoverage(page, 'settings-unauthenticated-redirect');
+  });
+
+  test('should allow authenticated users to access /settings', async ({ page }) => {
+    const testUser = {
+      email: `test-settings-${Date.now()}@example.com`,
+      password: 'TestPassword123!',
+      name: 'Settings Test User'
+    };
+
+    await createTestUser(page, testUser);
+
+    await page.goto('/settings');
+
+    await expect(page).toHaveURL('/settings');
+    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+    await expect(page.getByText('Appearance')).toBeVisible();
+    await expect(page.getByText('Dark Mode')).toBeVisible();
+
+    await collectCoverage(page, 'settings-authenticated-access');
+  });
+
+  test('should show password section for email/password users', async ({ page }) => {
+    const testUser = {
+      email: `test-password-section-${Date.now()}@example.com`,
+      password: 'TestPassword123!',
+      name: 'Password Section Test'
+    };
+
+    await createTestUser(page, testUser);
+    await page.goto('/settings');
+
+    await expect(page.getByRole('heading', { name: 'Password' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Change Password' })).toBeVisible();
+
+    await collectCoverage(page, 'settings-password-section');
+  });
+
+  test('should navigate back to home from settings', async ({ page }) => {
+    const testUser = {
+      email: `test-back-nav-${Date.now()}@example.com`,
+      password: 'TestPassword123!',
+      name: 'Back Nav Test'
+    };
+
+    await createTestUser(page, testUser);
+    await page.goto('/settings');
+
+    await page.getByRole('button', { name: 'Back to Notes' }).click();
+
+    await expect(page).toHaveURL('/');
+
+    await collectCoverage(page, 'settings-back-navigation');
+  });
+});
+
 test.describe('Authentication', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
