@@ -85,7 +85,15 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
 
       - name: Set up E2E database and run tests
-        run: npm run test:e2e:coverage
+        run: |
+          npm run test:e2e:coverage
+          if [ -d e2e/results ] && [ "$(ls -A e2e/results)" ]; then
+            echo "E2E test artifacts found, uploading..."
+            echo "UPLOAD_ARTIFACTS=true" >> $GITHUB_ENV
+          else
+            echo "No E2E test artifacts to upload"
+            echo "UPLOAD_ARTIFACTS=false" >> $GITHUB_ENV
+          fi
         env:
           CI: 'true'
           COVERAGE: 'true'
@@ -93,8 +101,8 @@ jobs:
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
           BETTER_AUTH_URL: 'http://localhost:45678'
 
-      - name: Upload E2E test artifacts
-        if: always()
+      - name: Upload E2E artifacts to storage
+        if: always() && env.UPLOAD_ARTIFACTS == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
