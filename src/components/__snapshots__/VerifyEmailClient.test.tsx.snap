@@ -1,0 +1,223 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VerifyEmailClient > Error State - Expired Link > matches snapshot for expired link 1`] = `
+<div>
+  <div
+    class="css-qzj89r"
+  >
+    <div
+      class="chakra-stack css-g3f1vx"
+    >
+      <h2
+        class="chakra-heading css-15pb32e"
+      >
+        Verification Failed
+      </h2>
+      <div
+        class="chakra-alert__root css-1tu4afu"
+      >
+        <span
+          class="css-13gnd3a"
+        >
+          <svg
+            class="css-126y6n1"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z"
+            />
+          </svg>
+        </span>
+        <div
+          class="chakra-alert__content css-xlayl9"
+        >
+          <div
+            class="chakra-alert__title css-1kctzi1"
+          >
+            Link Expired
+          </div>
+          <div
+            class="chakra-alert__description css-t6kp1r"
+          >
+            This verification link has expired or is invalid
+          </div>
+        </div>
+      </div>
+      <div
+        class="chakra-stack css-18abhre"
+      >
+        <p
+          class="css-j7r03v"
+        >
+          Verification links expire after 24 hours for security reasons.
+        </p>
+        <button
+          class="chakra-button css-5yfs8l"
+          type="button"
+        >
+          Register Again
+        </button>
+        <p
+          class="css-j7r03v"
+        >
+          Need help?
+           
+          <a
+            href="/login"
+            style="color: var(--chakra-colors-blue-500);"
+          >
+            Contact Support
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`VerifyEmailClient > Error State - Generic Error > matches snapshot for generic error 1`] = `
+<div>
+  <div
+    class="css-qzj89r"
+  >
+    <div
+      class="chakra-stack css-g3f1vx"
+    >
+      <h2
+        class="chakra-heading css-15pb32e"
+      >
+        Verification Failed
+      </h2>
+      <div
+        class="chakra-alert__root css-1tu4afu"
+      >
+        <span
+          class="css-13gnd3a"
+        >
+          <svg
+            class="css-126y6n1"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z"
+            />
+          </svg>
+        </span>
+        <div
+          class="chakra-alert__content css-xlayl9"
+        >
+          <div
+            class="chakra-alert__title css-1kctzi1"
+          >
+            Verification Error
+          </div>
+          <div
+            class="chakra-alert__description css-t6kp1r"
+          >
+            Email verification failed
+          </div>
+        </div>
+      </div>
+      <div
+        class="chakra-stack css-18abhre"
+      >
+        <button
+          class="chakra-button css-5yfs8l"
+          type="button"
+        >
+          Try Again
+        </button>
+        <p
+          class="css-j7r03v"
+        >
+          Need help?
+           
+          <a
+            href="/login"
+            style="color: var(--chakra-colors-blue-500);"
+          >
+            Contact Support
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`VerifyEmailClient > Success State > matches snapshot for successful verification 1`] = `
+<div>
+  <div
+    class="css-qzj89r"
+  >
+    <div
+      class="chakra-stack css-g3f1vx"
+    >
+      <h2
+        class="chakra-heading css-15pb32e"
+      >
+        Email Verified!
+      </h2>
+      <div
+        class="chakra-alert__root css-18dg8j3"
+      >
+        <span
+          class="css-13gnd3a"
+        >
+          <svg
+            class="css-126y6n1"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM11.0026 16L6.75999 11.7574L8.17421 10.3431L11.0026 13.1716L16.6595 7.51472L18.0737 8.92893L11.0026 16Z"
+            />
+          </svg>
+        </span>
+        <div
+          class="chakra-alert__content css-xlayl9"
+        >
+          <div
+            class="chakra-alert__title css-1kctzi1"
+          >
+            Welcome to SNApp!
+          </div>
+          <div
+            class="chakra-alert__description css-t6kp1r"
+          >
+            Your email has been successfully verified. You can now access all features.
+          </div>
+        </div>
+      </div>
+      <div
+        class="chakra-stack css-18abhre"
+      >
+        <p
+          class="css-j7r03v"
+        >
+          Redirecting to the app in 
+          3
+           seconds...
+        </p>
+        <button
+          class="chakra-button css-1u8nmh6"
+          type="button"
+        >
+          Go to App
+        </button>
+        <p
+          class="css-j7r03v"
+        >
+          Or
+           
+          <a
+            href="/login"
+            style="color: var(--chakra-colors-blue-500);"
+          >
+            sign in here
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+`;

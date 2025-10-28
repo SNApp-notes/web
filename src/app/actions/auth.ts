@@ -443,3 +443,57 @@ export async function changePasswordAction(
     };
   }
 }
+
+export async function verifyEmailAction(token: string) {
+  try {
+    const headersList = await headers();
+
+    const result = await auth.api.verifyEmail({
+      query: {
+        token
+      },
+      headers: headersList,
+      asResponse: true
+    });
+
+    if (!result.ok) {
+      const errorText = await result.text();
+      let errorMessage = 'Email verification failed';
+      let isExpired = false;
+
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.message) {
+          errorMessage = errorData.message;
+          if (
+            errorMessage.includes('expired') ||
+            errorMessage.includes('invalid') ||
+            errorMessage.includes('not found')
+          ) {
+            isExpired = true;
+            errorMessage = 'This verification link has expired or is invalid';
+          }
+        }
+      } catch {
+        // Use default error message
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+        isExpired
+      };
+    }
+
+    return {
+      success: true
+    };
+  } catch (error) {
+    console.error('Email verification error:', error);
+    return {
+      success: false,
+      error: 'Email verification failed',
+      isExpired: false
+    };
+  }
+}
