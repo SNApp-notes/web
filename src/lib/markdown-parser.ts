@@ -1,5 +1,5 @@
 import type { Header } from '@/types/notes';
-import { parse, type MarkdownNode, type HeaderNode } from './index';
+import { parse, type MarkdownNode, type HeaderNode } from '@snapp-notes/markdown-parser';
 
 /**
  * Extract headers from markdown content using peggy parser

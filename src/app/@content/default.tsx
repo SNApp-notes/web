@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useNotesContext } from '@/components/notes/NotesContext';
 import { updateNote } from '@/app/actions/notes';
-import { extractHeaders } from '@/lib/parser/markdown-parser';
+import { extractHeaders } from '@/lib/markdown-parser';
 import MiddlePanel from '@/components/notes/MiddlePanel';
 import RightPanel from '@/components/notes/RightPanel';
 
