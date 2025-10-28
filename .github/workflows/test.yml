@@ -2,7 +2,37 @@ name: 'Test'
 
 on:
   push:
-    branches: [master]
+    paths:
+      - 'src/**'
+      - 'e2e/**'
+      - 'prisma-main/**'
+      - 'prisma-e2e/**'
+      - 'public/**'
+      - 'scripts/**'
+      - '*.ts'
+      - '*.js'
+      - '*.json'
+      - '*.yml'
+      - '*.yaml'
+      - '.github/workflows/**'
+      - '!**.md'
+      - '!.ai/**'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'e2e/**'
+      - 'prisma-main/**'
+      - 'prisma-e2e/**'
+      - 'public/**'
+      - 'scripts/**'
+      - '*.ts'
+      - '*.js'
+      - '*.json'
+      - '*.yml'
+      - '*.yaml'
+      - '.github/workflows/**'
+      - '!**.md'
+      - '!.ai/**'
 
 jobs:
   lint:
@@ -204,10 +234,12 @@ jobs:
           fi
 
       - name: Upload merged coverage to Coveralls
+        if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ./coverage/merged/lcov.info
 
       - name: Purge README images
+        if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
         uses: kevincobain2000/action-camo-purge@v1
