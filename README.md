@@ -12,6 +12,11 @@ A Next.js application for online training 10xDevs, featuring SNApp – a minimal
 - [Project Description](#project-description)
 - [Tech Stack](#tech-stack)
 - [Getting Started Locally](#getting-started-locally)
+  - [Environment Variables](#configure-environment-variables)
+- [Testing](#testing)
+  - [Unit and Integration Tests](#unit-and-integration-tests)
+  - [End-to-End Tests](#end-to-end-tests)
+  - [Docker-Based E2E Testing](#docker-based-e2e-testing)
 - [Available Scripts](#available-scripts)
 - [Project Scope](#project-scope)
 - [Project Status](#project-status)
@@ -41,7 +46,7 @@ Key features include:
 
 **Front-End:**
 
-- Next.js 15
+- Next.js 16
 - React 19
 - TypeScript 5
 - Chakra UI v3
@@ -51,13 +56,14 @@ Key features include:
 
 **Back-End:**
 
-- Next.js (API routes and SSR)
+- Next.js (API routes and Server Actions)
 - Prisma ORM with MySQL/MariaDB
 - Better Auth for secure authentication
 
 **Testing & CI/CD:**
 
-- Bitest and React Testing Library for component testing
+- Vitest and React Testing Library for component testing
+- Playwright for end-to-end testing
 - GitHub Actions and Vercel for continuous integration and deployment
 
 ## Getting Started Locally
@@ -75,7 +81,51 @@ Key features include:
    npm install
    ```
 
-3. **Run the development server:**
+3. **Configure environment variables:**
+
+   Copy the example environment file and update with your values:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` and configure the following variables:
+
+   **Database Configuration (Required):**
+   - `DATABASE_URL`: MySQL/MariaDB connection string
+     ```
+     DATABASE_URL="mysql://username:password@localhost:3306/snapp"
+     ```
+
+   **Better Auth Configuration (Required):**
+   - `BETTER_AUTH_SECRET`: Secret key for session encryption (generate with `openssl rand -base64 32`)
+   - `BETTER_AUTH_URL`: Backend authentication URL (e.g., `http://localhost:3000`)
+   - `NEXT_PUBLIC_BETTER_AUTH_URL`: Public-facing authentication URL (e.g., `http://localhost:3000`)
+
+   **GitHub OAuth (Required):**
+
+   Create a GitHub OAuth app at [https://github.com/settings/developers](https://github.com/settings/developers)
+   - Set Authorization callback URL to: `http://localhost:3000/api/auth/callback/github`
+   - Configure the following variables:
+     - `GITHUB_CLIENT_ID`: Your GitHub OAuth app client ID
+     - `GITHUB_CLIENT_SECRET`: Your GitHub OAuth app client secret
+
+   **SMTP Configuration (Optional, for email verification):**
+   - `SMTP_FROM_EMAIL`: Sender email address (e.g., `noreply@snapp.dev`)
+   - `SMTP_HOST`: SMTP server hostname (e.g., `smtp.gmail.com`)
+   - `SMTP_PORT`: SMTP server port (e.g., `587` for TLS)
+   - `SMTP_USERNAME`: SMTP authentication username
+   - `SMTP_PASSWORD`: SMTP authentication password
+
+4. **Set up the database:**
+
+   Run Prisma migrations to create the database schema:
+
+   ```bash
+   npx prisma migrate dev --schema ./prisma-main/schema.prisma
+   ```
+
+5. **Run the development server:**
 
    ```bash
    npm run dev
@@ -83,9 +133,122 @@ Key features include:
 
    Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
-4. **Environment Variables:**
-   - Configure any required environment variables for authentication, database, etc., by creating a
-     `.env` file, use `.env.example` as reference
+## Testing
+
+This project uses a comprehensive testing strategy with separate database configurations for different environments.
+
+### Testing Architecture
+
+**Two-Database Approach:**
+
+- **Production/Development**: MySQL/MariaDB (configured via `prisma-main/schema.prisma`)
+- **Testing**: SQLite (configured via `prisma-e2e/schema.prisma`)
+
+The application automatically switches between databases based on `NODE_ENV`:
+
+- `NODE_ENV=test` → Uses SQLite (`test-vitest.db` for unit tests, `test-e2e.db` for E2E tests)
+- Otherwise → Uses MySQL/MariaDB from `DATABASE_URL`
+
+### Unit and Integration Tests
+
+**Framework:** Vitest + React Testing Library
+
+Unit and integration tests use SQLite for fast, isolated testing without requiring MySQL setup.
+
+**Run tests:**
+
+```bash
+# Run tests in watch mode
+npm test
+
+# Run tests once (CI mode)
+npm run test:run
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run tests with UI (requires @vitest/ui)
+npm run test:ui
+```
+
+**Key Features:**
+
+- Automatic SQLite database setup and cleanup
+- No manual database configuration required
+- Fast test execution with in-memory operations
+- Tests located next to source files (e.g., `Component.test.tsx`)
+
+### End-to-End Tests
+
+**Framework:** Playwright
+
+E2E tests verify complete user workflows including authentication, note management, and UI interactions.
+
+**Local E2E Testing (Linux/macOS/Windows):**
+
+```bash
+# Run E2E tests locally
+npm run test:e2e
+
+# Run E2E tests with Playwright UI for debugging
+npm run test:e2e:ui
+```
+
+**Requirements:**
+
+- Playwright browsers installed (`npx playwright install`)
+- Supported operating systems (Linux, macOS, Windows)
+
+### Docker-Based E2E Testing
+
+**For Unsupported Systems (e.g., Fedora):**
+
+On systems where Playwright binaries are not available, use Docker for E2E testing with an isolated environment.
+
+**Setup:**
+
+1. **Install Docker and Docker Compose** on your system
+
+2. **Build the Docker image** (first time only, or after modifying Docker files):
+
+   ```bash
+   npm run test:e2e:docker:build
+   ```
+
+   This builds the Docker image with:
+   - Node.js runtime
+   - Playwright browsers (Chromium, Firefox, WebKit)
+   - All project dependencies
+   - Isolated SQLite test database
+
+3. **Run E2E tests in Docker:**
+
+   ```bash
+   npm run test:e2e:docker
+   ```
+
+**Docker Architecture:**
+
+- **Image**: Ubuntu-based with Playwright dependencies pre-installed
+- **Database**: Isolated SQLite database (`test-e2e.db`) created fresh for each test run
+- **Network**: Isolated Docker network for secure testing
+- **Cleanup**: Automatic container and volume cleanup after tests complete
+
+**When to Rebuild Docker Image:**
+
+```bash
+# After modifying e2e/Dockerfile or e2e/docker-compose.yml
+npm run test:e2e:docker:build
+
+# After updating dependencies
+npm run test:e2e:docker:build
+```
+
+**Docker Configuration Files:**
+
+- `e2e/Dockerfile` - Docker image definition
+- `e2e/docker-compose.yml` - Container orchestration
+- `e2e/playwright.config.ts` - Playwright configuration
 
 ## Available Scripts
 
@@ -107,13 +270,28 @@ In the project directory, you can run:
   Formats the code with Prettier.
 
 - **`npm test`**
-  Runs tests in watch mode using Vitest.
+  Runs unit tests in watch mode using Vitest.
 
 - **`npm run test:run`**
-  Runs tests once (suitable for CI environments).
+  Runs unit tests once (suitable for CI environments).
 
 - **`npm run test:coverage`**
-  Runs tests and generates a coverage report.
+  Runs unit tests and generates a coverage report.
+
+- **`npm run test:ui`**
+  Runs unit tests with Vitest UI (requires @vitest/ui).
+
+- **`npm run test:e2e`**
+  Runs E2E tests locally with Playwright (not supported on Fedora).
+
+- **`npm run test:e2e:ui`**
+  Runs E2E tests with Playwright UI for debugging.
+
+- **`npm run test:e2e:docker`**
+  Runs E2E tests in Docker (required for Fedora and other unsupported systems).
+
+- **`npm run test:e2e:docker:build`**
+  Rebuilds Docker image for E2E tests (run after modifying Docker files).
 
 ## Project Scope
 
