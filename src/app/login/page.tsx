@@ -2,7 +2,7 @@ import { Box, Heading, VStack, Text, HStack, Separator, Alert } from '@chakra-ui
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
-import SignInForm from '@/components/SignInForm';
+import SignInForm from './SignInForm';
 import Link from 'next/link';
 import GitHubSignInButton from '@/components/GitHubSignInButton';
 

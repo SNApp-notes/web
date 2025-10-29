@@ -23,7 +23,7 @@ import {
 import { Toaster, toaster } from '@/components/ui/toaster';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
-export default function SettingsClient() {
+export default function SettingsForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPasswordForm, setShowPasswordForm] = useState<boolean>(false);

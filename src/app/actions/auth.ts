@@ -497,3 +497,117 @@ export async function verifyEmailAction(token: string) {
     };
   }
 }
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Please enter a valid email address')
+});
+
+export async function forgotPasswordAction(
+  _prevState: FormDataState,
+  formData: FormData
+) {
+  const validatedFields = forgotPasswordSchema.safeParse({
+    email: formData.get('email')
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Please enter a valid email address'
+    };
+  }
+
+  const { email } = validatedFields.data;
+
+  try {
+    const headersList = await headers();
+
+    await auth.api.forgetPassword({
+      body: {
+        email,
+        redirectTo: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/reset-password`
+      },
+      headers: headersList
+    });
+
+    return {
+      success: true,
+      email
+    };
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return {
+      message: 'Failed to send reset email. Please try again.'
+    };
+  }
+}
+
+const resetPasswordSchema = z.object({
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
+  token: z.string().min(1, 'Reset token is required')
+});
+
+export async function resetPasswordAction(_prevState: FormDataState, formData: FormData) {
+  const validatedFields = resetPasswordSchema.safeParse({
+    password: formData.get('password'),
+    confirmPassword: formData.get('confirmPassword'),
+    token: formData.get('token')
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Please check your input'
+    };
+  }
+
+  const { password, confirmPassword, token } = validatedFields.data;
+
+  if (password !== confirmPassword) {
+    return {
+      errors: { confirmPassword: ['Passwords do not match'] },
+      message: 'Passwords do not match'
+    };
+  }
+
+  try {
+    const headersList = await headers();
+
+    const result = await auth.api.resetPassword({
+      body: {
+        newPassword: password,
+        token
+      },
+      headers: headersList,
+      asResponse: true
+    });
+
+    if (!result.ok) {
+      const errorText = await result.text();
+      let errorMessage = 'Failed to reset password. The link may be invalid or expired.';
+
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch {
+        // Use default error message
+      }
+
+      return {
+        message: errorMessage
+      };
+    }
+
+    return {
+      success: true
+    };
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return {
+      message: 'An unexpected error occurred. Please try again.'
+    };
+  }
+}

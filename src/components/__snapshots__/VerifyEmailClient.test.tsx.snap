@@ -14,7 +14,7 @@ exports[`VerifyEmailClient > Error State - Expired Link > matches snapshot for e
         Verification Failed
       </h2>
       <div
-        class="chakra-alert__root css-1tu4afu"
+        class="chakra-alert__root css-1kf3jln"
       >
         <span
           class="css-13gnd3a"
@@ -89,7 +89,7 @@ exports[`VerifyEmailClient > Error State - Generic Error > matches snapshot for 
         Verification Failed
       </h2>
       <div
-        class="chakra-alert__root css-1tu4afu"
+        class="chakra-alert__root css-1kf3jln"
       >
         <span
           class="css-13gnd3a"
@@ -159,7 +159,7 @@ exports[`VerifyEmailClient > Success State > matches snapshot for successful ver
         Email Verified!
       </h2>
       <div
-        class="chakra-alert__root css-18dg8j3"
+        class="chakra-alert__root css-1c44bi3"
       >
         <span
           class="css-13gnd3a"
