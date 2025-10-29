@@ -24,7 +24,24 @@ vi.mock('@/lib/prisma', () => ({
 }));
 
 // Mock better-auth to capture configuration
-let authConfig: any;
+interface AuthConfig {
+  emailAndPassword: {
+    sendResetPassword: (params: {
+      user: { email: string; name?: string };
+      url: string;
+    }) => Promise<void>;
+    requireEmailVerification: boolean;
+  };
+  emailVerification: {
+    sendVerificationEmail: (params: {
+      user: { email: string; name?: string };
+      url: string;
+    }) => Promise<void>;
+  };
+  [key: string]: unknown;
+}
+
+let authConfig: AuthConfig;
 vi.mock('better-auth', () => ({
   betterAuth: vi.fn((config) => {
     authConfig = config;
@@ -59,9 +76,6 @@ describe('Better Auth Email Configuration', () => {
     vi.stubEnv('SMTP_PASSWORD', 'test-password');
     vi.stubEnv('SMTP_FROM_EMAIL', 'noreply@test-app.com');
 
-    // Reset authConfig
-    authConfig = null;
-
     // Clear module cache to force re-import with new env vars
     vi.resetModules();
   });
@@ -79,7 +93,7 @@ describe('Better Auth Email Configuration', () => {
       await import('@/lib/auth');
 
       // Get the sendResetPassword callback
-      const sendResetPassword = authConfig?.emailAndPassword?.sendResetPassword;
+      const sendResetPassword = authConfig?.emailAndPassword.sendResetPassword;
       expect(sendResetPassword).toBeDefined();
 
       // Call the callback with test data
@@ -115,7 +129,7 @@ describe('Better Auth Email Configuration', () => {
       vi.stubEnv('NODE_ENV', 'production');
       await import('@/lib/auth');
 
-      const sendResetPassword = authConfig?.emailAndPassword?.sendResetPassword;
+      const sendResetPassword = authConfig.emailAndPassword.sendResetPassword;
       const user = { email: 'user@example.com' };
       const resetUrl = 'https://test-app.com/reset-password?token=abc123';
 
@@ -134,7 +148,7 @@ describe('Better Auth Email Configuration', () => {
       vi.stubEnv('NODE_ENV', 'development');
       await import('@/lib/auth');
 
-      const sendResetPassword = authConfig?.emailAndPassword?.sendResetPassword;
+      const sendResetPassword = authConfig.emailAndPassword.sendResetPassword;
       const user = { email: 'user@example.com', name: 'Test User' };
       const resetUrl = 'https://test-app.com/reset-password?token=abc123';
 
@@ -155,7 +169,7 @@ describe('Better Auth Email Configuration', () => {
       vi.stubEnv('NODE_ENV', 'test');
       await import('@/lib/auth');
 
-      const sendResetPassword = authConfig?.emailAndPassword?.sendResetPassword;
+      const sendResetPassword = authConfig.emailAndPassword.sendResetPassword;
       const user = { email: 'user@example.com', name: 'Test User' };
       const resetUrl = 'https://test-app.com/reset-password?token=abc123';
 
@@ -173,7 +187,7 @@ describe('Better Auth Email Configuration', () => {
       vi.stubEnv('BETTER_AUTH_URL', 'https://my-custom-domain.com');
       await import('@/lib/auth');
 
-      const sendResetPassword = authConfig?.emailAndPassword?.sendResetPassword;
+      const sendResetPassword = authConfig.emailAndPassword.sendResetPassword;
       const user = { email: 'user@example.com', name: 'Test User' };
       const resetUrl = 'https://my-custom-domain.com/reset-password?token=abc123';
 
@@ -192,7 +206,7 @@ describe('Better Auth Email Configuration', () => {
       vi.stubEnv('NODE_ENV', 'production');
       await import('@/lib/auth');
 
-      const sendResetPassword = authConfig?.emailAndPassword?.sendResetPassword;
+      const sendResetPassword = authConfig.emailAndPassword.sendResetPassword;
       const user = { email: 'user@example.com', name: 'Test User' };
       const resetUrl = 'https://test-app.com/reset-password?token=abc123';
 
@@ -216,7 +230,7 @@ describe('Better Auth Email Configuration', () => {
       vi.stubEnv('NODE_ENV', 'production');
       await import('@/lib/auth');
 
-      const sendVerificationEmail = authConfig?.emailVerification?.sendVerificationEmail;
+      const sendVerificationEmail = authConfig.emailVerification.sendVerificationEmail;
       expect(sendVerificationEmail).toBeDefined();
 
       const user = { email: 'user@example.com', name: 'Test User' };
@@ -251,7 +265,7 @@ describe('Better Auth Email Configuration', () => {
       vi.stubEnv('NODE_ENV', 'production');
       await import('@/lib/auth');
 
-      const sendVerificationEmail = authConfig?.emailVerification?.sendVerificationEmail;
+      const sendVerificationEmail = authConfig.emailVerification.sendVerificationEmail;
       const user = { email: 'user@example.com' };
       const verifyUrl = 'https://test-app.com/verify-email?token=xyz789';
 
@@ -271,7 +285,7 @@ describe('Better Auth Email Configuration', () => {
       vi.stubEnv('NODE_ENV', 'development');
       await import('@/lib/auth');
 
-      let sendVerificationEmail = authConfig?.emailVerification?.sendVerificationEmail;
+      let sendVerificationEmail = authConfig.emailVerification.sendVerificationEmail;
       const user = { email: 'user@example.com', name: 'Test User' };
       const verifyUrl = 'https://test-app.com/verify-email?token=xyz789';
 
