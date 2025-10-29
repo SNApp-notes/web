@@ -5,6 +5,7 @@ import { FiSettings } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { memo, useCallback } from 'react';
 import { signOutAction } from '@/app/actions/auth';
+import { useSession } from '@/lib/auth-client';
 
 interface TopNavigationBarProps {
   hasUnsavedChanges: boolean;
@@ -16,6 +17,8 @@ const TopNavigationBar = memo(function TopNavigationBar({
   onLogout
 }: TopNavigationBarProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const isAuthenticated = !!session?.user;
 
   const handleLogout = useCallback(async () => {
     if (hasUnsavedChanges) {
@@ -51,26 +54,30 @@ const TopNavigationBar = memo(function TopNavigationBar({
             </Text>
           )}
 
-          <Button
-            p={3}
-            size="sm"
-            variant="ghost"
-            onClick={handleSettingsClick}
-            aria-label="Settings"
-            data-testid="user-menu-button"
-          >
-            <FiSettings />
-          </Button>
+          {isAuthenticated && (
+            <>
+              <Button
+                p={3}
+                size="sm"
+                variant="ghost"
+                onClick={handleSettingsClick}
+                aria-label="Settings"
+                data-testid="user-menu-button"
+              >
+                <FiSettings />
+              </Button>
 
-          <Button
-            p={3}
-            size="sm"
-            variant="ghost"
-            onClick={handleLogout}
-            data-testid="sign-out-button"
-          >
-            Logout
-          </Button>
+              <Button
+                p={3}
+                size="sm"
+                variant="ghost"
+                onClick={handleLogout}
+                data-testid="sign-out-button"
+              >
+                Logout
+              </Button>
+            </>
+          )}
         </Flex>
       </Flex>
     </Box>
