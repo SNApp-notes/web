@@ -70,7 +70,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit/integration tests with coverage
+      - name: Run tests
         run: npm run test:coverage
 
       - name: Upload unit coverage artifact
@@ -117,7 +117,7 @@ jobs:
         run: npx playwright install-deps chromium
         if: steps.playwright-cache.outputs.cache-hit == 'true'
 
-      - name: Set up E2E database and run tests
+      - name: Run tests
         run: npm run test:e2e:coverage
         env:
           CI: 'true'
