@@ -42,7 +42,7 @@ export default function VerifyEmailClient({
               Email Verified!
             </Heading>
 
-            <Alert.Root status="success">
+            <Alert.Root status="success" p={3}>
               <Alert.Indicator />
               <Alert.Content>
                 <Alert.Title>Welcome to SNApp!</Alert.Title>
@@ -76,7 +76,7 @@ export default function VerifyEmailClient({
               Verification Failed
             </Heading>
 
-            <Alert.Root status="error">
+            <Alert.Root status="error" p={3}>
               <Alert.Indicator />
               <Alert.Content>
                 <Alert.Title>

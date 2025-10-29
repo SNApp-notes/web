@@ -89,7 +89,7 @@ function ResetPasswordContent() {
             Invalid Reset Link
           </Heading>
 
-          <Alert.Root status="error">
+          <Alert.Root status="error" p={3}>
             <Alert.Indicator />
             <Alert.Content>
               <Alert.Title>Link Error</Alert.Title>
@@ -133,7 +133,7 @@ function ResetPasswordContent() {
             Password Reset!
           </Heading>
 
-          <Alert.Root status="success">
+          <Alert.Root status="success" p={3}>
             <Alert.Indicator />
             <Alert.Content>
               <Alert.Title>Success!</Alert.Title>
@@ -179,9 +179,9 @@ function ResetPasswordContent() {
         </Text>
 
         {error && (
-          <Alert.Root status="error">
+          <Alert.Root status="error" p={3}>
             <Alert.Indicator />
-            <Alert.Content p={3}>
+            <Alert.Content>
               <Alert.Title>Error</Alert.Title>
               <Alert.Description>{error}</Alert.Description>
             </Alert.Content>

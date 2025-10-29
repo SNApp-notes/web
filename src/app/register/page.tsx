@@ -117,7 +117,7 @@ export default function Register() {
               Check Your Email
             </Heading>
 
-            <Alert.Root status="success">
+            <Alert.Root status="success" p={3}>
               <Alert.Indicator />
               <Alert.Content>
                 <Alert.Title>Registration Successful!</Alert.Title>
