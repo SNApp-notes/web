@@ -1,45 +1,20 @@
-'use client';
-
 import { Flex, Button, Text, Box } from '@chakra-ui/react';
 import { FiSettings } from 'react-icons/fi';
-import { useRouter } from 'next/navigation';
-import { memo, useCallback } from 'react';
-import { signOutAction } from '@/app/actions/auth';
-import { useSession } from '@/lib/auth-client';
+import { memo } from 'react';
 
 interface TopNavigationBarProps {
   hasUnsavedChanges: boolean;
+  isAuthenticated: boolean;
+  onSettingsClick: () => void;
   onLogout: () => void;
 }
 
 const TopNavigationBar = memo(function TopNavigationBar({
   hasUnsavedChanges,
+  onSettingsClick,
+  isAuthenticated,
   onLogout
 }: TopNavigationBarProps) {
-  const router = useRouter();
-  const { data: session } = useSession();
-  const isAuthenticated = !!session?.user;
-
-  const handleLogout = useCallback(async () => {
-    if (hasUnsavedChanges) {
-      const confirm = window.confirm(
-        'You have unsaved changes. Are you sure you want to logout?'
-      );
-      if (!confirm) return;
-    }
-
-    try {
-      await signOutAction();
-      onLogout();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  }, [hasUnsavedChanges, onLogout]);
-
-  const handleSettingsClick = useCallback(() => {
-    router.push('/settings');
-  }, [router]);
-
   return (
     <Box as="header" borderBottom="1px solid" borderColor="border" bg="bg" px={4} py={2}>
       <Flex justify="space-between" align="center">
@@ -60,7 +35,7 @@ const TopNavigationBar = memo(function TopNavigationBar({
                 p={3}
                 size="sm"
                 variant="ghost"
-                onClick={handleSettingsClick}
+                onClick={onSettingsClick}
                 aria-label="Settings"
                 data-testid="user-menu-button"
               >
@@ -71,7 +46,7 @@ const TopNavigationBar = memo(function TopNavigationBar({
                 p={3}
                 size="sm"
                 variant="ghost"
-                onClick={handleLogout}
+                onClick={onLogout}
                 data-testid="sign-out-button"
               >
                 Logout
