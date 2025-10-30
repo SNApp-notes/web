@@ -43,8 +43,18 @@ export const createMockSession = (authenticated: boolean) => {
 
 export const setupMockSession = (
   authenticated: boolean,
-  mockUseSession?: ReturnType<typeof vi.mocked<typeof useSession>>
+  mockUseSession: ReturnType<typeof vi.mocked<typeof useSession>>,
+  options?: {
+    refetch?: ReturnType<typeof vi.fn>;
+    isPending?: boolean;
+    isRefetching?: boolean;
+  }
 ) => {
-  const mock = mockUseSession || vi.mocked(useSession);
-  mock.mockReturnValue(createMockSession(authenticated) as ReturnType<typeof useSession>);
+  const sessionData = createMockSession(authenticated);
+
+  mockUseSession.mockReturnValue({ ...sessionData, ...options } as ReturnType<
+    typeof useSession
+  >);
+
+  return sessionData;
 };

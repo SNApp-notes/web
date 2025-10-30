@@ -4,7 +4,7 @@ import NavigationPage from './page';
 import { useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useNotesContext } from '@/components/notes/NotesContext';
-import { createMockSession } from '@/mocks/auth-client';
+import { setupMockSession } from '@/mocks/auth-client';
 import { createMockRouter } from '@/mocks/next-navigation';
 
 vi.mock('@/lib/auth-client', () => ({
@@ -48,9 +48,7 @@ describe('NavigationPage', () => {
     mockUseRouter.mockReturnValue(mockRouter);
     mockRefetch.mockResolvedValue(undefined);
 
-    const sessionData = createMockSession(false);
-    sessionData.refetch = mockRefetch;
-    mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+    setupMockSession(false, mockUseSession, { refetch: mockRefetch });
     mockUseNotesContext.mockReturnValue(createMockNotesContext());
 
     vi.clearAllMocks();
@@ -88,11 +86,7 @@ describe('NavigationPage', () => {
 
   describe('Navigation Integration', () => {
     it('should render authenticated navigation when user is logged in', () => {
-      const authenticatedSession = createMockSession(true);
-      authenticatedSession.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(
-        authenticatedSession as ReturnType<typeof useSession>
-      );
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
 
       render(<NavigationPage />);
 

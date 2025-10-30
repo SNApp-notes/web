@@ -5,7 +5,7 @@ import { useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { signOutAction } from '@/app/actions/auth';
 import { useNotesContext } from '@/components/notes/NotesContext';
-import { createMockSession } from '@/mocks/auth-client';
+import { setupMockSession } from '@/mocks/auth-client';
 import { createMockRouter } from '@/mocks/next-navigation';
 import type { NoteTreeNode } from '@/types/tree';
 
@@ -69,9 +69,7 @@ describe('Navigation', () => {
 
   describe('Session Management', () => {
     it('should render with authenticated user', () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
       mockUseNotesContext.mockReturnValue(createMockNotesContext());
 
       render(<Navigation />);
@@ -82,9 +80,7 @@ describe('Navigation', () => {
     });
 
     it('should render with unauthenticated user', () => {
-      const sessionData = createMockSession(false);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(false, mockUseSession, { refetch: mockRefetch });
       mockUseNotesContext.mockReturnValue(createMockNotesContext());
 
       render(<Navigation />);
@@ -95,10 +91,7 @@ describe('Navigation', () => {
     });
 
     it('should not show auth buttons when session is pending', () => {
-      const sessionData = createMockSession(false);
-      sessionData.isPending = true;
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(false, mockUseSession, { refetch: mockRefetch, isPending: true });
       mockUseNotesContext.mockReturnValue(createMockNotesContext());
 
       render(<Navigation />);
@@ -108,9 +101,7 @@ describe('Navigation', () => {
     });
 
     it('should call refetch on mount', async () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
       mockUseNotesContext.mockReturnValue(createMockNotesContext());
 
       render(<Navigation />);
@@ -123,9 +114,7 @@ describe('Navigation', () => {
 
   describe('Unsaved Changes Detection', () => {
     it('should show unsaved changes indicator when note is dirty', () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
 
       const dirtyNote = createMockNote(1, true);
       mockUseNotesContext.mockReturnValue(createMockNotesContext(dirtyNote));
@@ -136,9 +125,7 @@ describe('Navigation', () => {
     });
 
     it('should not show unsaved changes indicator when note is clean', () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
 
       const cleanNote = createMockNote(1, false);
       mockUseNotesContext.mockReturnValue(createMockNotesContext(cleanNote));
@@ -149,9 +136,7 @@ describe('Navigation', () => {
     });
 
     it('should not show unsaved changes when no note is selected', () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
       mockUseNotesContext.mockReturnValue(createMockNotesContext(null));
 
       render(<Navigation />);
@@ -160,9 +145,7 @@ describe('Navigation', () => {
     });
 
     it('should handle selected note without data field', () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
 
       const noteWithoutData: NoteTreeNode = {
         id: 1,
@@ -179,9 +162,7 @@ describe('Navigation', () => {
 
   describe('Settings Navigation', () => {
     it('should navigate to settings when settings button is clicked', async () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
       mockUseNotesContext.mockReturnValue(createMockNotesContext());
 
       const { user } = render(<Navigation />);
@@ -193,9 +174,7 @@ describe('Navigation', () => {
     });
 
     it('should navigate to settings multiple times if clicked multiple times', async () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
       mockUseNotesContext.mockReturnValue(createMockNotesContext());
 
       const { user } = render(<Navigation />);
@@ -211,9 +190,7 @@ describe('Navigation', () => {
 
   describe('Logout Flow - No Unsaved Changes', () => {
     it('should logout successfully without confirmation when no unsaved changes', async () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
       mockUseNotesContext.mockReturnValue(createMockNotesContext());
       mockSignOutAction.mockResolvedValue(undefined);
 
@@ -230,9 +207,7 @@ describe('Navigation', () => {
     });
 
     it('should not show confirmation dialog when no unsaved changes', async () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
       mockUseNotesContext.mockReturnValue(createMockNotesContext());
       mockSignOutAction.mockResolvedValue(undefined);
 
@@ -255,9 +230,7 @@ describe('Navigation', () => {
 
   describe('Logout Flow - With Unsaved Changes', () => {
     it('should show confirmation dialog when logging out with unsaved changes', async () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
 
       const dirtyNote = createMockNote(1, true);
       mockUseNotesContext.mockReturnValue(createMockNotesContext(dirtyNote));
@@ -281,9 +254,7 @@ describe('Navigation', () => {
     });
 
     it('should proceed with logout when user confirms with unsaved changes', async () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
 
       const dirtyNote = createMockNote(1, true);
       mockUseNotesContext.mockReturnValue(createMockNotesContext(dirtyNote));
@@ -306,9 +277,7 @@ describe('Navigation', () => {
     });
 
     it('should cancel logout when user declines confirmation with unsaved changes', async () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
 
       const dirtyNote = createMockNote(1, true);
       mockUseNotesContext.mockReturnValue(createMockNotesContext(dirtyNote));
@@ -333,9 +302,7 @@ describe('Navigation', () => {
 
   describe('Logout Error Handling', () => {
     it('should handle logout action errors gracefully', async () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
       mockUseNotesContext.mockReturnValue(createMockNotesContext());
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -359,9 +326,7 @@ describe('Navigation', () => {
     });
 
     it('should not navigate when signOutAction throws', async () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
       mockUseNotesContext.mockReturnValue(createMockNotesContext());
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -388,9 +353,7 @@ describe('Navigation', () => {
 
   describe('Component Integration', () => {
     it('should pass correct props to TopNavigationBar', () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
 
       const dirtyNote = createMockNote(1, true);
       mockUseNotesContext.mockReturnValue(createMockNotesContext(dirtyNote));
@@ -405,9 +368,7 @@ describe('Navigation', () => {
     });
 
     it('should handle state changes correctly', () => {
-      const sessionData = createMockSession(false);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(false, mockUseSession, { refetch: mockRefetch });
       mockUseNotesContext.mockReturnValue(createMockNotesContext());
 
       const { rerender } = render(<Navigation />);
@@ -415,11 +376,7 @@ describe('Navigation', () => {
       expect(screen.queryByTestId('settings-button')).not.toBeInTheDocument();
 
       // Update session to authenticated
-      const authenticatedSession = createMockSession(true);
-      authenticatedSession.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(
-        authenticatedSession as ReturnType<typeof useSession>
-      );
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
 
       rerender(<Navigation />);
 
@@ -430,9 +387,7 @@ describe('Navigation', () => {
 
   describe('Callback Stability', () => {
     it('should maintain callback references when dependencies do not change', async () => {
-      const sessionData = createMockSession(true);
-      sessionData.refetch = mockRefetch;
-      mockUseSession.mockReturnValue(sessionData as ReturnType<typeof useSession>);
+      setupMockSession(true, mockUseSession, { refetch: mockRefetch });
       mockUseNotesContext.mockReturnValue(createMockNotesContext());
       mockSignOutAction.mockResolvedValue(undefined);
 
