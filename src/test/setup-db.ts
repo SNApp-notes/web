@@ -14,11 +14,37 @@ export async function setupTestDatabase(): Promise<void> {
     throw new Error('Template database not found. Global setup may have failed.');
   }
 
+  // Remove existing test database and any lock files
   if (fs.existsSync(TEST_DB_PATH)) {
-    fs.unlinkSync(TEST_DB_PATH);
+    try {
+      fs.unlinkSync(TEST_DB_PATH);
+    } catch (e) {
+      // If deletion fails, try to change permissions first
+      fs.chmodSync(TEST_DB_PATH, 0o666);
+      fs.unlinkSync(TEST_DB_PATH);
+    }
   }
 
+  // Also remove any journal/WAL files that might exist
+  const journalPath = `${TEST_DB_PATH}-journal`;
+  const walPath = `${TEST_DB_PATH}-wal`;
+  const shmPath = `${TEST_DB_PATH}-shm`;
+
+  [journalPath, walPath, shmPath].forEach((path) => {
+    if (fs.existsSync(path)) {
+      try {
+        fs.unlinkSync(path);
+      } catch (e) {
+        // Ignore errors when cleaning up lock files
+      }
+    }
+  });
+
+  // Copy template database
   fs.copyFileSync(TEMPLATE_DB_PATH, TEST_DB_PATH);
+
+  // Ensure the copied file has write permissions (0666 = rw-rw-rw-)
+  fs.chmodSync(TEST_DB_PATH, 0o666);
 
   prisma = new e2eClient();
 }

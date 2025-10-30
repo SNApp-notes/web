@@ -42,13 +42,26 @@ export async function setup() {
 }
 
 export async function teardown() {
-  if (fs.existsSync(TEST_DB_PATH)) {
-    fs.unlinkSync(TEST_DB_PATH);
-    console.log('Cleaned up integration test database');
+  // Clean up test database and all related files
+  const filesToClean = [
+    TEST_DB_PATH,
+    TEST_DB_JOURNAL_PATH,
+    `${TEST_DB_PATH}-wal`,
+    `${TEST_DB_PATH}-shm`
+  ];
+
+  for (const filePath of filesToClean) {
+    if (fs.existsSync(filePath)) {
+      try {
+        // Ensure file is writable before deletion
+        fs.chmodSync(filePath, 0o666);
+        fs.unlinkSync(filePath);
+      } catch (error) {
+        // Ignore errors during cleanup
+        console.warn(`Failed to clean up ${filePath}:`, error);
+      }
+    }
   }
 
-  if (fs.existsSync(TEST_DB_JOURNAL_PATH)) {
-    fs.unlinkSync(TEST_DB_JOURNAL_PATH);
-    console.log('Cleaned up integration test database journal');
-  }
+  console.log('Cleaned up integration test database');
 }
