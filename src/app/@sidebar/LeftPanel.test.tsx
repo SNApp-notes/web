@@ -383,6 +383,7 @@ describe('LeftPanel', () => {
 
       // First render
       const firstNewNoteButton = screen.getByRole('button', { name: 'New Note' });
+      expect(firstNewNoteButton).toBeInTheDocument();
 
       // Re-render with same props
       rerender(<LeftPanel />);

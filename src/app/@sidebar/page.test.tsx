@@ -51,7 +51,7 @@ describe('SidebarPage', () => {
   describe('Component Rendering', () => {
     it('should render without errors', () => {
       render(<SidebarPage />);
-      
+
       expect(screen.getByRole('button', { name: 'New Note' })).toBeInTheDocument();
     });
 
@@ -115,7 +115,7 @@ describe('SidebarPage', () => {
       // This test verifies that the component itself doesn't use client hooks
       // The LeftPanel child component handles all client-side logic
       render(<SidebarPage />);
-      
+
       // Should render successfully without any client-side state management
       expect(screen.getByRole('complementary')).toBeInTheDocument();
     });
