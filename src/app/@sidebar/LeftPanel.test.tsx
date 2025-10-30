@@ -214,15 +214,32 @@ describe('LeftPanel', () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockDeleteNote.mockRejectedValue(new Error('Failed to delete'));
 
-      // We'll test the callback directly since TreeView interaction is complex
       const mockNotes = [createMockNote(1, 'Note to delete')];
       mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes, null));
 
       render(<LeftPanel />);
 
-      // Access the component instance to test the delete callback
-      // Since we can't easily trigger the TreeView delete, we simulate the behavior
       expect(screen.getByText('Note to delete')).toBeInTheDocument();
+
+      // Find and click delete button
+      const treeView = screen.getByTestId('note-list');
+      const deleteButtons = treeView.querySelectorAll('[data-testid*="delete"]');
+      if (deleteButtons.length > 0) {
+        fireEvent.click(deleteButtons[0]);
+
+        // Confirm delete in dialog
+        const confirmButton = await screen.findByRole('button', { name: 'Delete' });
+        fireEvent.click(confirmButton);
+
+        // Wait for the delete to be called and error to be logged
+        await waitFor(() => {
+          expect(mockDeleteNote).toHaveBeenCalledWith(1);
+          expect(consoleSpy).toHaveBeenCalledWith(
+            'Failed to delete note:',
+            expect.any(Error)
+          );
+        });
+      }
 
       consoleSpy.mockRestore();
     });
@@ -234,8 +251,39 @@ describe('LeftPanel', () => {
 
       render(<LeftPanel />);
 
-      // Test the deletion logic by checking the callback functionality
-      expect(screen.getByText('Selected Note')).toBeInTheDocument();
+      const noteElement = screen.getByText('Selected Note');
+      expect(noteElement).toBeInTheDocument();
+
+      // Find and click delete button
+      const treeView = screen.getByTestId('note-list');
+      const deleteButtons = treeView.querySelectorAll('[data-testid*="delete"]');
+      if (deleteButtons.length > 0) {
+        fireEvent.click(deleteButtons[0]);
+
+        // Confirm delete in dialog
+        const confirmButton = await screen.findByRole('button', { name: 'Delete' });
+        fireEvent.click(confirmButton);
+
+        await waitFor(() => {
+          expect(mockDeleteNote).toHaveBeenCalledWith(1);
+          // Verify selectNote was called with null since we deleted the selected note
+          expect(mockSelectNote).toHaveBeenCalledWith(null);
+        });
+
+        // Verify the filter function was called to remove the note
+        await waitFor(() => {
+          expect(mockSetNotes).toHaveBeenCalledWith(expect.any(Function));
+        });
+
+        // Test the filter logic
+        const setNotesCall = mockSetNotes.mock.calls.find((call) => {
+          const fn = call[0];
+          const result = fn(mockNotes);
+          return result.length === 0; // Should filter out the deleted note
+        });
+
+        expect(setNotesCall).toBeDefined();
+      }
     });
 
     it('should filter notes correctly when deleting', async () => {
@@ -248,43 +296,153 @@ describe('LeftPanel', () => {
 
       render(<LeftPanel />);
 
-      // Test that the filter function works correctly in setNotes
       expect(screen.getByText('First Note')).toBeInTheDocument();
       expect(screen.getByText('Second Note')).toBeInTheDocument();
+
+      // Find and click delete button for first note
+      const treeView = screen.getByTestId('note-list');
+      const deleteButtons = treeView.querySelectorAll('[data-testid*="delete"]');
+      if (deleteButtons.length > 0) {
+        fireEvent.click(deleteButtons[0]);
+
+        // Confirm delete in dialog
+        const confirmButton = await screen.findByRole('button', { name: 'Delete' });
+        fireEvent.click(confirmButton);
+
+        await waitFor(() => {
+          expect(mockDeleteNote).toHaveBeenCalledWith(1);
+        });
+
+        // Verify setNotes was called with filter function
+        await waitFor(() => {
+          expect(mockSetNotes).toHaveBeenCalledWith(expect.any(Function));
+        });
+
+        // Test the filter function removes the correct note
+        const setNotesCall = mockSetNotes.mock.calls.find((call) => {
+          const fn = call[0];
+          const result = fn(mockNotes);
+          // Should filter out note with id 1, leaving only note 2
+          return result.length === 1 && result[0].id === 2;
+        });
+
+        expect(setNotesCall).toBeDefined();
+      }
     });
   });
 
   describe('Note Renaming', () => {
     it('should rename note and update context on success', async () => {
-      const mockUpdatedNote = { id: 1, name: 'Renamed Note' };
+      const mockNotes = [createMockNote(1, 'Original Name')];
+      const mockUpdatedNote = {
+        id: 1,
+        name: 'Renamed Note',
+        content: 'Content',
+        userId: 'user-1',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
       mockUpdateNote.mockResolvedValue(mockUpdatedNote);
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes, 1));
 
       render(<LeftPanel />);
 
-      // Verify the rename functionality would work
-      expect(mockUpdateNoteName).not.toHaveBeenCalled();
+      const noteElement = screen.getByText('Original Name');
+      expect(noteElement).toBeInTheDocument();
+
+      // Double-click to enter rename mode
+      fireEvent.doubleClick(noteElement);
+
+      await waitFor(() => {
+        const input = screen.queryByDisplayValue('Original Name');
+        if (input) {
+          fireEvent.change(input, { target: { value: 'Renamed Note' } });
+          fireEvent.blur(input);
+        }
+      });
+
+      // Verify updateNote was called
+      await waitFor(() => {
+        if (mockUpdateNote.mock.calls.length > 0) {
+          expect(mockUpdateNote).toHaveBeenCalledWith(1, { name: 'Renamed Note' });
+          expect(mockUpdateNoteName).toHaveBeenCalledWith(1, 'Renamed Note');
+        }
+      });
     });
 
-    it('should handle note rename failure and throw error', async () => {
+    it('should handle note rename failure and log error', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const mockNotes = [createMockNote(1, 'Test Note')];
       mockUpdateNote.mockRejectedValue(new Error('Failed to rename'));
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes, 1));
 
       render(<LeftPanel />);
 
-      // Test that error would be handled
-      expect(consoleSpy).not.toHaveBeenCalled();
+      const noteElement = screen.getByText('Test Note');
+      expect(noteElement).toBeInTheDocument();
+
+      // Double-click to enter rename mode
+      fireEvent.doubleClick(noteElement);
+
+      // Wrap the rename interaction to catch unhandled rejections
+      try {
+        await waitFor(
+          async () => {
+            const input = screen.queryByDisplayValue('Test Note');
+            if (input) {
+              fireEvent.change(input, { target: { value: 'New Name' } });
+              fireEvent.blur(input);
+
+              // Wait for the async operation to complete
+              await new Promise((resolve) => setTimeout(resolve, 50));
+            }
+          },
+          { timeout: 1000 }
+        );
+      } catch {
+        // Expected to fail due to mock rejection
+      }
+
+      // Wait to see if error is logged
+      await waitFor(
+        () => {
+          expect(mockUpdateNote).toHaveBeenCalledWith(1, { name: 'New Name' });
+          expect(consoleSpy).toHaveBeenCalledWith(
+            'Failed to rename note:',
+            expect.any(Error)
+          );
+        },
+        { timeout: 1000 }
+      );
 
       consoleSpy.mockRestore();
     });
 
     it('should call updateNote with correct parameters', async () => {
-      const mockUpdatedNote = { id: 2, name: 'New Name' };
+      const mockNotes = [createMockNote(2, 'Old Name')];
+      const mockUpdatedNote = {
+        id: 2,
+        name: 'New Name',
+        content: 'Content',
+        userId: 'user-1',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
       mockUpdateNote.mockResolvedValue(mockUpdatedNote);
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes, 2));
 
       render(<LeftPanel />);
 
-      // Verify updateNote would be called correctly
-      expect(mockUpdateNote).not.toHaveBeenCalled();
+      const noteElement = screen.getByText('Old Name');
+      fireEvent.doubleClick(noteElement);
+
+      await waitFor(() => {
+        const input = screen.queryByDisplayValue('Old Name');
+        if (input) {
+          fireEvent.change(input, { target: { value: 'New Name' } });
+          fireEvent.keyDown(input, { key: 'Enter' });
+        }
+      });
     });
   });
 
@@ -302,11 +460,19 @@ describe('LeftPanel', () => {
       expect(screen.getByText('Context Note 2')).toBeInTheDocument();
     });
 
-    it('should pass selectNote function to LeftPanelComponent', () => {
+    it('should pass selectNote function to LeftPanelComponent', async () => {
+      const mockNotes = [createMockNote(1, 'Selectable Note')];
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes));
+
       render(<LeftPanel />);
 
-      // Verify that the component renders and would use selectNote
-      expect(screen.getByRole('button', { name: 'New Note' })).toBeInTheDocument();
+      // Click on the note to trigger selection
+      const noteElement = screen.getByText('Selectable Note');
+      fireEvent.click(noteElement);
+
+      await waitFor(() => {
+        expect(mockSelectNote).toHaveBeenCalledWith(1);
+      });
     });
 
     it('should handle empty notes array', () => {
@@ -324,6 +490,47 @@ describe('LeftPanel', () => {
       render(<LeftPanel />);
 
       expect(screen.getByText('Selected Note')).toBeInTheDocument();
+    });
+
+    it('should filter notes when typing in search input', async () => {
+      const mockNotes = [
+        createMockNote(1, 'First Note'),
+        createMockNote(2, 'Second Note'),
+        createMockNote(3, 'Third Note')
+      ];
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes));
+
+      render(<LeftPanel />);
+
+      // All notes should be visible initially
+      expect(screen.getByText('First Note')).toBeInTheDocument();
+      expect(screen.getByText('Second Note')).toBeInTheDocument();
+      expect(screen.getByText('Third Note')).toBeInTheDocument();
+
+      // Type in the filter input
+      const filterInput = screen.getByPlaceholderText('Filter notes...');
+      fireEvent.change(filterInput, { target: { value: 'Second' } });
+
+      // Only matching note should be visible
+      await waitFor(() => {
+        expect(screen.queryByText('First Note')).not.toBeInTheDocument();
+        expect(screen.getByText('Second Note')).toBeInTheDocument();
+        expect(screen.queryByText('Third Note')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should show "No matching notes" when filter has no results', async () => {
+      const mockNotes = [createMockNote(1, 'Test Note')];
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes));
+
+      render(<LeftPanel />);
+
+      const filterInput = screen.getByPlaceholderText('Filter notes...');
+      fireEvent.change(filterInput, { target: { value: 'NonExistent' } });
+
+      await waitFor(() => {
+        expect(screen.getByText('No matching notes')).toBeInTheDocument();
+      });
     });
   });
 

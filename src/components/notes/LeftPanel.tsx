@@ -47,7 +47,11 @@ const LeftPanel = memo(function LeftPanel({
   // Handle TreeNode rename
   const handleTreeNodeRename = useCallback(
     async (node: TreeNode, newName: string) => {
-      await onRenameNote?.((node as NoteTreeNode).id, newName);
+      try {
+        await onRenameNote?.((node as NoteTreeNode).id, newName);
+      } catch {
+        // Error is already logged by the parent handler
+      }
     },
     [onRenameNote]
   );
