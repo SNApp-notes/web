@@ -37,7 +37,7 @@ const TopNavigationBar = memo(function TopNavigationBar({
                 variant="ghost"
                 onClick={onSettingsClick}
                 aria-label="Settings"
-                data-testid="user-menu-button"
+                data-testid="settings-button"
               >
                 <FiSettings />
               </Button>

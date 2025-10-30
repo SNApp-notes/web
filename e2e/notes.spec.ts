@@ -231,8 +231,14 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Wait for the content to be entered
     await page.waitForTimeout(500);
 
-    // Verify unsaved changes indicator appears
+    // Verify unsaved changes indicator appears in top bar
     await expect(page.getByText('Unsaved changes')).toBeVisible({ timeout: 5000 });
+
+    // Verify asterisk appears in the note name in sidebar
+    const noteWithAsterisk = page
+      .locator('.tree-node-label')
+      .filter({ hasText: new RegExp(`^\\* ${noteName}$`) });
+    await expect(noteWithAsterisk).toBeVisible({ timeout: 5000 });
 
     // Save with Ctrl+S - focus editor first
     await editorContent.click();
@@ -242,12 +248,11 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Wait for "Saving..." to appear
     await expect(page.getByText(/Saving\.\.\./)).toBeVisible({ timeout: 5000 });
 
-    // Wait for "Saved" status - use more specific selector to avoid matching editor content
-    const saveStatusText = page.locator('p').filter({ hasText: /^Saved$/ });
-    await expect(saveStatusText).toBeVisible({ timeout: 10000 });
+    // Verify asterisk disappears after save completes (note is no longer dirty)
+    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 10000 });
 
-    // Wait for save to complete fully before reload
-    await page.waitForTimeout(1000);
+    // Verify "Unsaved changes" label disappears from top bar
+    await expect(page.getByText('Unsaved changes')).not.toBeVisible({ timeout: 5000 });
 
     // Refresh the page to verify content was saved
     await page.reload();
@@ -290,11 +295,28 @@ test.describe('Notes Application - CRUD Operations', () => {
     const editor = page.locator('.cm-editor');
     await expect(editor).toBeVisible({ timeout: 5000 });
 
+    // Get the note name before editing
+    const noteLabel = page
+      .locator('.tree-node-label')
+      .filter({ hasText: /^New Note( \d+)?$/ })
+      .last();
+    await expect(noteLabel).toBeVisible({ timeout: 5000 });
+    const noteName = await noteLabel.textContent();
+
     // Click on the editor to focus it
     await editor.click();
 
     // Type content
     await page.keyboard.type('Testing save status');
+
+    // Verify asterisk appears in note name (unsaved changes)
+    const noteWithAsterisk = page
+      .locator('.tree-node-label')
+      .filter({ hasText: new RegExp(`^\\* ${noteName}$`) });
+    await expect(noteWithAsterisk).toBeVisible({ timeout: 3000 });
+
+    // Verify "Unsaved changes" appears in top bar
+    await expect(page.getByText('Unsaved changes')).toBeVisible({ timeout: 3000 });
 
     // Trigger save
     const isMac = process.platform === 'darwin';
@@ -307,11 +329,11 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Verify "Saving..." appears
     await expect(page.getByText('Saving...')).toBeVisible({ timeout: 3000 });
 
-    // Verify "Saved" appears after saving completes
-    await expect(page.getByText('Saved')).toBeVisible({ timeout: 5000 });
+    // Verify asterisk disappears after save completes (note is clean)
+    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 5000 });
 
-    // Verify save status disappears after 2 seconds
-    await expect(page.getByText('Saved')).not.toBeVisible({ timeout: 3000 });
+    // Verify "Unsaved changes" disappears from top bar
+    await expect(page.getByText('Unsaved changes')).not.toBeVisible({ timeout: 5000 });
 
     await collectCoverage(page, 'save-status-indicators');
   });
@@ -387,6 +409,12 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Verify unsaved changes indicator appears
     await expect(page.getByText('Unsaved changes')).toBeVisible({ timeout: 5000 });
 
+    // Verify asterisk appears in note name
+    const noteWithAsterisk = page
+      .locator('.tree-node-label')
+      .filter({ hasText: /^\* Complete Workflow Test$/ });
+    await expect(noteWithAsterisk).toBeVisible({ timeout: 5000 });
+
     // Step 4: Save the note - focus editor again first
     await editorContent.click();
     await page.waitForTimeout(300);
@@ -395,12 +423,11 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Wait for "Saving..." to appear
     await expect(page.getByText(/Saving\.\.\./)).toBeVisible({ timeout: 5000 });
 
-    // Wait for save to complete - use more specific selector to avoid matching editor content
-    const saveStatusText = page.locator('p').filter({ hasText: /^Saved$/ });
-    await expect(saveStatusText).toBeVisible({ timeout: 10000 });
+    // Verify asterisk disappears after save completes
+    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 10000 });
 
-    // Wait for save to complete fully
-    await page.waitForTimeout(1000);
+    // Verify "Unsaved changes" disappears from top bar
+    await expect(page.getByText('Unsaved changes')).not.toBeVisible({ timeout: 5000 });
 
     // Step 5: Verify persistence by refreshing
     await page.reload();

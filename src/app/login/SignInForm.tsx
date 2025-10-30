@@ -1,6 +1,8 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from '@/lib/auth-client';
 import { Button, VStack, Input, Text, Alert } from '@chakra-ui/react';
 import { signInAction } from '@/app/actions/auth';
 
@@ -10,12 +12,22 @@ type FormState = {
     password?: string[];
   };
   message?: string;
+  success?: boolean;
 };
 
 const initialState: FormState = {};
 
 export default function SignInForm() {
   const [state, formAction, isPending] = useActionState(signInAction, initialState);
+  const router = useRouter();
+  const { refetch } = useSession();
+
+  useEffect(() => {
+    if (state.success) {
+      refetch();
+      router.push('/');
+    }
+  }, [state, refetch, router]);
 
   return (
     <>

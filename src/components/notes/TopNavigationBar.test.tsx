@@ -49,7 +49,7 @@ describe('TopNavigationBar', () => {
         />
       );
 
-      expect(screen.queryByTestId('user-menu-button')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('settings-button')).not.toBeInTheDocument();
     });
 
     it('should not show logout button when not authenticated', () => {
@@ -78,7 +78,7 @@ describe('TopNavigationBar', () => {
         />
       );
 
-      expect(screen.getByTestId('user-menu-button')).toBeInTheDocument();
+      expect(screen.getByTestId('settings-button')).toBeInTheDocument();
       expect(screen.getByLabelText('Settings')).toBeInTheDocument();
     });
 
@@ -106,7 +106,7 @@ describe('TopNavigationBar', () => {
         />
       );
 
-      expect(screen.getByTestId('user-menu-button')).toBeInTheDocument();
+      expect(screen.getByTestId('settings-button')).toBeInTheDocument();
       expect(screen.getByTestId('sign-out-button')).toBeInTheDocument();
     });
   });
@@ -122,7 +122,7 @@ describe('TopNavigationBar', () => {
         />
       );
 
-      const settingsButton = screen.getByTestId('user-menu-button');
+      const settingsButton = screen.getByTestId('settings-button');
       await user.click(settingsButton);
 
       expect(mockOnSettingsClick).toHaveBeenCalledTimes(1);
@@ -172,7 +172,7 @@ describe('TopNavigationBar', () => {
         />
       );
 
-      const settingsButton = screen.getByTestId('user-menu-button');
+      const settingsButton = screen.getByTestId('settings-button');
       await user.click(settingsButton);
       await user.click(settingsButton);
       await user.click(settingsButton);
@@ -210,7 +210,7 @@ describe('TopNavigationBar', () => {
       );
 
       expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
-      expect(screen.getByTestId('user-menu-button')).toBeInTheDocument();
+      expect(screen.getByTestId('settings-button')).toBeInTheDocument();
       expect(screen.getByTestId('sign-out-button')).toBeInTheDocument();
     });
 
@@ -225,7 +225,7 @@ describe('TopNavigationBar', () => {
       );
 
       expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
-      expect(screen.getByTestId('user-menu-button')).toBeInTheDocument();
+      expect(screen.getByTestId('settings-button')).toBeInTheDocument();
       expect(screen.getByTestId('sign-out-button')).toBeInTheDocument();
     });
 
@@ -240,7 +240,7 @@ describe('TopNavigationBar', () => {
       );
 
       expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
-      expect(screen.queryByTestId('user-menu-button')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('settings-button')).not.toBeInTheDocument();
       expect(screen.queryByTestId('sign-out-button')).not.toBeInTheDocument();
     });
 
@@ -255,7 +255,7 @@ describe('TopNavigationBar', () => {
       );
 
       expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('user-menu-button')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('settings-button')).not.toBeInTheDocument();
       expect(screen.queryByTestId('sign-out-button')).not.toBeInTheDocument();
     });
   });

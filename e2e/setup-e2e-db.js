@@ -31,6 +31,3 @@ execSync('npx prisma db push --skip-generate --schema=prisma-e2e/schema.prisma',
 });
 
 console.log('E2E test database ready');
-console.log(
-  'IMPORTANT: Run "npm run postinstall" after tests to restore MySQL Prisma client'
-);

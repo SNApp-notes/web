@@ -14,6 +14,9 @@ export async function createTestUser(page: Page, userData: UserData): Promise<Us
   await page.click('button[type="submit"]');
   await page.waitForURL('/');
 
+  // Wait for session to be loaded and auth buttons to appear
+  await page.waitForSelector('[data-testid="sign-out-button"]', { timeout: 10000 });
+
   return userData;
 }
 
@@ -27,6 +30,9 @@ export async function loginUser(
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
   await page.waitForURL('/');
+
+  // Wait for session to be loaded and auth buttons to appear
+  await page.waitForSelector('[data-testid="sign-out-button"]', { timeout: 10000 });
 }
 
 export async function createAndLoginUser(page: Page): Promise<UserData> {
@@ -40,7 +46,6 @@ export async function createAndLoginUser(page: Page): Promise<UserData> {
 }
 
 export async function signOutUser(page: Page): Promise<void> {
-  await page.getByTestId('user-menu-button').click();
   await page.getByTestId('sign-out-button').click();
   await page.waitForURL(/.*login/);
 }

@@ -1,8 +1,6 @@
 'use server';
 
 import { z } from 'zod';
-import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import { sendEmail } from '@/lib/email';
@@ -101,7 +99,7 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
   const isProduction = process.env.NODE_ENV === 'production';
 
   if (!isProduction) {
-    // In development and test, create welcome note before redirecting
+    // In development and test, create welcome note and return success
     try {
       await prisma.$transaction(async (tx) => {
         const existingNotes = await tx.note.findMany({
@@ -122,9 +120,9 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
       console.error('Error creating welcome note:', error);
     }
 
-    // Revalidate the home page to ensure the new welcome note is loaded
-    revalidatePath('/');
-    redirect('/');
+    return {
+      success: true
+    };
   } else {
     // In production, show success message for email verification
     return {
@@ -190,7 +188,9 @@ export async function signInAction(
     };
   }
 
-  redirect('/');
+  return {
+    success: true
+  };
 }
 
 export async function signOutAction() {
@@ -203,7 +203,6 @@ export async function signOutAction() {
   } catch (error) {
     console.error('Sign out failed - session cleanup error');
   }
-  redirect('/login');
 }
 
 export async function requestAccountDeletionAction() {
