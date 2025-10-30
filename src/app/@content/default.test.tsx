@@ -7,6 +7,7 @@ import {
   setupMockNotesContext,
   type MockNotesContextValue
 } from '@/mocks/notes-context';
+import type { Note } from '@/lib/prisma';
 
 // Mock dependencies
 vi.mock('@/components/notes/NotesContext', () => ({
@@ -62,12 +63,11 @@ describe('ContentSlotDefault', () => {
     mockExtractHeaders.mockReturnValue([]);
 
     // Mock window.location
-    delete (window as any).location;
     window.location = {
       pathname: '/note/1',
       search: '',
       href: 'http://localhost/note/1'
-    } as any;
+    } as unknown as Location;
   });
 
   afterEach(() => {
@@ -178,7 +178,7 @@ describe('ContentSlotDefault', () => {
   describe('Save Functionality', () => {
     it('saves note successfully', async () => {
       const user = userEvent.setup();
-      mockUpdateNote.mockResolvedValue({} as any);
+      mockUpdateNote.mockResolvedValue({} as unknown as Note);
 
       const mockNote = createMockNote(1, 'Test Note', 'Content to save');
       mockContext = setupMockNotesContext(mockUseNotesContext, {
@@ -247,7 +247,7 @@ describe('ContentSlotDefault', () => {
     });
 
     it('resets save status to idle after 2 seconds', async () => {
-      mockUpdateNote.mockResolvedValue({} as any);
+      mockUpdateNote.mockResolvedValue({} as unknown as Note);
 
       const mockNote = createMockNote(1, 'Test Note', 'Content');
       mockContext = setupMockNotesContext(mockUseNotesContext, {
