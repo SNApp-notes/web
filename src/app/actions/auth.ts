@@ -485,6 +485,34 @@ export async function verifyEmailAction(token: string) {
       };
     }
 
+    // Parse the response to get user information
+    const responseData = await result.json();
+    const userId = responseData.user?.id;
+
+    if (userId) {
+      // Create welcome note for newly verified user
+      try {
+        await prisma.$transaction(async (tx) => {
+          const existingNotes = await tx.note.findMany({
+            where: { userId }
+          });
+
+          if (existingNotes.length === 0) {
+            await tx.note.create({
+              data: {
+                noteId: 1, // First note for this user
+                name: 'Welcome to SNApp',
+                content: null,
+                userId
+              }
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Error creating welcome note:', error);
+      }
+    }
+
     return {
       success: true
     };

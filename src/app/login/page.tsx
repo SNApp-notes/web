@@ -58,6 +58,19 @@ export default async function Login({ searchParams }: LoginProps) {
           </Alert.Root>
         )}
 
+        {message === 'email-verified' && (
+          <Alert.Root status="success" p={3}>
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>Email Verified!</Alert.Title>
+              <Alert.Description>
+                Your email has been successfully verified. You can now sign in to access
+                your account.
+              </Alert.Description>
+            </Alert.Content>
+          </Alert.Root>
+        )}
+
         {isDevelopment && (
           <Alert.Root status="info" p={3}>
             <Alert.Indicator />

@@ -20,7 +20,7 @@ export default function VerifyEmailClient({
 
   const countdown = useCountdown({
     initialCount: 3,
-    onComplete: () => router.push('/'),
+    onComplete: () => router.push('/login?message=email-verified'),
     enabled: success
   });
 
@@ -55,11 +55,14 @@ export default function VerifyEmailClient({
 
             <VStack gap={4} align="stretch">
               <Text textAlign="center" color="fg.muted" fontSize="sm">
-                Redirecting to the app in {countdown} seconds...
+                Redirecting to login in {countdown} seconds...
               </Text>
 
-              <Button onClick={() => router.push('/')} size="lg">
-                Go to App
+              <Button
+                onClick={() => router.push('/login?message=email-verified')}
+                size="lg"
+              >
+                Sign In Now
               </Button>
 
               <Text textAlign="center" color="fg.muted" fontSize="sm">
