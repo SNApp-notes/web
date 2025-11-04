@@ -157,8 +157,12 @@ test('component renders correctly', () => {
 **Running E2E Tests:**
 
 ```bash
-# Docker (REQUIRED on Fedora)
+# Docker (REQUIRED on Fedora) - Output visible in terminal only
 npm run test:e2e:docker
+
+# Docker with log capture - RECOMMENDED for agents/debugging
+# Makes output visible in OpenCode AND saves to e2e.log for examination
+npm run test:e2e:docker 2>&1 | tee e2e.log
 
 # Rebuild Docker image after modifying Docker files
 npm run test:e2e:docker:build
@@ -176,6 +180,14 @@ npm run test:e2e:ui
 - Use page object pattern for complex interactions
 - Test critical user flows end-to-end
 - Prefer E2E tests for authentication, data persistence, and multi-page workflows
+
+**For Agents:**
+
+- **Always use `npm run test:e2e:docker 2>&1 | tee e2e.log`** when running E2E tests
+- This saves output to `e2e.log` file while displaying it in real-time
+- You can examine the log file afterward instead of running tests twice
+- Log file helps debug flaky tests and identify timing issues
+- Use `tail -n 100 e2e.log` to view last 100 lines of previous test run
 
 ## Next.js 16 Features & Breaking Changes
 
