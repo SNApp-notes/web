@@ -8,7 +8,11 @@ import GitHubSignInButton from '@/components/GitHubSignInButton';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
-export default async function Login() {
+type LoginProps = {
+  searchParams: Promise<{ message?: string }>;
+};
+
+export default async function Login({ searchParams }: LoginProps) {
   // Check if user is already authenticated
   const session = await auth.api.getSession({
     headers: await headers()
@@ -18,6 +22,9 @@ export default async function Login() {
   if (session) {
     redirect('/');
   }
+
+  const params = await searchParams;
+  const message = params.message;
 
   return (
     <Box
@@ -37,6 +44,19 @@ export default async function Login() {
         <Text textAlign="center" color="fg.muted">
           A modern note-taking application for power users. Sign in to get started.
         </Text>
+
+        {message === 'account-deleted' && (
+          <Alert.Root status="success" p={3}>
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>Account Deleted</Alert.Title>
+              <Alert.Description>
+                Your account has been successfully deleted. All your data has been
+                removed.
+              </Alert.Description>
+            </Alert.Content>
+          </Alert.Root>
+        )}
 
         {isDevelopment && (
           <Alert.Root status="info" p={3}>
