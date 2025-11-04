@@ -25,7 +25,7 @@ try {
 }
 
 // Import Prisma client
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require('./prisma-main/types');
 
 /**
  * Convert legacy text-based headers to Markdown format
@@ -154,20 +154,37 @@ async function validateUser(prisma, userId) {
 }
 
 /**
+ * Get the next available noteId for a user
+ */
+async function getNextNoteId(prisma, userId) {
+  const maxNote = await prisma.note.findFirst({
+    where: { userId },
+    orderBy: { noteId: 'desc' },
+    select: { noteId: true }
+  });
+
+  return maxNote ? maxNote.noteId + 1 : 1;
+}
+
+/**
  * Import notes to the new database
  */
 async function importNotes(prisma, notes, userId) {
   const imported = [];
   const failed = [];
 
+  // Get the starting noteId for this user
+  let currentNoteId = await getNextNoteId(prisma, userId);
+
   for (const note of notes) {
     try {
       // Convert legacy headers to Markdown
       const convertedContent = convertHeadersToMarkdown(note.content);
 
-      // Create note in new database
+      // Create note in new database with per-user sequential noteId
       const newNote = await prisma.note.create({
         data: {
+          noteId: currentNoteId,
           name: note.name || 'Untitled Note',
           content: convertedContent,
           userId: userId
@@ -176,13 +193,16 @@ async function importNotes(prisma, notes, userId) {
 
       imported.push({
         legacyId: note.id,
-        newId: newNote.id,
+        newId: newNote.noteId,
         name: newNote.name
       });
 
       console.log(
-        `✅ Imported: "${newNote.name}" (legacy ID: ${note.id} → new ID: ${newNote.id})`
+        `✅ Imported: "${newNote.name}" (legacy ID: ${note.id} → new noteId: ${newNote.noteId})`
       );
+
+      // Increment for next note
+      currentNoteId++;
     } catch (error) {
       failed.push({
         legacyId: note.id,
