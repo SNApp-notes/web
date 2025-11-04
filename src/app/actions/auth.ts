@@ -109,6 +109,7 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
         if (existingNotes.length === 0) {
           await tx.note.create({
             data: {
+              noteId: 1, // First note for this user
               name: 'Welcome to SNApp',
               content: null,
               userId

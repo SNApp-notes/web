@@ -15,7 +15,7 @@ export default function LeftPanel() {
       const newNote = await createNote('New Note');
 
       const newTreeNode: NoteTreeNode = {
-        id: newNote.id,
+        id: newNote.noteId,
         name: newNote.name,
         selected: false,
         data: {
@@ -25,7 +25,7 @@ export default function LeftPanel() {
       };
 
       setNotes((prevNotes: NoteTreeNode[]) => [newTreeNode, ...prevNotes]);
-      selectNote(newNote.id);
+      selectNote(newNote.noteId);
     } catch (error) {
       console.error('Failed to create note:', error);
     }

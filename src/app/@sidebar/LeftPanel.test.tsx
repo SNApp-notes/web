@@ -92,7 +92,7 @@ describe('LeftPanel', () => {
 
   describe('New Note Creation', () => {
     it('should create new note and add to context on success', async () => {
-      const mockNewNote = { id: 3, name: 'New Note', content: '' };
+      const mockNewNote = { noteId: 3, name: 'New Note', content: '' };
       mockCreateNote.mockResolvedValue(mockNewNote);
 
       render(<LeftPanel />);
@@ -131,7 +131,7 @@ describe('LeftPanel', () => {
     });
 
     it('should create new note with correct tree node structure', async () => {
-      const mockNewNote = { id: 5, name: 'Test Note', content: 'Test content' };
+      const mockNewNote = { noteId: 5, name: 'Test Note', content: 'Test content' };
       mockCreateNote.mockResolvedValue(mockNewNote);
 
       render(<LeftPanel />);
@@ -163,7 +163,7 @@ describe('LeftPanel', () => {
     });
 
     it('should handle new note with empty content', async () => {
-      const mockNewNote = { id: 6, name: 'Empty Note', content: null };
+      const mockNewNote = { noteId: 6, name: 'Empty Note', content: null };
       mockCreateNote.mockResolvedValue(mockNewNote);
 
       render(<LeftPanel />);
@@ -335,7 +335,7 @@ describe('LeftPanel', () => {
     it('should rename note and update context on success', async () => {
       const mockNotes = [createMockNote(1, 'Original Name')];
       const mockUpdatedNote = {
-        id: 1,
+        noteId: 1,
         name: 'Renamed Note',
         content: 'Content',
         userId: 'user-1',
@@ -421,7 +421,7 @@ describe('LeftPanel', () => {
     it('should call updateNote with correct parameters', async () => {
       const mockNotes = [createMockNote(2, 'Old Name')];
       const mockUpdatedNote = {
-        id: 2,
+        noteId: 2,
         name: 'New Name',
         content: 'Content',
         userId: 'user-1',
@@ -615,7 +615,7 @@ describe('LeftPanel', () => {
 
   describe('Server Actions Integration', () => {
     it('should call createNote server action with correct parameters', async () => {
-      const mockNewNote = { id: 10, name: 'Server Note', content: 'Server content' };
+      const mockNewNote = { noteId: 10, name: 'Server Note', content: 'Server content' };
       mockCreateNote.mockResolvedValue(mockNewNote);
 
       render(<LeftPanel />);
@@ -630,7 +630,7 @@ describe('LeftPanel', () => {
     });
 
     it('should handle server action async operations', async () => {
-      const mockNewNote = { id: 11, name: 'Async Note', content: '' };
+      const mockNewNote = { noteId: 11, name: 'Async Note', content: '' };
       mockCreateNote.mockImplementation(
         () => new Promise((resolve) => setTimeout(() => resolve(mockNewNote), 100))
       );

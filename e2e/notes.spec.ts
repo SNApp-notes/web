@@ -31,6 +31,55 @@ test.describe('Notes Application - CRUD Operations', () => {
     await collectCoverage(page, 'create-note-authenticated');
   });
 
+  test('should create first manual note with noteId: 2 (after welcome note)', async ({
+    page
+  }) => {
+    // User should already have welcome note with ID 1
+    // Verify welcome note exists
+    await expect(page.locator('[data-testid="note-list"]')).toContainText('Welcome', {
+      timeout: 5000
+    });
+
+    // Click on welcome note to verify it has ID 1
+    const welcomeNote = page
+      .locator('[data-testid="note-list"] .tree-node-label')
+      .filter({ hasText: /Welcome/ })
+      .first();
+    await welcomeNote.click();
+    await page.waitForURL(/\/note\/1$/, { timeout: 10000 });
+    expect(page.url()).toMatch(/\/note\/1$/);
+
+    // Count existing notes before creating a new one
+    const noteCountBefore = await page
+      .locator('[data-testid="note-list"] .tree-item')
+      .count();
+
+    // Create first manual note
+    const newNoteButton = page.getByRole('button', { name: /new note/i });
+    await newNoteButton.click();
+
+    // Wait for new note to appear
+    await expect(page.locator('[data-testid="note-list"] .tree-item')).toHaveCount(
+      noteCountBefore + 1,
+      { timeout: 5000 }
+    );
+
+    // Click on the newly created note (it should be the last one in the list)
+    const newNote = page
+      .locator('[data-testid="note-list"] .tree-node-label')
+      .filter({ hasText: /^New Note( \d+)?$/ })
+      .first();
+    await expect(newNote).toBeVisible({ timeout: 5000 });
+    await newNote.click();
+
+    // Verify the URL contains /note/2 (first manual note gets ID 2 after welcome note with ID 1)
+    await page.waitForURL(/\/note\/2$/, { timeout: 10000 });
+    const url = page.url();
+    expect(url).toMatch(/\/note\/2$/);
+
+    await collectCoverage(page, 'first-manual-note-id-is-two');
+  });
+
   test('should rename a note via double-click and Enter key', async ({ page }) => {
     // Count initial notes
     const initialNoteCount = await page.locator('.tree-node-label').count();

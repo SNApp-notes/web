@@ -204,6 +204,93 @@ test.describe('Welcome Note Creation', () => {
     expect(notesAfterSecondRefresh.length).toBe(1);
     await collectCoverage(page, 'no-duplicated-note');
   });
+
+  test('should always create welcome note with noteId: 1 for new users', async ({
+    page
+  }) => {
+    const timestamp = Date.now();
+    const email = `test-noteid-${timestamp}@example.com`;
+
+    await page.fill('input[name="name"]', 'NoteID Test User');
+    await page.fill('input[name="email"]', email);
+    await page.fill('input[name="password"]', 'TestPassword123!');
+    await page.click('button[type="submit"]');
+
+    await page.waitForURL('/', { timeout: 10000 });
+
+    // Wait for the welcome note to appear in the sidebar
+    await page.waitForSelector('[data-testid="note-list"] .tree-item', {
+      timeout: 10000
+    });
+
+    // Click on the welcome note to navigate to it
+    const welcomeNote = page.locator('[data-testid="note-list"] .tree-item').first();
+    await welcomeNote.click();
+
+    // Wait for URL to contain /note/1 (using regex for more flexible matching)
+    await page.waitForURL(/\/note\/1$/, { timeout: 10000 });
+
+    // Verify the URL ends with /note/1
+    const url = page.url();
+    expect(url).toMatch(/\/note\/1$/);
+
+    await collectCoverage(page, 'welcome-note-id-is-one');
+  });
+
+  test('should allow multiple users to each have noteId: 1 independently', async ({
+    page
+  }) => {
+    // Create first user
+    const timestamp = Date.now();
+    const user1Email = `test-user1-${timestamp}@example.com`;
+
+    await page.fill('input[name="name"]', 'First User');
+    await page.fill('input[name="email"]', user1Email);
+    await page.fill('input[name="password"]', 'TestPassword123!');
+    await page.click('button[type="submit"]');
+
+    await page.waitForURL('/', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="note-list"] .tree-item', {
+      timeout: 10000
+    });
+
+    // Click on first user's welcome note
+    const user1Note = page.locator('[data-testid="note-list"] .tree-item').first();
+    await user1Note.click();
+
+    // Wait for URL to contain /note/1
+    await page.waitForURL(/\/note\/1$/, { timeout: 10000 });
+    const url1 = page.url();
+    expect(url1).toMatch(/\/note\/1$/);
+
+    // Sign out first user (sign-out button is available on all authenticated pages)
+    await signOutUser(page);
+
+    // Create second user
+    await page.goto('/register');
+    const user2Email = `test-user2-${timestamp}@example.com`;
+
+    await page.fill('input[name="name"]', 'Second User');
+    await page.fill('input[name="email"]', user2Email);
+    await page.fill('input[name="password"]', 'TestPassword123!');
+    await page.click('button[type="submit"]');
+
+    await page.waitForURL('/', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="note-list"] .tree-item', {
+      timeout: 10000
+    });
+
+    // Click on second user's welcome note
+    const user2Note = page.locator('[data-testid="note-list"] .tree-item').first();
+    await user2Note.click();
+
+    // Verify second user also has /note/1 (independent from first user)
+    await page.waitForURL(/\/note\/1$/, { timeout: 10000 });
+    const url2 = page.url();
+    expect(url2).toMatch(/\/note\/1$/);
+
+    await collectCoverage(page, 'multiple-users-independent-note-ids');
+  });
 });
 
 test.describe('Sign In Flow', () => {

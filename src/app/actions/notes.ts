@@ -81,41 +81,54 @@ export async function createNote(baseName: string = 'New Note'): Promise<Note> {
     // Sanitize the base name
     const sanitizedBaseName = sanitizeNoteName(baseName) || 'New Note';
 
-    // Find existing notes with similar names to determine counter
-    const existingNotes = await prisma.note.findMany({
-      where: {
-        userId: session.user.id,
-        name: {
-          startsWith: sanitizedBaseName
-        }
-      },
-      select: { name: true }
-    });
+    // Use transaction for atomicity (prevent race conditions)
+    const newNote = await prisma.$transaction(async (tx) => {
+      // Find highest noteId for this user
+      const maxNote = await tx.note.findFirst({
+        where: { userId: session.user.id },
+        orderBy: { noteId: 'desc' },
+        select: { noteId: true }
+      });
 
-    let finalName = sanitizedBaseName;
+      const nextNoteId = (maxNote?.noteId || 0) + 1;
 
-    // If there are existing notes with the same base name, add counter
-    if (existingNotes.length > 0) {
-      // Extract counters from existing names and find the highest
-      const counters = existingNotes
-        .map((note) => {
-          const match = note.name.match(new RegExp(`^${sanitizedBaseName}\\s(\\d+)$`));
-          return match ? parseInt(match[1]) : note.name === sanitizedBaseName ? 0 : -1;
-        })
-        .filter((counter: number) => counter >= 0);
+      // Find existing notes with similar names to determine counter
+      const existingNotes = await tx.note.findMany({
+        where: {
+          userId: session.user.id,
+          name: {
+            startsWith: sanitizedBaseName
+          }
+        },
+        select: { name: true }
+      });
 
-      const highestCounter = counters.length > 0 ? Math.max(...counters) : 0;
-      const nextCounter = highestCounter + 1;
+      let finalName = sanitizedBaseName;
 
-      finalName = `${sanitizedBaseName} ${nextCounter}`;
-    }
+      // If there are existing notes with the same base name, add counter
+      if (existingNotes.length > 0) {
+        // Extract counters from existing names and find the highest
+        const counters = existingNotes
+          .map((note) => {
+            const match = note.name.match(new RegExp(`^${sanitizedBaseName}\\s(\\d+)$`));
+            return match ? parseInt(match[1]) : note.name === sanitizedBaseName ? 0 : -1;
+          })
+          .filter((counter: number) => counter >= 0);
 
-    const newNote = await prisma.note.create({
-      data: {
-        name: finalName,
-        content: '',
-        userId: session.user.id
+        const highestCounter = counters.length > 0 ? Math.max(...counters) : 0;
+        const nextCounter = highestCounter + 1;
+
+        finalName = `${sanitizedBaseName} ${nextCounter}`;
       }
+
+      return await tx.note.create({
+        data: {
+          noteId: nextNoteId,
+          name: finalName,
+          content: '',
+          userId: session.user.id
+        }
+      });
     });
 
     return newNote;
@@ -126,7 +139,7 @@ export async function createNote(baseName: string = 'New Note'): Promise<Note> {
 }
 
 export async function updateNote(
-  id: number,
+  noteId: number,
   updates: Partial<Pick<Note, 'name' | 'content'>>
 ): Promise<Note> {
   try {
@@ -139,9 +152,14 @@ export async function updateNote(
       throw new Error('Unauthorized');
     }
 
-    // Verify ownership
-    const existing = await prisma.note.findFirst({
-      where: { id, userId: session.user.id }
+    // Verify ownership using compound key
+    const existing = await prisma.note.findUnique({
+      where: {
+        noteId_userId: {
+          noteId,
+          userId: session.user.id
+        }
+      }
     });
 
     if (!existing) {
@@ -149,7 +167,12 @@ export async function updateNote(
     }
 
     const updatedNote = await prisma.note.update({
-      where: { id },
+      where: {
+        noteId_userId: {
+          noteId,
+          userId: session.user.id
+        }
+      },
       data: {
         ...updates,
         updatedAt: new Date()
@@ -163,7 +186,7 @@ export async function updateNote(
   }
 }
 
-export async function deleteNote(id: number): Promise<void> {
+export async function deleteNote(noteId: number): Promise<void> {
   try {
     const headersList = await headers();
     const session = await auth.api.getSession({
@@ -174,9 +197,14 @@ export async function deleteNote(id: number): Promise<void> {
       throw new Error('Unauthorized');
     }
 
-    // Verify ownership
-    const existing = await prisma.note.findFirst({
-      where: { id, userId: session.user.id }
+    // Verify ownership and delete using compound key
+    const existing = await prisma.note.findUnique({
+      where: {
+        noteId_userId: {
+          noteId,
+          userId: session.user.id
+        }
+      }
     });
 
     if (!existing) {
@@ -184,7 +212,12 @@ export async function deleteNote(id: number): Promise<void> {
     }
 
     await prisma.note.delete({
-      where: { id }
+      where: {
+        noteId_userId: {
+          noteId,
+          userId: session.user.id
+        }
+      }
     });
   } catch (error) {
     console.error('Error deleting note:', error);
@@ -192,7 +225,7 @@ export async function deleteNote(id: number): Promise<void> {
   }
 }
 
-export async function getNote(id: number): Promise<Note | null> {
+export async function getNote(noteId: number): Promise<Note | null> {
   try {
     const headersList = await headers();
     const session = await auth.api.getSession({
@@ -203,8 +236,13 @@ export async function getNote(id: number): Promise<Note | null> {
       throw new Error('Unauthorized');
     }
 
-    const note = await prisma.note.findFirst({
-      where: { id, userId: session.user.id }
+    const note = await prisma.note.findUnique({
+      where: {
+        noteId_userId: {
+          noteId,
+          userId: session.user.id
+        }
+      }
     });
 
     return note;
@@ -237,6 +275,7 @@ export async function createExampleNote(): Promise<Note> {
 
     const exampleNote = await prisma.note.create({
       data: {
+        noteId: 1, // First note for new user
         name: 'Welcome to SNApp',
         content: null, // null content triggers onboarding display
         userId: session.user.id
@@ -263,6 +302,7 @@ export async function createWelcomeNoteForUser(userId: string): Promise<Note | n
 
       const welcomeNote = await tx.note.create({
         data: {
+          noteId: 1, // First note for new user
           name: 'Welcome to SNApp',
           content: null,
           userId

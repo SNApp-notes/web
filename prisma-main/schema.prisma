@@ -71,14 +71,15 @@ model Verification {
 }
 
 model Note {
-  id        Int      @id @default(autoincrement())
+  noteId    Int
+  userId    String
   name      String
   content   String?  @db.LongText
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@id([noteId, userId])
   @@index([userId])
   @@map("note")
 }

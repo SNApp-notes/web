@@ -12,7 +12,7 @@ interface NotesLayoutWrapperProps {
 // Convert Prisma Note to NoteTreeNode
 function convertNoteToTreeNode(note: Note): NoteTreeNode {
   return {
-    id: note.id,
+    id: note.noteId,
     name: note.name,
     selected: false,
     data: {
