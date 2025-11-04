@@ -417,6 +417,30 @@ Criteria:
 - Edge case: Form validation prevents submission with empty fields and displays
   appropriate error messages for each required field.
 
+US-019 Title: As a user, I want my notes to be numbered starting from 1 so that
+I have predictable, user-friendly note IDs that don't reveal system-wide usage
+patterns. Description: Note IDs should be sequential per user (1, 2, 3...)
+rather than globally unique across all users. This provides better user
+experience with shorter, predictable URLs and maintains privacy by not exposing
+total system usage. Acceptance Criteria:
+
+- Given a new user creates their first note, when the note is created, it
+  receives noteId 1 regardless of how many notes exist system-wide.
+- Given a user with 5 existing notes creates a new note, when the note is
+  created, it receives noteId 6.
+- Given multiple users creating notes simultaneously, when notes are created,
+  each user's note IDs increment independently without conflicts.
+- URLs continue to work as `/note/{noteId}` but internally resolve using the
+  compound key (noteId + userId from session).
+- Page refresh and direct URL access work correctly with per-user note IDs.
+- Existing notes are migrated to the new system without data loss, with IDs
+  renumbered per user based on creation order.
+- Database uses compound primary key (noteId, userId) to ensure uniqueness.
+- Edge case: Concurrent note creation by the same user handles ID assignment
+  correctly without gaps or duplicates through proper transaction handling.
+- Edge case: Deleting a note does not affect the sequential numbering of future
+  notes (IDs are not reused).
+
 
 ## 6. Success Metrics
 
