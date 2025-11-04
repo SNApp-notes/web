@@ -239,7 +239,8 @@ export async function requestAccountDeletionAction() {
       }
     });
 
-    const confirmationUrl = `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/auth/delete-account?token=${deletionToken}`;
+    const baseUrl = process.env.BETTER_AUTH_URL || 'http://localhost:3000';
+    const confirmationUrl = `${baseUrl}/api/auth/delete-account?token=${deletionToken}`;
 
     if (isDevelopment) {
       return {
@@ -253,7 +254,23 @@ export async function requestAccountDeletionAction() {
     await sendEmail({
       to: session.user.email,
       subject: 'Confirm Account Deletion - SNApp',
-      text: 'Check HTML email',
+      text: `
+Hi ${session.user.name || 'there'},
+
+We received a request to delete your SNApp account. This action cannot be undone and will permanently delete:
+
+- Your account and profile information
+- All your notes and content
+- Your login sessions
+
+If you're sure you want to delete your account, click the link below:
+
+${confirmationUrl}
+
+This link will expire in 24 hours for security reasons.
+
+If you didn't request account deletion, you can safely ignore this email. Your account will remain active.
+      `.trim(),
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #E53E3E; text-align: center;">Account Deletion Request</h1>
@@ -549,11 +566,12 @@ export async function forgotPasswordAction(
 
   try {
     const headersList = await headers();
+    const baseUrl = process.env.BETTER_AUTH_URL || 'http://localhost:3000';
 
     await auth.api.forgetPassword({
       body: {
         email,
-        redirectTo: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/reset-password`
+        redirectTo: `${baseUrl}/reset-password`
       },
       headers: headersList
     });

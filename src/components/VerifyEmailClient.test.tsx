@@ -36,43 +36,43 @@ describe('VerifyEmailClient', () => {
           'Your email has been successfully verified. You can now access all features.'
         )
       ).toBeInTheDocument();
-      expect(screen.getByText(/Redirecting to the app in 3 seconds/)).toBeInTheDocument();
+      expect(screen.getByText(/Redirecting to login in 3 seconds/)).toBeInTheDocument();
     });
 
     it('updates countdown from 3 to 0', () => {
       render(<VerifyEmailClient success={true} />);
 
-      expect(screen.getByText(/Redirecting to the app in 3 seconds/)).toBeInTheDocument();
+      expect(screen.getByText(/Redirecting to login in 3 seconds/)).toBeInTheDocument();
 
       act(() => {
         vi.advanceTimersByTime(1000);
       });
-      expect(screen.getByText(/Redirecting to the app in 2 seconds/)).toBeInTheDocument();
+      expect(screen.getByText(/Redirecting to login in 2 seconds/)).toBeInTheDocument();
 
       act(() => {
         vi.advanceTimersByTime(1000);
       });
-      expect(screen.getByText(/Redirecting to the app in 1 seconds/)).toBeInTheDocument();
+      expect(screen.getByText(/Redirecting to login in 1 seconds/)).toBeInTheDocument();
     });
 
-    it('redirects to home page after countdown completes', () => {
+    it('redirects to login page after countdown completes', () => {
       render(<VerifyEmailClient success={true} />);
 
       act(() => {
         vi.advanceTimersByTime(3000);
       });
 
-      expect(mockPush).toHaveBeenCalledWith('/');
+      expect(mockPush).toHaveBeenCalledWith('/login?message=email-verified');
     });
 
-    it('redirects immediately when "Go to App" button is clicked', async () => {
+    it('redirects immediately when "Sign In Now" button is clicked', async () => {
       vi.useRealTimers();
       const { user } = render(<VerifyEmailClient success={true} />);
 
-      const goToAppButton = screen.getByRole('button', { name: /go to app/i });
-      await user.click(goToAppButton);
+      const signInButton = screen.getByRole('button', { name: /sign in now/i });
+      await user.click(signInButton);
 
-      expect(mockPush).toHaveBeenCalledWith('/');
+      expect(mockPush).toHaveBeenCalledWith('/login?message=email-verified');
     });
 
     it('displays link to sign in page', () => {
@@ -230,7 +230,7 @@ describe('VerifyEmailClient', () => {
       act(() => {
         vi.advanceTimersByTime(1000);
       });
-      expect(screen.getByText(/Redirecting to the app in 2 seconds/)).toBeInTheDocument();
+      expect(screen.getByText(/Redirecting to login in 2 seconds/)).toBeInTheDocument();
 
       // Unmount component
       unmount();

@@ -194,7 +194,7 @@ exports[`VerifyEmailClient > Success State > matches snapshot for successful ver
         <p
           class="css-j7r03v"
         >
-          Redirecting to the app in 
+          Redirecting to login in 
           3
            seconds...
         </p>
@@ -202,7 +202,7 @@ exports[`VerifyEmailClient > Success State > matches snapshot for successful ver
           class="chakra-button css-1u8nmh6"
           type="button"
         >
-          Go to App
+          Sign In Now
         </button>
         <p
           class="css-j7r03v"
