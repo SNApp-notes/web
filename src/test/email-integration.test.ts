@@ -78,31 +78,54 @@ vi.mock('@/lib/auth', () => {
 });
 
 import nodemailer from 'nodemailer';
+import type { Transporter } from 'nodemailer';
+import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import {
   requestAccountDeletionAction,
   forgotPasswordAction,
   verifyEmailAction
 } from '@/app/actions/auth';
 import { auth } from '@/lib/auth';
+import type { User, Session } from '@/lib/prisma';
+
+// Type for Better Auth session response
+type AuthSession = {
+  user: Pick<User, 'id' | 'email' | 'name' | 'emailVerified' | 'createdAt' | 'updatedAt'>;
+  session: Pick<
+    Session,
+    'id' | 'expiresAt' | 'token' | 'createdAt' | 'updatedAt' | 'userId'
+  >;
+};
 
 // Create a reference to the sendMail mock that will be created by nodemailer.createTransport
 let mockSendMail = vi.fn();
 
 // Override createTransport to capture sendMail reference
-const originalMock = vi.mocked(nodemailer.createTransport);
-vi.mocked(nodemailer.createTransport).mockImplementation(((...args: any[]) => {
+vi.mocked(nodemailer.createTransport).mockImplementation(() => {
   mockSendMail = vi.fn();
-  const result = {
+  return {
     sendMail: mockSendMail
-  };
-  return result as any;
-}) as any);
+  } as unknown as Transporter<SMTPTransport.SentMessageInfo>;
+});
 
 // Get references to the auth mocks
 const mockGetSession = vi.mocked(auth.api.getSession);
 const mockForgetPassword = vi.mocked(auth.api.forgetPassword);
 const mockVerifyEmail = vi.mocked(auth.api.verifyEmail);
 const mockCreateTransport = vi.mocked(nodemailer.createTransport);
+
+// Helper mock data
+const createMockSession = (): Pick<
+  Session,
+  'id' | 'expiresAt' | 'token' | 'createdAt' | 'updatedAt' | 'userId'
+> => ({
+  id: 'session-123',
+  expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+  token: 'test-token',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  userId: 'user-123'
+});
 
 describe('Email Integration Tests', () => {
   beforeEach(() => {
@@ -134,7 +157,10 @@ describe('Email Integration Tests', () => {
   });
 
   describe('Account Deletion Email', () => {
-    const mockUser = {
+    const mockUser: Pick<
+      User,
+      'id' | 'email' | 'name' | 'createdAt' | 'updatedAt' | 'emailVerified'
+    > = {
       id: 'user-123',
       email: 'test@example.com',
       name: 'Test User',
@@ -146,8 +172,8 @@ describe('Email Integration Tests', () => {
     beforeEach(() => {
       mockGetSession.mockResolvedValue({
         user: mockUser,
-        session: {} as any
-      } as any);
+        session: createMockSession()
+      } as unknown as AuthSession);
     });
 
     it('should send account deletion email with correct domain from BETTER_AUTH_URL', async () => {
@@ -258,8 +284,8 @@ describe('Email Integration Tests', () => {
     it('should handle user without email', async () => {
       mockGetSession.mockResolvedValue({
         user: { ...mockUser, email: '' },
-        session: {} as any
-      } as any);
+        session: createMockSession()
+      } as unknown as AuthSession);
 
       const result = await requestAccountDeletionAction();
 
@@ -387,10 +413,11 @@ describe('Email Integration Tests', () => {
         json: vi.fn().mockResolvedValue({
           user: { id: 'user-123', email: 'test@example.com' }
         })
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any;
+      };
 
-      mockVerifyEmail.mockResolvedValue(mockResponse);
+      (mockVerifyEmail as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse as unknown as Response
+      );
 
       const result = await verifyEmailAction('test-token-123');
 
@@ -412,10 +439,11 @@ describe('Email Integration Tests', () => {
             message: 'Verification token has expired'
           })
         )
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any;
+      };
 
-      mockVerifyEmail.mockResolvedValue(mockResponse);
+      (mockVerifyEmail as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse as unknown as Response
+      );
 
       const result = await verifyEmailAction('expired-token');
 
@@ -432,10 +460,11 @@ describe('Email Integration Tests', () => {
             message: 'Token not found'
           })
         )
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any;
+      };
 
-      mockVerifyEmail.mockResolvedValue(mockResponse);
+      (mockVerifyEmail as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse as unknown as Response
+      );
 
       const result = await verifyEmailAction('invalid-token');
 
@@ -458,10 +487,13 @@ describe('Email Integration Tests', () => {
         user: {
           id: 'user-123',
           email: 'test@example.com',
-          name: 'Test User'
-        } as any,
-        session: {} as any
-      } as any);
+          name: 'Test User',
+          emailVerified: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        session: createMockSession()
+      } as unknown as AuthSession);
 
       await requestAccountDeletionAction();
 
@@ -490,10 +522,13 @@ describe('Email Integration Tests', () => {
         user: {
           id: 'user-123',
           email: 'test@example.com',
-          name: 'Test User'
-        } as any,
-        session: {} as any
-      } as any);
+          name: 'Test User',
+          emailVerified: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        session: createMockSession()
+      } as unknown as AuthSession);
 
       await requestAccountDeletionAction();
 
@@ -524,10 +559,13 @@ describe('Email Integration Tests', () => {
           user: {
             id: 'user-123',
             email: 'test@example.com',
-            name: 'Test User'
-          } as any,
-          session: {} as any
-        } as any);
+            name: 'Test User',
+            emailVerified: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          session: createMockSession()
+        } as unknown as AuthSession);
 
         await requestAccountDeletionAction();
 
@@ -560,13 +598,16 @@ describe('Email Integration Tests', () => {
         user: {
           id: 'user-123',
           email: 'test@example.com',
-          name: 'Test User'
-        } as any,
-        session: {} as any
-      } as any);
+          name: 'Test User',
+          emailVerified: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        session: createMockSession()
+      } as unknown as AuthSession);
 
       await requestAccountDeletionAction();
-      let emailCall = mockSendMail.mock.calls[0][0];
+      const emailCall = mockSendMail.mock.calls[0][0];
       expect(emailCall.html).toContain(testDomain);
       expect(emailCall.text).toContain(testDomain);
 
