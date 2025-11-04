@@ -64,7 +64,7 @@ export default function RegisterForm({ isDevelopment }: RegisterFormProps) {
       alignItems="center"
       justifyContent="center"
     >
-      <VStack gap={6} align="stretch" width="full">
+      <VStack gap={6} align="stretch" width="md">
         {isDevelopment && (
           <Alert.Root status="info" p={3}>
             <Alert.Indicator />

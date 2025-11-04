@@ -30,11 +30,11 @@ export default async function Login() {
       alignItems="center"
       justifyContent="center"
     >
-      <VStack gap={6} align="center">
+      <VStack gap={6} align="center" width="md">
         <Heading size="xl" color="fg">
           SNApp
         </Heading>
-        <Text textAlign="center" maxW="md" color="fg.muted">
+        <Text textAlign="center" color="fg.muted">
           A modern note-taking application for power users. Sign in to get started.
         </Text>
 
