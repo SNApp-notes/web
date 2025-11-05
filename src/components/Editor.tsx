@@ -76,7 +76,7 @@ const Editor = memo(
         markdown({
           base: markdownLanguage,
           extensions: {
-              remove: ['SetextHeading']
+            remove: ['SetextHeading']
           },
           codeLanguages: languages
         }),
