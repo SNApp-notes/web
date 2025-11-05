@@ -75,6 +75,9 @@ const Editor = memo(
       () => [
         markdown({
           base: markdownLanguage,
+          extensions: {
+              remove: ['SetextHeading']
+          },
           codeLanguages: languages
         }),
         EditorView.lineWrapping,
