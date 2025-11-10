@@ -1,14 +1,26 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
-import prisma from '@/lib/prisma';
 
+import prisma from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
+import { createExampleNote } from '@/app/actions/notes';
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
   plugins: [nextCookies()],
+  databaseHooks: {
+    account: {
+      create: {
+        after: async (account) => {
+          if (account.providerId !== "credential") {
+            createExampleNote();
+          }
+        }
+      }
+    }
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: process.env.NODE_ENV === 'production',
