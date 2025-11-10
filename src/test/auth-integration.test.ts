@@ -142,7 +142,7 @@ describe('Better Auth Integration', () => {
       const result = await signUpAction({}, formData);
 
       expect(
-        result.message.startsWith('An unexpected error occurred. Please try again.')
+        result.message?.startsWith('An unexpected error occurred. Please try again.')
       ).toBe(true);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Sign up failed for user: test@example.com',
