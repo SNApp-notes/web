@@ -4,7 +4,6 @@ import { nextCookies } from 'better-auth/next-js';
 
 import prisma from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
-import { createExampleNote } from '@/app/actions/notes';
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
@@ -14,8 +13,32 @@ export const auth = betterAuth({
     account: {
       create: {
         after: async (account) => {
-          if (account.providerId !== "credential") {
-            createExampleNote();
+          // Only create welcome note for OAuth users (not email/password)
+          if (account.providerId !== 'credential') {
+            try {
+              // Direct database interaction - no session needed
+              await prisma.$transaction(async (tx) => {
+                // Check if user already has any notes
+                const existingNotes = await tx.note.findMany({
+                  where: { userId: account.userId }
+                });
+
+                // Only create welcome note if this is their first time
+                if (existingNotes.length === 0) {
+                  await tx.note.create({
+                    data: {
+                      noteId: 1, // First note for this user
+                      name: 'Welcome to SNApp',
+                      content: null, // null triggers display of /public/samples/welcome.md
+                      userId: account.userId
+                    }
+                  });
+                }
+              });
+            } catch (error) {
+              console.error('Error creating welcome note for OAuth user:', error);
+              // Don't throw - this shouldn't break the auth flow
+            }
           }
         }
       }
