@@ -4,7 +4,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/SNApp-notes/web/badge.svg?branch=master&v=1)](https://coveralls.io/github/SNApp-notes/web?branch=master)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-
 SNApp is a lightweight note-taking web application designed to replace a legacy
 [AngularJS-based notes app](https://github.com/SNApp-notes/web-legacy).
 
