@@ -208,7 +208,7 @@ export async function requestAccountDeletionAction() {
     });
 
     const baseUrl = process.env.BETTER_AUTH_URL || 'http://localhost:3000';
-    const confirmationUrl = `${baseUrl}/api/auth/delete-account?token=${deletionToken}`;
+    const confirmationUrl = `${baseUrl.replace(/\/$/, '')}/api/auth/delete-account?token=${deletionToken}`;
 
     if (isDevelopment) {
       return {
