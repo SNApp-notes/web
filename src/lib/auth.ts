@@ -141,5 +141,8 @@ If you didn't create an account with SNApp, you can safely ignore this email.
   database: prismaAdapter(prisma, {
     provider: process.env.CI ? 'sqlite' : 'mysql',
     usePlural: false
-  })
+  }),
+  telemetry: {
+    enabled: false
+  }
 });
