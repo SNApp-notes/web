@@ -13,32 +13,30 @@ export const auth = betterAuth({
     account: {
       create: {
         after: async (account) => {
-          // Only create welcome note for OAuth users (not email/password)
-          if (account.providerId !== 'credential') {
-            try {
-              // Direct database interaction - no session needed
-              await prisma.$transaction(async (tx) => {
-                // Check if user already has any notes
-                const existingNotes = await tx.note.findMany({
-                  where: { userId: account.userId }
-                });
-
-                // Only create welcome note if this is their first time
-                if (existingNotes.length === 0) {
-                  await tx.note.create({
-                    data: {
-                      noteId: 1, // First note for this user
-                      name: 'Welcome to SNApp',
-                      content: null, // null triggers display of /public/samples/welcome.md
-                      userId: account.userId
-                    }
-                  });
-                }
+          // Create welcome note for all new users (OAuth and email/password)
+          try {
+            // Direct database interaction - no session needed
+            await prisma.$transaction(async (tx) => {
+              // Check if user already has any notes
+              const existingNotes = await tx.note.findMany({
+                where: { userId: account.userId }
               });
-            } catch (error) {
-              console.error('Error creating welcome note for OAuth user:', error);
-              // Don't throw - this shouldn't break the auth flow
-            }
+
+              // Only create welcome note if this is their first account/note
+              if (existingNotes.length === 0) {
+                await tx.note.create({
+                  data: {
+                    noteId: 1, // First note for this user
+                    name: 'Welcome to SNApp',
+                    content: null, // null triggers display of /public/samples/welcome.md
+                    userId: account.userId
+                  }
+                });
+              }
+            });
+          } catch (error) {
+            console.error('Error creating welcome note for new user:', error);
+            // Don't throw - this shouldn't break the auth flow
           }
         }
       }

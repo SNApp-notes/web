@@ -95,44 +95,12 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
     };
   }
 
-  // Handle success case outside of try-catch to avoid catching redirect errors
-  const isProduction = process.env.NODE_ENV === 'production';
-
-  if (!isProduction) {
-    // In development and test, create welcome note and return success
-    try {
-      await prisma.$transaction(async (tx) => {
-        const existingNotes = await tx.note.findMany({
-          where: { userId }
-        });
-
-        if (existingNotes.length === 0) {
-          await tx.note.create({
-            data: {
-              noteId: 1, // First note for this user
-              name: 'Welcome to SNApp',
-              content: null,
-              userId
-            }
-          });
-        }
-      });
-    } catch (error) {
-      console.error('Error creating welcome note:', error);
-    }
-
-    return {
-      success: true
-    };
-  } else {
-    // In production, show success message for email verification
-    return {
-      success: true,
-      email: email,
-      message:
-        'Account created successfully! Please check your email to verify your account.'
-    };
-  }
+  return {
+    success: true,
+    email: email,
+    message:
+    'Account created successfully! Please check your email to verify your account.'
+  };
 }
 
 export async function signInAction(
@@ -500,34 +468,6 @@ export async function verifyEmailAction(token: string) {
         error: errorMessage,
         isExpired
       };
-    }
-
-    // Parse the response to get user information
-    const responseData = await result.json();
-    const userId = responseData.user?.id;
-
-    if (userId) {
-      // Create welcome note for newly verified user
-      try {
-        await prisma.$transaction(async (tx) => {
-          const existingNotes = await tx.note.findMany({
-            where: { userId }
-          });
-
-          if (existingNotes.length === 0) {
-            await tx.note.create({
-              data: {
-                noteId: 1, // First note for this user
-                name: 'Welcome to SNApp',
-                content: null,
-                userId
-              }
-            });
-          }
-        });
-      } catch (error) {
-        console.error('Error creating welcome note:', error);
-      }
     }
 
     return {
