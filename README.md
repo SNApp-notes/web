@@ -9,7 +9,6 @@ SNApp is a lightweight note-taking web application designed to replace a legacy
 
 ## Table of Contents
 
-- [Project Description](#project-description)
 - [Tech Stack](#tech-stack)
 - [Getting Started Locally](#getting-started-locally)
   - [Environment Variables](#configure-environment-variables)
