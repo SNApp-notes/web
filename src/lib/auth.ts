@@ -106,6 +106,7 @@ If you didn't request a password reset, you can safely ignore this email. Your p
     }
   },
   emailVerification: {
+    autoSignInAfterVerification: true,
     sendVerificationEmail: async ({
       user,
       url
