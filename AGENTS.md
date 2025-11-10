@@ -7,6 +7,8 @@ Test: `npm test` (watch) | `npm run test:run` (once) | `npm run test:coverage`
 E2E: `npm run test:e2e:docker` (Fedora) | `npm run test:e2e` (local) | `npm run test:e2e:ui` (UI)
 E2E Docker: `npm run test:e2e:docker:build` (rebuild after Dockerfile changes)
 
+**TypeScript**: NEVER run `tsc` directly - use `npm run build` for type checking (Next.js handles it correctly)
+
 ## Build Workflow
 
 **CRITICAL**: After `npm run build`, delete `.next/` before `npm run dev` to avoid cache conflicts.
