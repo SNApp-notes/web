@@ -95,11 +95,22 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
     };
   }
 
+  // In development mode, auto-sign in without email verification
+  const requiresEmailVerification = process.env.NODE_ENV === 'production';
+
+  if (requiresEmailVerification) {
+    return {
+      success: true,
+      email: email,
+      message:
+        'Account created successfully! Please check your email to verify your account.'
+    };
+  }
+
+  // Development mode - no message triggers auto-redirect
   return {
     success: true,
-    email: email,
-    message:
-    'Account created successfully! Please check your email to verify your account.'
+    email: email
   };
 }
 
