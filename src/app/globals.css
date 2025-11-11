@@ -17,7 +17,7 @@ a {
 
 /* 80 characters line in Editor */
 .cm-editor .cm-content::before {
-  width: calc(80ch + 6px);
+  width: calc(80ch + 5px);
   content: '';
   display: block;
   position: absolute;
