@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useRef, useMemo, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { useQueryState, parseAsInteger } from 'nuqs';
 import { useNotesContext } from '@/components/notes/NotesContext';
 import { updateNote } from '@/app/actions/notes';
@@ -11,7 +11,6 @@ import RightPanel from '@/components/notes/RightPanel';
 
 export default function ContentSlotDefault() {
   const editorRef = useRef<import('@/types/editor').EditorRef | null>(null);
-  const router = useRouter();
   const pathname = usePathname();
 
   // Use nuqs for type-safe line query parameter management
