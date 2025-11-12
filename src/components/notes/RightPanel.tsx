@@ -65,6 +65,8 @@ function RightPanel({ headers, currentLine, onHeaderClick }: RightPanelProps) {
                 py={2}
                 onClick={() => onHeaderClick(header.line)}
                 title={`Jump to line ${header.line}`}
+                data-current={currentLine === header.line ? 'true' : undefined}
+                data-line={header.line}
               >
                 <Text
                   fontSize="sm"

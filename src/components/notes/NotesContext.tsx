@@ -104,6 +104,14 @@ export function NotesProvider({
     }
   }, [pathname, updateSelection]);
 
+  // Auto-select first note when at root with notes available
+  useEffect(() => {
+    if (pathname === '/' && notes.length > 0 && !selectedNoteId) {
+      const firstNote = notes[0];
+      router.push(`/note/${firstNote.id}`);
+    }
+  }, [pathname, notes, selectedNoteId, router]);
+
   const value: NotesContextValue = {
     notes,
     selectedNoteId,

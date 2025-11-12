@@ -17,7 +17,7 @@ Production assets in `.next/` conflict with dev hot-reload causing stale code is
 
 ## Tech Stack
 
-Next.js, TypeScript, Chakra UI v3, CodeMirror 6, Prisma, MySQL, Better Auth, CSS Modules, Vitest, React Testing Library, clsx
+Next.js, TypeScript, Chakra UI v3, CodeMirror 6, Prisma, MySQL, Better Auth, CSS Modules, Vitest, React Testing Library, clsx, nuqs
 
 ## Code Style
 
@@ -169,3 +169,35 @@ export async function signUp(prevState: any, formData: FormData) {
 **Rules**: Always use clsx for dynamic classNames. Use object syntax for booleans. No string concatenation.
 
 **Migration**: `className={\`base ${isActive ? 'active' : ''}\`}`→`className={clsx('base', { 'active': isActive })}`
+
+## nuqs for URL Query State Management
+
+**Purpose**: Type-safe URL query parameter management with React state synchronization | **Import**: `import { useQueryState, parseAsInteger } from 'nuqs'`
+
+**Setup**: Requires `NuqsAdapter` in provider (already configured in `src/components/ui/provider.tsx`)
+
+**Usage**:
+
+```tsx
+// Basic usage with integer parser
+const [lineParam, setLineParam] = useQueryState('line', parseAsInteger.withDefault(0));
+
+// Update URL query parameter
+setLineParam(42); // URL becomes ?line=42
+
+// Clear parameter
+setLineParam(null); // Removes ?line from URL
+
+// Conditional usage based on route
+const pathname = usePathname();
+const currentLine =
+  pathname.startsWith('/note/') && lineParam > 0 ? lineParam : undefined;
+```
+
+**Benefits**: Type-safe parsing, automatic hydration handling, survives page refresh, cleaner than manual URLSearchParams
+
+**Parsers**: `parseAsInteger`, `parseAsString`, `parseAsBoolean`, `parseAsFloat`, `parseAsArrayOf`, etc.
+
+**Rules**: Always use nuqs for URL state instead of manual URLSearchParams. Use `.withDefault()` for default values.
+
+**Testing**: Mock both `useQueryState` return value AND Next.js `useRouter`/`usePathname` hooks

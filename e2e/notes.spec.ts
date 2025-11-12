@@ -511,3 +511,293 @@ test.describe('Notes Application - CRUD Operations', () => {
     await collectCoverage(page, 'complete-note-workflow');
   });
 });
+
+test.describe('Header Navigation and URL Updates', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('[data-testid="note-list"]')).toBeVisible({
+      timeout: 10000
+    });
+  });
+
+  test('should update URL when clicking header in right panel', async ({ page }) => {
+    // Create a note with headers
+    const newNoteButton = page.getByRole('button', { name: /new note/i });
+    await newNoteButton.click();
+
+    // Wait for editor to be visible
+    const editor = page.locator('.cm-editor').first();
+    await expect(editor).toBeVisible({ timeout: 5000 });
+
+    // Click on the editor to focus it
+    const editorContent = page.locator('.cm-content').first();
+    await editorContent.click();
+    await page.waitForTimeout(500);
+
+    // Clear and add content with multiple headers
+    await page.keyboard.press('Control+a');
+    await page.keyboard.press('Delete');
+    await page.keyboard.type('---\n\n# Header 1\n\nSome content here.\n\n');
+    await page.keyboard.type('---\n\n## Header 2\n\nMore content.\n\n');
+    await page.keyboard.type('---\n\n### Header 3\n\nEven more content.');
+
+    // Wait for headers to be parsed
+    await page.waitForTimeout(1000);
+
+    // Get the current note ID from URL
+    const currentUrl = page.url();
+    const noteIdMatch = currentUrl.match(/\/note\/(\d+)/);
+    expect(noteIdMatch).not.toBeNull();
+    const noteId = noteIdMatch![1];
+
+    // Click on the second header in the right panel and extract its line number
+    const secondHeader = page.locator('aside').getByText('Header 2').first();
+    await expect(secondHeader).toBeVisible({ timeout: 5000 });
+
+    // Get the parent box element that has data-line attribute
+    const secondHeaderBox = secondHeader.locator('..');
+    const expectedLine = await secondHeaderBox.getAttribute('data-line');
+    expect(expectedLine).toBeTruthy();
+
+    await secondHeader.click();
+
+    // Wait for URL to update with the specific line parameter
+    await page.waitForURL(`**/note/${noteId}?line=${expectedLine}`, { timeout: 5000 });
+
+    // Verify the URL contains the exact line number
+    const urlAfterClick = page.url();
+    expect(urlAfterClick).toContain(`/note/${noteId}?line=${expectedLine}`);
+
+    await collectCoverage(page, 'header-click-updates-url');
+  });
+
+  test('should scroll to correct line when refreshing page with line parameter', async ({
+    page
+  }) => {
+    // Create a note with headers
+    const newNoteButton = page.getByRole('button', { name: /new note/i });
+    await newNoteButton.click();
+
+    // Wait for editor
+    const editor = page.locator('.cm-editor').first();
+    await expect(editor).toBeVisible({ timeout: 5000 });
+
+    // Add content with headers
+    const editorContent = page.locator('.cm-content').first();
+    await editorContent.click();
+    await page.keyboard.press('Control+a');
+    await page.keyboard.press('Delete');
+    await page.keyboard.type('# First Header\n\n');
+    for (let i = 0; i < 20; i++) {
+      await page.keyboard.type(`Line ${i + 1}\n`);
+    }
+    await page.keyboard.type('\n---\n\n## Second Header\n\nMore content here.');
+
+    // Wait for content to be rendered
+    await page.waitForTimeout(1000);
+
+    // Save the note before clicking header (to persist content to database)
+    await page.keyboard.press('Control+s');
+    await page.waitForTimeout(500); // Wait for save to complete
+
+    // Click on "Second Header" in right panel
+    const secondHeader = page.locator('aside').getByText('Second Header').first();
+    await expect(secondHeader).toBeVisible({ timeout: 5000 });
+
+    // Get the parent box element that has data-line attribute
+    const secondHeaderBox = secondHeader.locator('..');
+    const expectedLine = await secondHeaderBox.getAttribute('data-line');
+    expect(expectedLine).toBeTruthy();
+
+    await secondHeader.click();
+
+    // Wait for URL to update with the specific line parameter
+    await page.waitForURL(`**?line=${expectedLine}`, { timeout: 5000 });
+
+    // Verify the URL contains the exact line number
+    const urlWithLine = page.url();
+    expect(urlWithLine).toContain(`?line=${expectedLine}`);
+
+    // Refresh the page
+    await page.reload();
+
+    // Wait for editor to load after refresh
+    await expect(editor).toBeVisible({ timeout: 10000 });
+
+    // Wait for the URL to still have the line parameter after reload
+    await page.waitForURL(`**?line=${expectedLine}`, { timeout: 5000 });
+
+    // Verify "Second Header" is highlighted in the right panel
+    // (indicating we scrolled to the correct position)
+    const highlightedHeader = page.locator('aside [data-current="true"]');
+    await expect(highlightedHeader).toBeVisible({ timeout: 5000 });
+    await expect(highlightedHeader).toContainText('Second Header');
+
+    // Verify the highlighted header has the same line number as clicked
+    const highlightedLine = await highlightedHeader.getAttribute('data-line');
+    expect(highlightedLine).toBe(expectedLine);
+
+    // Verify URL still contains the correct line parameter after refresh
+    const urlAfterRefresh = page.url();
+    expect(urlAfterRefresh).toContain(`?line=${expectedLine}`);
+
+    await collectCoverage(page, 'refresh-with-line-parameter');
+  });
+
+  test('should highlight current header in right panel when scrolling', async ({
+    page
+  }) => {
+    // Create a note with multiple headers
+    const newNoteButton = page.getByRole('button', { name: /new note/i });
+    await newNoteButton.click();
+
+    const editor = page.locator('.cm-editor').first();
+    await expect(editor).toBeVisible({ timeout: 5000 });
+
+    const editorContent = page.locator('.cm-content').first();
+    await editorContent.click();
+    await page.keyboard.press('Control+a');
+    await page.keyboard.press('Delete');
+
+    // Create content with 3 headers
+    await page.keyboard.type('---\n\n# Header A\n\nContent A.\n\n');
+    await page.keyboard.type('---\n\n## Header B\n\nContent B.\n\n');
+    await page.keyboard.type('---\n\n### Header C\n\nContent C.');
+
+    await page.waitForTimeout(1000);
+
+    // Click first header and verify URL
+    const firstHeader = page.locator('aside').getByText('Header A').first();
+    await expect(firstHeader).toBeVisible({ timeout: 5000 });
+
+    const firstHeaderBox = firstHeader.locator('..');
+    const firstLine = await firstHeaderBox.getAttribute('data-line');
+    expect(firstLine).toBeTruthy();
+
+    await firstHeader.click();
+    await page.waitForURL(`**?line=${firstLine}`, { timeout: 5000 });
+
+    const urlFirst = page.url();
+    expect(urlFirst).toContain(`?line=${firstLine}`);
+
+    // Click second header and verify URL updated
+    const secondHeader = page.locator('aside').getByText('Header B').first();
+    const secondHeaderBox = secondHeader.locator('..');
+    const secondLine = await secondHeaderBox.getAttribute('data-line');
+    expect(secondLine).toBeTruthy();
+
+    await secondHeader.click();
+    await page.waitForURL(`**?line=${secondLine}`, { timeout: 5000 });
+
+    const urlSecond = page.url();
+    expect(urlSecond).toContain(`?line=${secondLine}`);
+
+    // Click third header and verify URL updated
+    const thirdHeader = page.locator('aside').getByText('Header C').first();
+    const thirdHeaderBox = thirdHeader.locator('..');
+    const thirdLine = await thirdHeaderBox.getAttribute('data-line');
+    expect(thirdLine).toBeTruthy();
+
+    await thirdHeader.click();
+    await page.waitForURL(`**?line=${thirdLine}`, { timeout: 5000 });
+
+    const urlThird = page.url();
+    expect(urlThird).toContain(`?line=${thirdLine}`);
+
+    // Verify all three line numbers are different
+    expect(firstLine).not.toBe(secondLine);
+    expect(secondLine).not.toBe(thirdLine);
+    expect(firstLine).not.toBe(thirdLine);
+
+    await collectCoverage(page, 'header-navigation-updates-url');
+  });
+
+  test('should handle headers with dash syntax (--- delimiters)', async ({ page }) => {
+    // Create a note
+    const newNoteButton = page.getByRole('button', { name: /new note/i });
+    await newNoteButton.click();
+
+    const editor = page.locator('.cm-editor').first();
+    await expect(editor).toBeVisible({ timeout: 5000 });
+
+    const editorContent = page.locator('.cm-content').first();
+    await editorContent.click();
+    await page.keyboard.press('Control+a');
+    await page.keyboard.press('Delete');
+
+    // Use new dash syntax for headers
+    await page.keyboard.type('---\n\n# Introduction\n\nWelcome!\n\n');
+    await page.keyboard.type("---\n\n## Getting Started\n\nLet's begin.\n\n");
+    await page.keyboard.type('---\n\n### Advanced Topics\n\nFor experts.');
+
+    await page.waitForTimeout(1000);
+
+    // Verify headers appear in right panel
+    await expect(page.locator('aside').getByText('Introduction')).toBeVisible({
+      timeout: 5000
+    });
+    await expect(page.locator('aside').getByText('Getting Started')).toBeVisible();
+    await expect(page.locator('aside').getByText('Advanced Topics')).toBeVisible();
+
+    // Click on "Getting Started" header and verify URL with specific line number
+    const gettingStartedHeader = page
+      .locator('aside')
+      .getByText('Getting Started')
+      .first();
+
+    const gettingStartedBox = gettingStartedHeader.locator('..');
+    const expectedLine = await gettingStartedBox.getAttribute('data-line');
+    expect(expectedLine).toBeTruthy();
+
+    await gettingStartedHeader.click();
+
+    // Wait for URL to update with the specific line parameter
+    await page.waitForURL(`**?line=${expectedLine}`, { timeout: 5000 });
+
+    const urlAfterClick = page.url();
+    expect(urlAfterClick).toContain(`?line=${expectedLine}`);
+
+    await collectCoverage(page, 'dash-syntax-headers');
+  });
+
+  test('should auto-select first note when navigating to / with notes available', async ({
+    page
+  }) => {
+    // Verify we have notes
+    const notesList = page.locator('[data-testid="note-list"]');
+    await expect(notesList).toBeVisible({ timeout: 5000 });
+
+    const noteCount = await page.locator('[data-testid="note-list"] .tree-item').count();
+    expect(noteCount).toBeGreaterThan(0);
+
+    // Get the first note's ID by clicking on it first to establish baseline
+    const firstNoteLabel = page.locator('.tree-node-label').first();
+    await firstNoteLabel.click();
+    await page.waitForURL(/\/note\/\d+/, { timeout: 5000 });
+
+    // Extract the note ID from URL
+    const urlWithNote = page.url();
+    const noteIdMatch = urlWithNote.match(/\/note\/(\d+)/);
+    expect(noteIdMatch).not.toBeNull();
+    const firstNoteId = noteIdMatch![1];
+
+    // Now navigate to root (/)
+    await page.goto('/');
+
+    // Wait for note list to be visible
+    await expect(notesList).toBeVisible({ timeout: 5000 });
+
+    // The app should automatically redirect to the first note
+    await page.waitForURL(`**/note/${firstNoteId}`, { timeout: 5000 });
+
+    // Verify the URL contains the first note's ID
+    const finalUrl = page.url();
+    expect(finalUrl).toContain(`/note/${firstNoteId}`);
+
+    // Verify the first note is selected in the UI
+    const selectedNote = page.locator('.tree-node-selected').first();
+    await expect(selectedNote).toBeVisible();
+
+    await collectCoverage(page, 'auto-select-first-note');
+  });
+});

@@ -32,6 +32,7 @@ SNApp is a lightweight note-taking web application designed to replace a legacy
 - CodeMirror 6
 - CSS Modules
 - clsx
+- nuqs
 
 **Back-End:**
 
