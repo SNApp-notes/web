@@ -53,6 +53,7 @@ Key features include:
 - CodeMirror 6
 - CSS Modules
 - clsx
+- nuqs
 
 **Back-End:**
 

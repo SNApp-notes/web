@@ -7,6 +7,7 @@
 - CodeMirror 6
 - CSS Modules
 - clsx
+- nuqs
 - zod
 
 ## Backend

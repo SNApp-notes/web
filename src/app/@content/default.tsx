@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useQueryState, parseAsInteger } from 'nuqs';
 import { useNotesContext } from '@/components/notes/NotesContext';
 import { updateNote } from '@/app/actions/notes';
 import { extractHeaders } from '@/lib/markdown-parser';
@@ -8,8 +10,12 @@ import MiddlePanel from '@/components/notes/MiddlePanel';
 import RightPanel from '@/components/notes/RightPanel';
 
 export default function ContentSlotDefault() {
-  const [currentLine, setCurrentLine] = useState<number | undefined>(undefined);
   const editorRef = useRef<import('@/types/editor').EditorRef | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Use nuqs for type-safe line query parameter management
+  const [lineParam, setLineParam] = useQueryState('line', parseAsInteger.withDefault(0));
 
   const {
     getNote,
@@ -20,41 +26,16 @@ export default function ContentSlotDefault() {
     setSaveStatus
   } = useNotesContext();
 
-  // Clear current line when selected note changes
+  // Derive current line from query parameter
+  const currentLine =
+    pathname.startsWith('/note/') && lineParam > 0 ? lineParam : undefined;
+
+  // Scroll to current line when editor is ready or current line changes
   useEffect(() => {
-    setCurrentLine(undefined);
-  }, [selectedNoteId]);
-
-  // Extract current line from URL - make this the authoritative source
-  useEffect(() => {
-    const extractLineFromUrl = () => {
-      // Only process line parameters if we're on a note page
-      const pathname = window.location.pathname;
-      const isNotePage = pathname.startsWith('/note/');
-
-      if (!isNotePage) {
-        return;
-      }
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const lineParam = urlParams.get('line');
-
-      if (lineParam) {
-        const lineNumber = parseInt(lineParam, 10);
-        if (!isNaN(lineNumber)) {
-          setCurrentLine(lineNumber);
-          return;
-        }
-      }
-
-      setCurrentLine(undefined);
-    };
-
-    // Extract line on mount and whenever URL changes
-    extractLineFromUrl();
-
-    // Listen for URL changes (handled by Next.js router now)
-  }, []);
+    if (currentLine && editorRef.current) {
+      editorRef.current.scrollToLine(currentLine);
+    }
+  }, [currentLine]);
 
   const selectedNote = selectedNoteId ? getNote(selectedNoteId) : null;
   // Content is now populated server-side, no null values expected
@@ -90,15 +71,12 @@ export default function ContentSlotDefault() {
   }, [selectedNote, content, setSaveStatus, markNoteDirty]);
 
   const handleHeaderClick = (line: number) => {
-    // Update current line state immediately for visual feedback
-    setCurrentLine(line);
+    // Update line query parameter for deep linking and visual feedback
+    setLineParam(line);
 
     if (editorRef.current) {
       editorRef.current.scrollToLine(line);
     }
-
-    // TODO: Use Next.js router to update URL with line parameter
-    // For now, just update the line state without URL manipulation
   };
 
   // Unsaved changes warning (US-015)
