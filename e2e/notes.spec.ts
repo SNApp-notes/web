@@ -580,7 +580,7 @@ test.describe('Header Navigation and URL Updates', () => {
 
     // Wait for editor
     const editor = page.locator('.cm-editor').first();
-    await expect(editor).toBeVisible({ timeout: 5000 });
+    await editor.waitFor({ timeout: 5000 });
 
     // Add content with headers
     const editorContent = page.locator('.cm-content').first();
@@ -593,16 +593,16 @@ test.describe('Header Navigation and URL Updates', () => {
     }
     await page.keyboard.type('\n---\n\n## Second Header\n\nMore content here.');
 
-    // Wait for content to be rendered
-    await page.waitForTimeout(1000);
-
     // Save the note before clicking header (to persist content to database)
     await page.keyboard.press('Control+s');
-    await page.waitForTimeout(500); // Wait for save to complete
+
+    // Wait for save to complete by checking for "Saved" status
+    const savedStatus = page.getByText('Saved');
+    await savedStatus.waitFor({ timeout: 5000 });
 
     // Click on "Second Header" in right panel
     const secondHeader = page.locator('aside').getByText('Second Header').first();
-    await expect(secondHeader).toBeVisible({ timeout: 5000 });
+    await secondHeader.waitFor({ timeout: 5000 });
 
     // Get the parent box element that has data-line attribute
     const secondHeaderBox = secondHeader.locator('..');
@@ -618,11 +618,20 @@ test.describe('Header Navigation and URL Updates', () => {
     const urlWithLine = page.url();
     expect(urlWithLine).toContain(`?line=${expectedLine}`);
 
+    // Verify the active line gutter shows the correct line number after click
+    // Filter for line number element (not folding icon) by checking text matches digits
+    const activeLineGutterAfterClick = page
+      .locator('.cm-activeLineGutter')
+      .filter({ hasText: /^\d+$/ });
+    await activeLineGutterAfterClick.waitFor({ timeout: 5000 });
+    const activeLineTextAfterClick = await activeLineGutterAfterClick.innerText();
+    expect(activeLineTextAfterClick).toBe(expectedLine);
+
     // Refresh the page
     await page.reload();
 
     // Wait for editor to load after refresh
-    await expect(editor).toBeVisible({ timeout: 10000 });
+    await editor.waitFor({ timeout: 10000 });
 
     // Wait for the URL to still have the line parameter after reload
     await page.waitForURL(`**?line=${expectedLine}`, { timeout: 5000 });
@@ -630,7 +639,7 @@ test.describe('Header Navigation and URL Updates', () => {
     // Verify "Second Header" is highlighted in the right panel
     // (indicating we scrolled to the correct position)
     const highlightedHeader = page.locator('aside [data-current="true"]');
-    await expect(highlightedHeader).toBeVisible({ timeout: 5000 });
+    await highlightedHeader.waitFor({ timeout: 5000 });
     await expect(highlightedHeader).toContainText('Second Header');
 
     // Verify the highlighted header has the same line number as clicked
@@ -640,6 +649,15 @@ test.describe('Header Navigation and URL Updates', () => {
     // Verify URL still contains the correct line parameter after refresh
     const urlAfterRefresh = page.url();
     expect(urlAfterRefresh).toContain(`?line=${expectedLine}`);
+
+    // CRITICAL: Verify the active line gutter shows the correct line number after refresh
+    // Filter for line number element (not folding icon) by checking text matches digits
+    const activeLineGutter = page
+      .locator('.cm-activeLineGutter')
+      .filter({ hasText: /^\d+$/ });
+    await activeLineGutter.waitFor({ timeout: 5000 });
+    const activeLineText = await activeLineGutter.innerText();
+    expect(activeLineText).toBe(expectedLine);
 
     await collectCoverage(page, 'refresh-with-line-parameter');
   });
@@ -799,5 +817,116 @@ test.describe('Header Navigation and URL Updates', () => {
     await expect(selectedNote).toBeVisible();
 
     await collectCoverage(page, 'auto-select-first-note');
+  });
+
+  test('should verify active line gutter matches URL line parameter', async ({
+    page
+  }) => {
+    // Create a note with multiple headers
+    const newNoteButton = page.getByRole('button', { name: /new note/i });
+    await newNoteButton.click();
+
+    const editor = page.locator('.cm-editor').first();
+    await editor.waitFor({ timeout: 5000 });
+
+    // Add content with multiple headers
+    const editorContent = page.locator('.cm-content').first();
+    await editorContent.click();
+    await page.keyboard.press('Control+a');
+    await page.keyboard.press('Delete');
+
+    // Create content with line numbers we can predict
+    await page.keyboard.type('# Header 1\n\n');
+    await page.keyboard.type('Content line 1\n');
+    await page.keyboard.type('Content line 2\n');
+    await page.keyboard.type('Content line 3\n\n');
+    await page.keyboard.type('---\n\n');
+    await page.keyboard.type('## Header 2\n\n');
+    await page.keyboard.type('Content line 4\n');
+    await page.keyboard.type('Content line 5\n\n');
+    await page.keyboard.type('---\n\n');
+    await page.keyboard.type('### Header 3\n\n');
+    await page.keyboard.type('Final content');
+
+    // Save the note
+    await page.keyboard.press('Control+s');
+    const savedStatus = page.getByText('Saved');
+    await savedStatus.waitFor({ timeout: 5000 });
+
+    // Get current note URL for later use
+    const currentUrl = page.url();
+    const noteIdMatch = currentUrl.match(/\/note\/(\d+)/);
+    expect(noteIdMatch).not.toBeNull();
+    const noteId = noteIdMatch![1];
+
+    // Test Case 1: Click on Header 2 and verify active line gutter
+    const header2 = page.locator('aside').getByText('Header 2').first();
+    await header2.waitFor({ timeout: 5000 });
+
+    const header2Box = header2.locator('..');
+    const header2Line = await header2Box.getAttribute('data-line');
+    expect(header2Line).toBeTruthy();
+
+    await header2.click();
+    await page.waitForURL(`**?line=${header2Line}`, { timeout: 5000 });
+
+    // Verify active line gutter shows the correct line
+    // Filter for line number element (not folding icon) by checking text matches digits
+    const activeLineGutter1 = page
+      .locator('.cm-activeLineGutter')
+      .filter({ hasText: /^\d+$/ });
+    await activeLineGutter1.waitFor({ timeout: 5000 });
+    const activeLineText1 = await activeLineGutter1.innerText();
+    expect(activeLineText1).toBe(header2Line);
+    expect(page.url()).toContain(`?line=${header2Line}`);
+
+    // Test Case 2: Click on Header 3 and verify active line gutter updates
+    const header3 = page.locator('aside').getByText('Header 3').first();
+    await header3.waitFor({ timeout: 5000 });
+
+    const header3Box = header3.locator('..');
+    const header3Line = await header3Box.getAttribute('data-line');
+    expect(header3Line).toBeTruthy();
+
+    await header3.click();
+    await page.waitForURL(`**?line=${header3Line}`, { timeout: 5000 });
+
+    // Verify active line gutter updates to new line
+    const activeLineGutter2 = page
+      .locator('.cm-activeLineGutter')
+      .filter({ hasText: /^\d+$/ });
+    await activeLineGutter2.waitFor({ timeout: 5000 });
+    const activeLineText2 = await activeLineGutter2.innerText();
+    expect(activeLineText2).toBe(header3Line);
+    expect(page.url()).toContain(`?line=${header3Line}`);
+
+    // Test Case 3: Navigate directly via URL with line parameter
+    await page.goto(`/note/${noteId}?line=${header2Line}`);
+    await editor.waitFor({ timeout: 10000 });
+    await page.waitForURL(`**?line=${header2Line}`, { timeout: 5000 });
+
+    // Verify active line gutter shows correct line after direct URL navigation
+    const activeLineGutter3 = page
+      .locator('.cm-activeLineGutter')
+      .filter({ hasText: /^\d+$/ });
+    await activeLineGutter3.waitFor({ timeout: 5000 });
+    const activeLineText3 = await activeLineGutter3.innerText();
+    expect(activeLineText3).toBe(header2Line);
+
+    // Test Case 4: Refresh page with line parameter
+    await page.reload();
+    await editor.waitFor({ timeout: 10000 });
+    await page.waitForURL(`**?line=${header2Line}`, { timeout: 5000 });
+
+    // Verify active line gutter persists after refresh
+    const activeLineGutter4 = page
+      .locator('.cm-activeLineGutter')
+      .filter({ hasText: /^\d+$/ });
+    await activeLineGutter4.waitFor({ timeout: 5000 });
+    const activeLineText4 = await activeLineGutter4.innerText();
+    expect(activeLineText4).toBe(header2Line);
+    expect(page.url()).toContain(`?line=${header2Line}`);
+
+    await collectCoverage(page, 'active-line-gutter-verification');
   });
 });

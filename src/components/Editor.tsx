@@ -178,10 +178,14 @@ const Editor = memo(
     // Handle line scrolling when selectedLine changes or content is loaded
     useEffect(() => {
       const view = codeMirrorRef.current?.view;
-      if (selectedLine && view && contentLoaded) {
-        scrollToLine(selectedLine);
+      // Ensure view is ready, content is loaded, and we have a line to scroll to
+      if (selectedLine && view && contentLoaded && viewReady) {
+        // Use requestAnimationFrame to ensure DOM is fully rendered
+        requestAnimationFrame(() => {
+          scrollToLine(selectedLine);
+        });
       }
-    }, [selectedLine, contentLoaded, scrollToLine]);
+    }, [selectedLine, contentLoaded, viewReady, scrollToLine]);
 
     return (
       <CodeMirror
