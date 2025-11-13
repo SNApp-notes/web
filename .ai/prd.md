@@ -133,13 +133,13 @@ usability.
 - Offline access, local synchronization, or mobile apps.
 - Backup/export features (users can copy/paste content manually).
 - Categories, notes tree, drag-and-drop reordering, or sorting.
-- Favorite notes, full-text search, or notes sharing/publishing.
+- Favorite notes, notes sharing/publishing.
 - Client-side encryption (relies on HTTPS and server controls).
 - Advanced analytics tools or user feedback mechanisms.
 - Support for legacy browsers (e.g., IE11) or non-major browsers.
 
-Post-MVP planning: Introduce categories and full-text search in phase 2; add
-multi-factor auth and exports in phase 3.
+Post-MVP planning: Introduce categories in phase 2; add multi-factor auth and 
+exports in phase 3.
 
 ## 5. User Stories
 
@@ -440,6 +440,62 @@ total system usage. Acceptance Criteria:
   correctly without gaps or duplicates through proper transaction handling.
 - Edge case: Deleting a note does not affect the sequential numbering of future
   notes (IDs are not reused).
+
+US-020 Title: As a user, I want to search for notes by their content so that I
+can quickly find information across all my notes without remembering which note
+contains it. Description: Full-text search allows users to search through the
+content of all their notes using a keyboard shortcut (Ctrl+Shit+F) that opens a
+modal dialog. Search results display matching notes with context snippets
+showing where the search term appears. The search state persists between modal
+opens, allowing users to navigate through multiple results. This is essential
+for power users with large note collections who need to locate specific
+information quickly. Acceptance Criteria:
+
+- Given an authenticated session, when the user presses Ctrl+Shit+F, a modal dialog
+  appears centered horizontally near the top of the page, overlaying the current
+  interface.
+- The modal contains a search input field that is automatically focused when the
+  dialog opens, allowing immediate typing.
+- When the user types a search query and presses Enter, a server-side search
+  executes against the full text content of all their notes using
+  case-insensitive partial matching.
+- Search results display within the same modal dialog, below the search input,
+  showing note names with content snippets (1-2 lines) containing the matched
+  search term with the matching text highlighted.
+- Results are paginated showing 5 results per page, with pagination controls
+  (Previous/Next or page numbers) at the bottom when there are more than 5
+  results.
+- Results are ordered by relevance (notes with multiple matches appear higher).
+- When there are no matching results, the modal displays "No notes found"
+  message below the search input.
+- When clicking a search result, the modal closes, the selected note opens in
+  the editor, the URL updates to `/note/{noteId}/{lineNumber}` reflecting the
+  exact line where the search term was found, and the editor automatically
+  scrolls to that position with the term highlighted.
+- The search state (search query, results, and current pagination page)
+  persists in memory after closing the modal, so when the user presses Ctrl+Shit+F
+  again, the previous search results are immediately visible without
+  re-executing the search.
+- The user can modify the search query and press Enter to execute a new search,
+  which replaces the previous results.
+- The modal can be closed by pressing Escape, clicking outside the dialog, or
+  clicking a close button (X) in the modal header.
+- The existing left panel search input remains unchanged and continues to filter
+  notes by name only.
+- Search is performed server-side using MySQL full-text search capabilities for
+  optimal performance with large note collections.
+- Edge case: Search terms with special characters (e.g., `code()`, `$variable`)
+  are properly escaped and searched literally.
+- Edge case: Search works correctly with Markdown syntax, finding text even
+  within code blocks, headers, and lists.
+- Edge case: Empty search input shows no results until Enter is pressed with
+  valid text.
+- Edge case: If a note from previous search results is deleted, it is filtered
+  out when reopening the modal, and pagination adjusts accordingly.
+- Edge case: Navigating through pagination pages preserves the current page when
+  closing and reopening the modal.
+- Performance: Search queries complete within 500ms for collections up to 1000
+  notes with average 5KB size each.
 
 
 ## 6. Success Metrics
