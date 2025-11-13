@@ -1,3 +1,74 @@
+/**
+ * CodeMirror 6-based markdown editor component with syntax highlighting,
+ * line scrolling, keyboard shortcuts, and theme support.
+ *
+ * @remarks
+ * This module uses CodeMirror 6 (`@uiw/react-codemirror`) with markdown language support
+ * (`@codemirror/lang-markdown`), nested code block syntax highlighting (`@codemirror/language-data`),
+ * theme support (`@uiw/codemirror-theme-basic`), and Chakra UI color mode integration.
+ *
+ * **Features:**
+ * - Markdown syntax highlighting with nested code block support
+ * - Line numbers, bracket matching, auto-completion, code folding
+ * - Automatic theme switching based on Chakra UI color mode
+ * - Line scrolling via `selectedLine` prop or `scrollToLine()` method
+ * - Keyboard shortcut: Cmd/Ctrl+S triggers `onSave` callback
+ * - Auto-focus on mount, read-only mode support
+ * - Exposes imperative API via `EditorRef` (focus, blur, getValue, setValue, scrollToLine)
+ *
+ * **Performance:**
+ * - Memoized to prevent unnecessary re-renders
+ * - Uses `useMemo` for extensions and theme to avoid recreation
+ * - Large content samples loaded via `fetch()` (not bundled)
+ *
+ * **Accessibility:**
+ * - Auto-focus for keyboard navigation
+ * - Read-only mode for viewing content
+ * - Scrollable content with keyboard support
+ *
+ * @example
+ * ```tsx
+ * import Editor from '@/components/Editor';
+ *
+ * function NoteEditor() {
+ *   const [content, setContent] = useState('# Hello World');
+ *   const editorRef = useRef<EditorRef>(null);
+ *
+ *   const handleSave = () => {
+ *     const currentContent = editorRef.current?.getValue();
+ *     console.log('Saving:', currentContent);
+ *   };
+ *
+ *   const scrollToLine10 = () => {
+ *     editorRef.current?.scrollToLine(10);
+ *   };
+ *
+ *   return (
+ *     <Editor
+ *       ref={editorRef}
+ *       value={content}
+ *       onChange={setContent}
+ *       placeholder="Start typing..."
+ *       selectedLine={5}
+ *       onSave={handleSave}
+ *       onEditorReady={(editor) => console.log('Editor ready!', editor)}
+ *     />
+ *   );
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Read-only editor for viewing content
+ * <Editor
+ *   value={noteContent}
+ *   readOnly={true}
+ *   selectedLine={lineNumber}
+ * />
+ * ```
+ *
+ * @public
+ */
 'use client';
 
 import {
@@ -17,6 +88,63 @@ import { useColorMode } from '@/components/ui/color-mode';
 import { EditorView, keymap } from '@codemirror/view';
 import type { EditorProps, EditorRef } from '@/types/editor';
 
+/**
+ * CodeMirror 6-based markdown editor with syntax highlighting and line scrolling.
+ *
+ * @param props - Editor configuration
+ * @param props.value - Current editor content (default: '')
+ * @param props.onChange - Callback when content changes
+ * @param props.placeholder - Placeholder text when editor is empty
+ * @param props.readOnly - Whether editor is read-only (default: false)
+ * @param props.selectedLine - Line number to scroll to (1-based)
+ * @param props.className - Additional CSS classes
+ * @param props.onEditorReady - Callback when editor API is ready
+ * @param props.onSave - Callback for Cmd/Ctrl+S keyboard shortcut
+ * @param ref - Ref exposing editor API methods
+ * @returns Rendered CodeMirror editor
+ *
+ * @remarks
+ * **Line Scrolling:**
+ * - Set `selectedLine` prop to scroll to a specific line (1-based index)
+ * - Use `editorRef.current.scrollToLine(lineNumber)` for programmatic scrolling
+ * - Scrolling waits for content to load and view to be ready
+ * - Invalid line numbers are logged as warnings (no errors thrown)
+ *
+ * **Editor Ref API:**
+ * - `focus()` - Focus the editor
+ * - `blur()` - Blur the editor
+ * - `getValue()` - Get current content as string
+ * - `setValue(value)` - Replace all content
+ * - `scrollToLine(line)` - Scroll to line number (1-based)
+ *
+ * **Theme:**
+ * - Automatically switches between light/dark based on Chakra UI color mode
+ * - Uses `basicLight` and `basicDark` themes from `@uiw/codemirror-theme-basic`
+ *
+ * **Keyboard Shortcuts:**
+ * - Cmd/Ctrl+S: Triggers `onSave` callback (prevents default browser save)
+ *
+ * **Performance:**
+ * - Memoized component to prevent unnecessary re-renders
+ * - Extensions and theme are memoized to avoid recreation
+ * - Uses `requestAnimationFrame` for smooth scrolling
+ *
+ * @example
+ * ```tsx
+ * const editorRef = useRef<EditorRef>(null);
+ *
+ * // Scroll to line 42
+ * editorRef.current?.scrollToLine(42);
+ *
+ * // Get current content
+ * const content = editorRef.current?.getValue();
+ *
+ * // Set new content
+ * editorRef.current?.setValue('# New Content');
+ * ```
+ *
+ * @public
+ */
 const Editor = memo(
   forwardRef<EditorRef, EditorProps>(function Editor(
     {

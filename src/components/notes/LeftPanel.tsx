@@ -1,3 +1,36 @@
+/**
+ * Left sidebar panel for note management and navigation.
+ *
+ * @remarks
+ * Dependencies: Chakra UI v3, React, TreeView, ConfirmationDialog
+ *
+ * **Features:**
+ * - Note list display with tree structure
+ * - Real-time note filtering
+ * - New note creation button
+ * - Note rename functionality
+ * - Note deletion with confirmation dialog
+ * - Dirty state indicator (asterisk prefix)
+ * - Empty state handling
+ *
+ * **Performance:**
+ * - Memoized component to prevent unnecessary re-renders
+ * - Memoized tree data filtering
+ * - useCallback hooks for event handlers
+ *
+ * @example
+ * ```tsx
+ * <LeftPanel
+ *   notes={userNotes}
+ *   onNoteSelect={(id) => router.push(`/note/${id}`)}
+ *   onNewNote={handleCreateNote}
+ *   onDeleteNote={handleDeleteNote}
+ *   onRenameNote={handleRenameNote}
+ * />
+ * ```
+ *
+ * @public
+ */
 'use client';
 
 import { useState, useMemo, memo, useCallback } from 'react';
@@ -7,14 +40,42 @@ import type { NoteTreeNode, TreeNode } from '@/types/tree';
 import TreeView from '@/components/TreeView';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
+/**
+ * Props for the LeftPanel component.
+ *
+ * @public
+ */
 interface LeftPanelProps {
+  /** Array of notes to display in tree structure */
   notes: NoteTreeNode[];
+  /** Callback invoked when a note is selected */
   onNoteSelect: (id: number) => void;
+  /** Callback invoked when creating a new note */
   onNewNote: () => void;
+  /** Callback invoked when deleting a note */
   onDeleteNote: (id: number) => void;
+  /** Callback invoked when renaming a note */
   onRenameNote: (id: number, name: string) => Promise<void>;
 }
 
+/**
+ * Renders the left sidebar panel with note list and management controls.
+ *
+ * @param props - Component props
+ * @param props.notes - Array of note tree nodes
+ * @param props.onNoteSelect - Handler for note selection
+ * @param props.onNewNote - Handler for new note creation
+ * @param props.onDeleteNote - Handler for note deletion
+ * @param props.onRenameNote - Async handler for note renaming
+ * @returns Memoized left panel component
+ *
+ * @remarks
+ * Manages local state for filtering and delete confirmation.
+ * Filters notes by name (case-insensitive) and sorts by ID.
+ * Shows asterisk prefix for notes with unsaved changes.
+ *
+ * @public
+ */
 const LeftPanel = memo(function LeftPanel({
   notes,
   onNoteSelect,

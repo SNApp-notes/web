@@ -1,3 +1,21 @@
+/**
+ * @module auth
+ * @description Server-side authentication configuration using Better Auth.
+ * Provides email/password authentication, OAuth (GitHub), email verification,
+ * password reset, and automatic welcome note creation for new users.
+ *
+ * @dependencies
+ * - better-auth: Authentication framework
+ * - @/lib/prisma: Database client
+ * - @/lib/email: Email service for verification and password reset
+ *
+ * @remarks
+ * - Email verification is required in production, disabled in development
+ * - In development mode, password reset links are logged to console
+ * - Database adapter switches between MySQL (prod/dev) and SQLite (CI)
+ * - Creates a welcome note for each new user on first account creation
+ */
+
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
@@ -5,6 +23,36 @@ import { nextCookies } from 'better-auth/next-js';
 import prisma from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 
+/**
+ * Authentication instance configured with Better Auth.
+ *
+ * @constant {Object} auth - Better Auth instance
+ *
+ * @property {string} baseURL - Base URL from BETTER_AUTH_URL environment variable
+ * @property {string} secret - Secret key from BETTER_AUTH_SECRET environment variable
+ * @property {Object} emailAndPassword - Email/password authentication configuration
+ * @property {boolean} emailAndPassword.requireEmailVerification - Requires email verification in production only
+ * @property {Object} emailVerification - Email verification configuration
+ * @property {boolean} emailVerification.autoSignInAfterVerification - Automatically signs in user after email verification
+ * @property {Object} socialProviders - OAuth provider configuration (GitHub)
+ * @property {Object} databaseHooks - Lifecycle hooks for database operations
+ * @property {Object} database - Prisma database adapter configuration
+ *
+ * @example
+ * // In server components or API routes
+ * import { auth } from '@/lib/auth';
+ *
+ * const session = await auth.api.getSession({ headers: await headers() });
+ * if (session?.user) {
+ *   console.log('User is authenticated:', session.user.email);
+ * }
+ *
+ * @remarks
+ * - GitHub OAuth is only enabled if GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are set
+ * - Database hooks create a welcome note for new users on first account creation
+ * - Email verification and password reset use different logic in development vs production
+ * - Telemetry is disabled for privacy
+ */
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
