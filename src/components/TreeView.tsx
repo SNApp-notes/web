@@ -1,3 +1,98 @@
+/**
+ * Hierarchical tree view component for displaying and managing nested note structures.
+ * Supports expand/collapse, inline editing, deletion, and selection with keyboard/mouse navigation.
+ *
+ * @remarks
+ * This module uses Chakra UI components (Box, VStack, HStack, Text, Input, IconButton),
+ * Feather icons from `react-icons/fi`, clsx for conditional className construction,
+ * and custom TreeNode/TreeViewProps types from `@/types/tree`.
+ *
+ * **Features:**
+ * - Hierarchical tree structure with categories (folders) and leaf nodes (notes)
+ * - Expand/collapse categories with chevron indicators
+ * - Select leaf nodes (only notes can be selected, not categories)
+ * - Inline rename via double-click (Enter to save, Escape to cancel)
+ * - Delete button for leaf nodes (hover to reveal)
+ * - Auto-scroll selected node into view
+ * - Custom name/title generators for node display
+ * - Memoized components to prevent unnecessary re-renders
+ *
+ * **Interaction Patterns:**
+ * - Single click: Select leaf node or toggle category
+ * - Double click: Start inline editing (leaf nodes only)
+ * - Hover: Reveal delete button (leaf nodes only)
+ * - Keyboard: Enter (save edit), Escape (cancel edit)
+ *
+ * **Accessibility:**
+ * - `role="treeitem"` for ARIA support
+ * - Auto-scroll selected node into view
+ * - Keyboard navigation support
+ * - Focus management for inline editing
+ *
+ * **Performance:**
+ * - Memoized TreeNodeComponent to prevent re-renders on sibling changes
+ * - Recursive rendering with level tracking for indentation
+ * - Event handler memoization with useCallback
+ *
+ * @example
+ * ```tsx
+ * import { TreeView } from '@/components/TreeView';
+ * import type { TreeNode } from '@/types/tree';
+ *
+ * const notes: TreeNode[] = [
+ *   {
+ *     id: 1,
+ *     name: 'Projects',
+ *     selected: false,
+ *     children: [
+ *       { id: 2, name: 'Project A', selected: true, data: { content: '...' } },
+ *       { id: 3, name: 'Project B', selected: false, data: { content: '...' } }
+ *     ]
+ *   },
+ *   { id: 4, name: 'Ideas', selected: false, data: { content: '...' } }
+ * ];
+ *
+ * function NotesSidebar() {
+ *   const handleSelect = (node: TreeNode) => {
+ *     console.log('Selected:', node.name);
+ *   };
+ *
+ *   const handleRename = (node: TreeNode, newName: string) => {
+ *     console.log('Renamed:', node.name, '->', newName);
+ *   };
+ *
+ *   const handleDelete = (node: TreeNode) => {
+ *     if (confirm(`Delete ${node.name}?`)) {
+ *       console.log('Deleted:', node.name);
+ *     }
+ *   };
+ *
+ *   return (
+ *     <TreeView
+ *       data={notes}
+ *       title="My Notes"
+ *       onNodeSelect={handleSelect}
+ *       onNodeRename={handleRename}
+ *       onNodeDelete={handleDelete}
+ *       generateName={(node) => node.data?.customName || node.name}
+ *       generateTitle={(node) => `${node.name} - ${node.data?.createdAt}`}
+ *     />
+ *   );
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Simple read-only tree (no editing/deletion)
+ * <TreeView
+ *   data={fileTree}
+ *   title="Files"
+ *   onNodeSelect={(node) => openFile(node.id)}
+ * />
+ * ```
+ *
+ * @public
+ */
 'use client';
 
 import React from 'react';
@@ -13,6 +108,12 @@ import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import clsx from 'clsx';
 import type { TreeNode, TreeViewProps } from '@/types/tree';
 
+/**
+ * Props for individual tree node component (internal use).
+ *
+ * @typeParam T - Type of data attached to tree nodes
+ * @internal
+ */
 interface TreeNodeComponentProps<T = unknown> {
   node: TreeNode<T>;
   onNodeSelect?: (node: TreeNode<T>) => void;
@@ -23,6 +124,50 @@ interface TreeNodeComponentProps<T = unknown> {
   level?: number;
 }
 
+/**
+ * Individual tree node component with expand/collapse, editing, and deletion.
+ *
+ * @typeParam T - Type of data attached to tree nodes
+ * @param props - Node component props
+ * @returns Rendered tree node with children (if expanded)
+ *
+ * @remarks
+ * **Node Types:**
+ * - **Category**: Has children, displays folder icon, expandable, cannot be selected/edited/deleted
+ * - **Leaf**: No children, displays file icon, selectable, editable, deletable
+ *
+ * **Interaction:**
+ * - Single click: Select leaf node or toggle category
+ * - Double click: Start inline editing (leaf nodes only)
+ * - Delete button: Visible on hover/selection (leaf nodes only)
+ * - Keyboard: Enter (save), Escape (cancel) during editing
+ *
+ * **Editing:**
+ * - Double-click leaf node to start editing
+ * - Input auto-focuses and selects all text
+ * - Enter saves (trimmed, non-empty names only)
+ * - Escape cancels without saving
+ * - Blur auto-saves
+ *
+ * **Accessibility:**
+ * - `role="treeitem"` for screen readers
+ * - Auto-scroll selected node into view
+ * - Focus management for inline editing
+ * - Keyboard shortcuts (Enter, Escape)
+ *
+ * @example
+ * ```tsx
+ * <TreeNodeComponent
+ *   node={{ id: 1, name: 'My Note', selected: true }}
+ *   onNodeSelect={(node) => console.log('Selected:', node.name)}
+ *   onNodeRename={(node, newName) => console.log('Renamed to:', newName)}
+ *   onNodeDelete={(node) => console.log('Deleted:', node.name)}
+ *   level={1}
+ * />
+ * ```
+ *
+ * @internal
+ */
 const TreeNodeComponent = <T = unknown,>({
   node,
   onNodeSelect,
@@ -241,6 +386,66 @@ const MemoizedTreeNodeComponent = memo(TreeNodeComponent) as <T = unknown>(
   props: TreeNodeComponentProps<T>
 ) => React.ReactElement;
 
+/**
+ * Main tree view container component for displaying hierarchical data.
+ *
+ * @typeParam T - Type of data attached to tree nodes
+ * @param props - Tree view configuration
+ * @param props.data - Array of root-level tree nodes
+ * @param props.onNodeSelect - Called when leaf node is selected
+ * @param props.onNodeRename - Called when node is renamed
+ * @param props.onNodeDelete - Called when delete button is clicked
+ * @param props.generateName - Custom function to generate node display name
+ * @param props.generateTitle - Custom function to generate node title attribute
+ * @param props.title - Optional header title for the tree view (defaults to 'Tree')
+ * @returns Rendered tree view with scrollable container
+ *
+ * @remarks
+ * **Structure:**
+ * - Renders a scrollable container with optional title
+ * - Each root node is rendered as a TreeNodeComponent
+ * - Child nodes are recursively rendered when parent is expanded
+ *
+ * **Callbacks:**
+ * - `onNodeSelect`: Only called for leaf nodes (no children)
+ * - `onNodeRename`: Called after successful inline edit (Enter key or blur)
+ * - `onNodeDelete`: Called when delete button is clicked (confirmation should be in callback)
+ *
+ * **Custom Generators:**
+ * - `generateName`: Override default `node.name` display (e.g., show per-user IDs)
+ * - `generateTitle`: Add tooltip text to nodes (e.g., show creation date)
+ *
+ * **Performance:**
+ * - Uses memoized components to prevent re-renders
+ * - Only re-renders affected nodes when data changes
+ * - Efficient event handling with useCallback
+ *
+ * @example
+ * ```tsx
+ * const notes: TreeNode[] = [
+ *   {
+ *     id: 1,
+ *     name: 'Work',
+ *     selected: false,
+ *     children: [
+ *       { id: 2, name: 'Meeting Notes', selected: true, data: { content: '...' } }
+ *     ]
+ *   }
+ * ];
+ *
+ * <TreeView
+ *   data={notes}
+ *   title="My Notes"
+ *   onNodeSelect={(node) => loadNote(node.id)}
+ *   onNodeRename={(node, newName) => updateNoteName(node.id, newName)}
+ *   onNodeDelete={(node) => {
+ *     if (confirm(`Delete ${node.name}?`)) deleteNote(node.id);
+ *   }}
+ * />
+ * ```
+ *
+ * @public
+ */
 const TreeViewComponent = <T = unknown,>({
   data,
   onNodeSelect,

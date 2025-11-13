@@ -1,15 +1,68 @@
+/**
+ * Right sidebar panel for markdown header navigation.
+ *
+ * @remarks
+ * Dependencies: Chakra UI v3, React
+ *
+ * **Features:**
+ * - Displays parsed markdown headers from current note
+ * - Real-time header filtering
+ * - Click-to-navigate to header line
+ * - Current line highlighting
+ * - Empty state handling
+ * - Hover states for better UX
+ *
+ * **Performance:**
+ * - Memoized header filtering
+ * - useCallback for event handlers
+ *
+ * @example
+ * ```tsx
+ * <RightPanel
+ *   headers={parsedHeaders}
+ *   currentLine={42}
+ *   onHeaderClick={(line) => editorRef.scrollToLine(line)}
+ * />
+ * ```
+ *
+ * @public
+ */
 'use client';
 
 import { Box, Text, Input, Stack } from '@chakra-ui/react';
 import { useState, useMemo, useCallback } from 'react';
 import type { Header } from '@/types/notes';
 
+/**
+ * Props for the RightPanel component.
+ *
+ * @public
+ */
 interface RightPanelProps {
+  /** Array of headers parsed from the current note */
   headers: Header[];
+  /** Current line number in the editor */
   currentLine?: number;
+  /** Callback invoked when a header is clicked */
   onHeaderClick: (line: number) => void;
 }
 
+/**
+ * Renders the right sidebar panel with header navigation.
+ *
+ * @param props - Component props
+ * @param props.headers - Array of parsed markdown headers
+ * @param props.currentLine - Current line number in editor
+ * @param props.onHeaderClick - Handler for header click navigation
+ * @returns Right panel component
+ *
+ * @remarks
+ * Filters headers by text content (case-insensitive).
+ * Highlights header matching current editor line.
+ * Shows empty state when no headers found or no matches.
+ *
+ * @public
+ */
 function RightPanel({ headers, currentLine, onHeaderClick }: RightPanelProps) {
   const [filter, setFilter] = useState('');
 
