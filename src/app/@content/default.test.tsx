@@ -50,18 +50,15 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/components/notes/MiddlePanel', () => ({
-  default: vi.fn(
-    ({ note, content, saveStatus, onContentChange, onSave, onEditorReady }) => (
-      <div data-testid="middle-panel">
-        <div data-testid="note-id">{note?.id}</div>
-        <div data-testid="note-content">{content}</div>
-        <div data-testid="save-status">{saveStatus}</div>
-        <button onClick={() => onContentChange('new content')}>Change Content</button>
-        <button onClick={onSave}>Save</button>
-        <button onClick={() => onEditorReady({ scrollToLine: vi.fn() })}>Ready</button>
-      </div>
-    )
-  )
+  default: vi.fn(({ note, content, saveStatus, onContentChange, onEditorReady }) => (
+    <div data-testid="middle-panel">
+      <div data-testid="note-id">{note?.id}</div>
+      <div data-testid="note-content">{content}</div>
+      <div data-testid="save-status">{saveStatus}</div>
+      <button onClick={() => onContentChange('new content')}>Change Content</button>
+      <button onClick={() => onEditorReady({ scrollToLine: vi.fn() })}>Ready</button>
+    </div>
+  ))
 }));
 
 vi.mock('@/components/notes/RightPanel', () => ({
@@ -218,7 +215,7 @@ describe('ContentSlotDefault', () => {
   });
 
   describe('Save Functionality', () => {
-    it('saves note successfully', async () => {
+    it('saves note successfully via keyboard shortcut', async () => {
       const user = userEvent.setup();
       mockUpdateNote.mockResolvedValue({} as unknown as Note);
 
@@ -230,8 +227,8 @@ describe('ContentSlotDefault', () => {
 
       render(<ContentSlotDefault />);
 
-      const saveButton = screen.getByText('Save');
-      await user.click(saveButton);
+      // Simulate Ctrl+S keyboard shortcut
+      await user.keyboard('{Control>}s{/Control}');
 
       expect(mockContext.setSaveStatus).toHaveBeenCalledWith('saving');
       await waitFor(() => {
@@ -245,7 +242,7 @@ describe('ContentSlotDefault', () => {
       expect(mockContext.markNoteDirty).toHaveBeenCalledWith(1, false);
     });
 
-    it('handles save error', async () => {
+    it('handles save error via keyboard shortcut', async () => {
       const user = userEvent.setup();
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockUpdateNote.mockRejectedValue(new Error('Save failed'));
@@ -258,8 +255,8 @@ describe('ContentSlotDefault', () => {
 
       render(<ContentSlotDefault />);
 
-      const saveButton = screen.getByText('Save');
-      await user.click(saveButton);
+      // Simulate Ctrl+S keyboard shortcut
+      await user.keyboard('{Control>}s{/Control}');
 
       await waitFor(() => {
         expect(mockContext.setSaveStatus).toHaveBeenCalledWith('error');
@@ -281,14 +278,15 @@ describe('ContentSlotDefault', () => {
 
       render(<ContentSlotDefault />);
 
-      const saveButton = screen.getByText('Save');
-      await user.click(saveButton);
+      // Simulate Ctrl+S keyboard shortcut
+      await user.keyboard('{Control>}s{/Control}');
 
       expect(mockUpdateNote).not.toHaveBeenCalled();
       expect(mockContext.setSaveStatus).not.toHaveBeenCalled();
     });
 
     it('resets save status to idle after 2 seconds', async () => {
+      const user = userEvent.setup();
       mockUpdateNote.mockResolvedValue({} as unknown as Note);
 
       const mockNote = createMockNote(1, 'Test Note', 'Content');
@@ -299,8 +297,8 @@ describe('ContentSlotDefault', () => {
 
       render(<ContentSlotDefault />);
 
-      const saveButton = screen.getByText('Save');
-      saveButton.click();
+      // Simulate Ctrl+S keyboard shortcut
+      await user.keyboard('{Control>}s{/Control}');
 
       await waitFor(() => {
         expect(mockContext.setSaveStatus).toHaveBeenCalledWith('saved');
