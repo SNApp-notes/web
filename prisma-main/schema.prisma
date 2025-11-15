@@ -81,5 +81,6 @@ model Note {
 
   @@id([noteId, userId])
   @@index([userId])
+  @@fulltext([content])
   @@map("note")
 }

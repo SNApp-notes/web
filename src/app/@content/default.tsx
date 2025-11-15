@@ -6,6 +6,7 @@ import { useQueryState, parseAsInteger } from 'nuqs';
 import { useNotesContext } from '@/components/notes/NotesContext';
 import { updateNote } from '@/app/actions/notes';
 import { extractHeaders } from '@/lib/markdown-parser';
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 import MiddlePanel from '@/components/notes/MiddlePanel';
 import RightPanel from '@/components/notes/RightPanel';
 
@@ -69,6 +70,9 @@ export default function ContentSlotDefault() {
     }
   }, [selectedNote, content, setSaveStatus, markNoteDirty]);
 
+  // Register Ctrl+S (Windows/Linux) and Cmd+S (MacOS) keyboard shortcut for save
+  useKeyboardShortcut(['CTRL+S', 'META+S'], handleSave);
+
   const handleHeaderClick = (line: number) => {
     // Update line query parameter for deep linking and visual feedback
     setLineParam(line);
@@ -100,7 +104,6 @@ export default function ContentSlotDefault() {
         saveStatus={saveStatus}
         selectedLine={currentLine}
         onContentChange={handleContentChange}
-        onSave={handleSave}
         onEditorReady={(editor) => {
           editorRef.current = editor;
         }}

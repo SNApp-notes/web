@@ -30,7 +30,6 @@
  *   saveStatus="saved"
  *   selectedLine={42}
  *   onContentChange={handleChange}
- *   onSave={handleSave}
  *   onEditorReady={(ref) => editorRef.current = ref}
  * />
  * ```
@@ -62,8 +61,6 @@ interface MiddlePanelProps {
   selectedLine?: number;
   /** Callback invoked when content changes */
   onContentChange: (content: string) => void;
-  /** Callback invoked when save is triggered */
-  onSave: () => void;
   /** Optional callback invoked when editor is ready */
   onEditorReady?: (editorRef: EditorRef) => void;
 }
@@ -77,7 +74,6 @@ interface MiddlePanelProps {
  * @param props.saveStatus - Current save status
  * @param props.selectedLine - Line number to highlight
  * @param props.onContentChange - Handler for content changes
- * @param props.onSave - Handler for save action
  * @param props.onEditorReady - Handler for editor initialization
  * @returns Memoized middle panel component
  *
@@ -93,7 +89,6 @@ const MiddlePanel = memo(function MiddlePanel({
   saveStatus,
   selectedLine,
   onContentChange,
-  onSave,
   onEditorReady
 }: MiddlePanelProps) {
   const saveStatusText = useMemo(() => {
@@ -157,7 +152,6 @@ const MiddlePanel = memo(function MiddlePanel({
             onChange={handleContentChange}
             selectedLine={selectedLine}
             onEditorReady={onEditorReady}
-            onSave={onSave}
             placeholder="Start writing your note..."
           />
         ) : (

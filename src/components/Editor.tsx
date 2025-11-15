@@ -12,7 +12,6 @@
  * - Line numbers, bracket matching, auto-completion, code folding
  * - Automatic theme switching based on Chakra UI color mode
  * - Line scrolling via `selectedLine` prop or `scrollToLine()` method
- * - Keyboard shortcut: Cmd/Ctrl+S triggers `onSave` callback
  * - Auto-focus on mount, read-only mode support
  * - Exposes imperative API via `EditorRef` (focus, blur, getValue, setValue, scrollToLine)
  *
@@ -34,11 +33,6 @@
  *   const [content, setContent] = useState('# Hello World');
  *   const editorRef = useRef<EditorRef>(null);
  *
- *   const handleSave = () => {
- *     const currentContent = editorRef.current?.getValue();
- *     console.log('Saving:', currentContent);
- *   };
- *
  *   const scrollToLine10 = () => {
  *     editorRef.current?.scrollToLine(10);
  *   };
@@ -50,7 +44,6 @@
  *       onChange={setContent}
  *       placeholder="Start typing..."
  *       selectedLine={5}
- *       onSave={handleSave}
  *       onEditorReady={(editor) => console.log('Editor ready!', editor)}
  *     />
  *   );
@@ -85,7 +78,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { basicLight, basicDark } from '@uiw/codemirror-theme-basic';
 import { useColorMode } from '@/components/ui/color-mode';
-import { EditorView, keymap } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 import type { EditorProps, EditorRef } from '@/types/editor';
 
 /**
@@ -99,7 +92,6 @@ import type { EditorProps, EditorRef } from '@/types/editor';
  * @param props.selectedLine - Line number to scroll to (1-based)
  * @param props.className - Additional CSS classes
  * @param props.onEditorReady - Callback when editor API is ready
- * @param props.onSave - Callback for Cmd/Ctrl+S keyboard shortcut
  * @param ref - Ref exposing editor API methods
  * @returns Rendered CodeMirror editor
  *
@@ -120,9 +112,6 @@ import type { EditorProps, EditorRef } from '@/types/editor';
  * **Theme:**
  * - Automatically switches between light/dark based on Chakra UI color mode
  * - Uses `basicLight` and `basicDark` themes from `@uiw/codemirror-theme-basic`
- *
- * **Keyboard Shortcuts:**
- * - Cmd/Ctrl+S: Triggers `onSave` callback (prevents default browser save)
  *
  * **Performance:**
  * - Memoized component to prevent unnecessary re-renders
@@ -154,8 +143,7 @@ const Editor = memo(
       readOnly = false,
       selectedLine,
       className,
-      onEditorReady,
-      onSave
+      onEditorReady
     },
     ref
   ) {
@@ -209,21 +197,9 @@ const Editor = memo(
           codeLanguages: languages
         }),
         EditorView.lineWrapping,
-        editorTheme,
-        keymap.of([
-          {
-            key: 'Mod-s',
-            run: () => {
-              if (onSave) {
-                onSave();
-                return true;
-              }
-              return false;
-            }
-          }
-        ])
+        editorTheme
       ],
-      [editorTheme, onSave]
+      [editorTheme]
     );
 
     const scrollToLine = useCallback((line: number) => {

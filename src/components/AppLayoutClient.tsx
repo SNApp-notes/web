@@ -31,6 +31,9 @@
  * - Responsive grid layout defined in `MainNotesLayout.module.css`
  * - Sidebar and content panels are arranged horizontally
  *
+ * **Keyboard Shortcuts:**
+ * - Ctrl+Shift+F: Opens search modal (US-020)
+ *
  * @example
  * ```tsx
  * import AppLayoutClient from '@/components/AppLayoutClient';
@@ -54,6 +57,9 @@
 
 import styles from './notes/MainNotesLayout.module.css';
 import Footer from './Footer';
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
+import { useSearchContext } from '@/components/search/SearchContext';
+import { SearchModal } from '@/components/search/SearchModal';
 
 /**
  * Props for AppLayoutClient component.
@@ -92,6 +98,9 @@ interface AppLayoutClientProps {
  * - Grid layout with flexible sidebar and content panels
  * - Footer always pinned to bottom
  *
+ * **Keyboard Shortcuts:**
+ * - Ctrl+Shift+F: Opens search modal
+ *
  * @example
  * ```tsx
  * <AppLayoutClient
@@ -109,6 +118,11 @@ export default function AppLayoutClient({
   content,
   children
 }: AppLayoutClientProps) {
+  const { openModal } = useSearchContext();
+
+  // Register Ctrl+Shift+F (Windows/Linux) and Cmd+Shift+F (MacOS) keyboard shortcut for search
+  useKeyboardShortcut(['CTRL+SHIFT+F', 'META+SHIFT+F'], openModal);
+
   return (
     <div className={styles.layout}>
       {navigation}
@@ -117,6 +131,7 @@ export default function AppLayoutClient({
         {content}
       </div>
       {children}
+      <SearchModal />
       <Footer />
     </div>
   );
