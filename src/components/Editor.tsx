@@ -242,9 +242,10 @@ const Editor = memo(
       try {
         const { from: position } = doc.line(line);
         view.focus();
+        const scrollPosition = position > 0 ? position - 1 : position;
         view.dispatch({
           selection: { anchor: position, head: position },
-          effects: [EditorView.scrollIntoView(position - 1, { y: 'start' })]
+          effects: [EditorView.scrollIntoView(scrollPosition, { y: 'start' })]
         });
       } catch (error) {
         console.warn(`Cannot scroll to line ${line}:`, error);

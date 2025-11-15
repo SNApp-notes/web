@@ -41,15 +41,15 @@ import { parse, type MarkdownNode, type HeaderNode } from '@snapp-notes/markdown
  *
  * const headers = extractHeaders(content);
  * // [
- * //   { id: 'header-0-1', text: 'Main Title', content: '# Main Title', line: 1 },
- * //   { id: 'header-1-2', text: 'Section 1', content: '## Section 1', line: 2 },
- * //   { id: 'header-2-3', text: 'Subsection', content: '### Subsection', line: 3 }
+ * //   { id: 'header-1-1', text: 'Main Title', content: '# Main Title', line: 1 },
+ * //   { id: 'header-2-2', text: 'Section 1', content: '## Section 1', line: 2 },
+ * //   { id: 'header-3-3', text: 'Subsection', content: '### Subsection', line: 3 }
  * // ]
  * ```
  *
  * @remarks
  * - Returns empty array if content is empty or null
- * - Header IDs are formatted as 'header-{index}-{level}'
+ * - Header IDs are formatted as 'header-{counter}-{level}'
  * - Text is trimmed and has leading '#' symbols removed
  * - Line numbers are 1-based (matching editor line numbers)
  * - Does not extract headers from code blocks or inline code
@@ -59,12 +59,14 @@ export function extractHeaders(content: string): Header[] {
 
   const nodes: MarkdownNode[] = parse(content);
   const headers: Header[] = [];
+  let headerCounter = 0;
 
-  nodes.forEach((node, index) => {
+  nodes.forEach((node) => {
     if (node.type === 'header') {
       const headerNode = node as HeaderNode;
+      headerCounter++;
       headers.push({
-        id: `header-${index}-${headerNode.level}`,
+        id: `header-${headerCounter}-${headerNode.level}`,
         text: headerNode.content.replace(/^#+\s*/, '').trim(),
         content: headerNode.content.trim(),
         line: headerNode.loc.start.line

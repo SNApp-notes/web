@@ -30,7 +30,7 @@ describe('extractHeaders', () => {
         content: '# Hello World',
         line: 1
       });
-      expect(result[0].id).toMatch(/^header-0-1$/);
+      expect(result[0].id).toMatch(/^header-1-1$/);
     });
 
     it('should extract single level 2 header', () => {
@@ -43,7 +43,7 @@ describe('extractHeaders', () => {
         content: '## Section Title',
         line: 1
       });
-      expect(result[0].id).toMatch(/^header-0-2$/);
+      expect(result[0].id).toMatch(/^header-1-2$/);
     });
 
     it('should extract multiple headers of different levels', () => {
@@ -112,9 +112,9 @@ Content
 
       const result = extractHeaders(content);
 
-      expect(result[0].id).toBe('header-0-1');
+      expect(result[0].id).toBe('header-1-1');
       expect(result[1].id).toBe('header-2-2');
-      expect(result[2].id).toBe('header-4-3');
+      expect(result[2].id).toBe('header-3-3');
     });
 
     it('should generate different IDs for headers with same text', () => {
@@ -126,9 +126,9 @@ Content
 
       expect(result[0].id).not.toBe(result[1].id);
       expect(result[1].id).not.toBe(result[2].id);
-      expect(result[0].id).toBe('header-0-1');
+      expect(result[0].id).toBe('header-1-1');
       expect(result[1].id).toBe('header-2-2');
-      expect(result[2].id).toBe('header-4-3');
+      expect(result[2].id).toBe('header-3-3');
     });
   });
 
