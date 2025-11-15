@@ -141,18 +141,16 @@ export function SearchResultItem({
       </Tooltip>
 
       {/* Content snippet */}
-      <Tooltip content={contentSnippet}>
-        <Text
-          fontSize="sm"
-          fontFamily="monospace"
-          color="gray.600"
-          _dark={{ color: 'gray.400' }}
-          mb={1}
-          whiteSpace="pre-wrap"
-        >
-          {highlightMatch(contentSnippet, searchQuery)}
-        </Text>
-      </Tooltip>
+      <Text
+        fontSize="sm"
+        fontFamily="monospace"
+        color="gray.600"
+        _dark={{ color: 'gray.400' }}
+        mb={1}
+        whiteSpace="pre-wrap"
+      >
+        {highlightMatch(contentSnippet, searchQuery)}
+      </Text>
 
       {/* Match info */}
       <Text fontSize="xs" color="gray.500" _dark={{ color: 'gray.500' }}>
