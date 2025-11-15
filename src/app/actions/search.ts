@@ -61,7 +61,9 @@ const SNIPPET_SIZE = 80;
 function generateSnippet(content: string, query: string): string {
   // Guard against empty query
   if (!query.trim()) {
-    return content.substring(0, SNIPPET_SIZE) + (content.length > SNIPPET_SIZE ? '...' : '');
+    return (
+      content.substring(0, SNIPPET_SIZE) + (content.length > SNIPPET_SIZE ? '...' : '')
+    );
   }
 
   const lowerContent = content.toLowerCase();
@@ -70,7 +72,9 @@ function generateSnippet(content: string, query: string): string {
 
   if (matchIndex === -1) {
     // No match found, return first 150 characters
-    return content.substring(0, SNIPPET_SIZE) + (content.length > SNIPPET_SIZE ? '...' : '');
+    return (
+      content.substring(0, SNIPPET_SIZE) + (content.length > SNIPPET_SIZE ? '...' : '')
+    );
   }
 
   // Extract context around match (50 chars before and after)

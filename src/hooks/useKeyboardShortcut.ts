@@ -4,7 +4,7 @@
  * Provides a clean API for handling Ctrl/Cmd, Shift, and Alt combinations.
  *
  * @dependencies
- * - React - useEffect and useCallback hooks
+ * - React - useEffect and useMemo hooks
  *
  * @remarks
  * **Features:**
@@ -43,7 +43,7 @@
 
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useMemo } from 'react';
 
 /* Code taken from jQuery Terminal */
 // IE mapping
@@ -168,7 +168,10 @@ function globalKeyDownHandler(event: KeyboardEvent) {
  */
 export function useKeyboardShortcut(shortcut: string | string[], callback: () => void) {
   // Normalize shortcut to array for consistent handling
-  const shortcuts = Array.isArray(shortcut) ? shortcut : [shortcut];
+  const shortcuts = useMemo(
+    () => (Array.isArray(shortcut) ? shortcut : [shortcut]),
+    [shortcut]
+  );
 
   useEffect(() => {
     // Attach global listener if not already attached

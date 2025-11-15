@@ -32,7 +32,9 @@
  * - Sidebar and content panels are arranged horizontally
  *
  * **Keyboard Shortcuts:**
- * - Ctrl+Shift+F: Opens search modal (US-020)
+ * - Ctrl+Shift+F / Cmd+Shift+F: Open search modal (US-020)
+ * - Ctrl+G / Cmd+G: Close search modal (when open)
+ * - Ctrl+S / Cmd+S: Save current note
  *
  * @example
  * ```tsx

@@ -100,8 +100,8 @@ function highlightMatch(text: string, query: string): React.ReactElement[] {
  * @returns {[string, boolean]} result string and the flag if the value was truncated
  */
 function limitName(name: string, limit: number): [string, boolean] {
-    const result = name.length > limit ? name.substring(0, limit) + '...' : name;
-    return [result, name.length > limit];
+  const result = name.length > limit ? name.substring(0, limit) + '...' : name;
+  return [result, name.length > limit];
 }
 
 /**

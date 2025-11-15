@@ -1,17 +1,24 @@
 'use client';
 
-import { Input, Stack, Button, Box, Spinner, Alert, InputGroup, Kbd } from '@chakra-ui/react';
+import { Input, Stack, Button, Box, Spinner, Alert } from '@chakra-ui/react';
 import { Dialog } from '@chakra-ui/react';
+import { useRef, useEffect } from 'react';
+
 import { useSearchContext } from './SearchContext';
 import { SearchResults } from './SearchResults';
-import { useRef, useEffect } from 'react';
-import { LuSearch } from "react-icons/lu"
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 
 /**
  * Main search modal component.
  *
  * @component
  * @returns {JSX.Element} Rendered search modal
+ *
+ * @remarks
+ * **Keyboard Shortcuts:**
+ * - Ctrl+G / Cmd+G: Close modal
+ * - Escape: Close modal (built-in Dialog behavior)
+ * - Enter: Execute search
  */
 export function SearchModal() {
   const {
@@ -26,6 +33,13 @@ export function SearchModal() {
   } = useSearchContext();
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Register Ctrl+G (Windows/Linux) and Cmd+G (MacOS) keyboard shortcut to close modal
+  useKeyboardShortcut(['CTRL+G', 'META+G'], () => {
+    if (isModalOpen) {
+      closeModal();
+    }
+  });
 
   // Auto-focus input when modal opens
   useEffect(() => {
@@ -69,16 +83,16 @@ export function SearchModal() {
           <Dialog.Body overflowY="auto" maxH="calc(80vh - 120px)">
             <Stack gap={4}>
               {/* Search input */}
-                <Input
-                  p={3}
-                  ref={inputRef}
-                  placeholder="Enter search query..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  size="lg"
-                  autoFocus
-                />
+              <Input
+                p={3}
+                ref={inputRef}
+                placeholder="Enter search query..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                size="lg"
+                autoFocus
+              />
 
               {/* Search button */}
               <Button

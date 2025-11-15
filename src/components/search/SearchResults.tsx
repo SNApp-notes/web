@@ -87,6 +87,7 @@ export function SearchResults() {
       {totalPages > 1 && (
         <Stack direction="row" gap={2} justifyContent="center" alignItems="center">
           <Button
+            p={3}
             size="sm"
             variant="outline"
             disabled={currentPage === 1}
@@ -100,6 +101,7 @@ export function SearchResults() {
           </Text>
 
           <Button
+            p={3}
             size="sm"
             variant="outline"
             disabled={currentPage === totalPages}

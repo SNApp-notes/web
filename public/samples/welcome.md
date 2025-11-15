@@ -26,6 +26,7 @@ You can delete this note, or just rename it and use as the first one.
 Use the powerful full-text search to find content across all your notes:
 
 - Press **Ctrl+Shift+F** (or **Cmd+Shift+F** on Mac) to open the search modal
+- To exit the search you can use **CTRL+G** (or **ESC** on Mac) or click outside
 - Type your search query and press **Enter** or click **Search**
 - Click on any result to navigate directly to that line in the note
 - See highlighted matches and snippet previews
