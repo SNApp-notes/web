@@ -17,8 +17,6 @@ SNApp is a lightweight note-taking web application designed to replace a legacy
   - [End-to-End Tests](#end-to-end-tests)
   - [Docker-Based E2E Testing](#docker-based-e2e-testing)
 - [Available Scripts](#available-scripts)
-- [Project Scope](#project-scope)
-- [Project Status](#project-status)
 - [License](#license)
 
 ## Tech Stack
@@ -272,30 +270,6 @@ In the project directory, you can run:
 
 - **`npm run test:e2e:docker:build`**
   Rebuilds Docker image for E2E tests (run after modifying Docker files).
-
-## Project Scope
-
-**In Scope:**
-
-- GitHub OAuth authentication for secure, personalized access.
-- Basic CRUD operations for note management (create, read, update, delete).
-- A three-panel interface for effective note navigation and editing.
-- An onboarding example that introduces app features.
-- Dark mode toggle with persistent user settings.
-- Anonymous analytics using server-side logging.
-
-**Out of Scope (for MVP):**
-
-- Offline access or local synchronization.
-- Advanced features like drag-and-drop, full-text search, or exporting notes.
-- Multiple authentication methods (only GitHub OAuth is supported).
-- Client-side encryption and advanced user management features.
-
-## Project Status
-
-The project is currently in the MVP stage, focusing on core functionalities and rapid
-development. Future enhancements are planned to expand usability and add advanced features based on
-user feedback.
 
 ## License
 
