@@ -74,7 +74,7 @@ export function SearchModal() {
         justifyContent="center"
         pt={20}
       >
-        <Dialog.Content maxW="600px" w="90%" p={4} maxH="80vh">
+        <Dialog.Content maxW="600px" w="90%" p={3} maxH="80vh">
           <Dialog.Header>
             <Dialog.Title>Search Notes</Dialog.Title>
             <Dialog.CloseTrigger aria-label="Close dialog" />

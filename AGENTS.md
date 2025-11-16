@@ -25,6 +25,8 @@ Single quotes, semicolons, 2-space tabs, 90 char width, no trailing commas
 Imports: `@/` alias, `import type` for types | Naming: camelCase/PascalCase | Use `clsx` for classNames
 TypeScript strict mode, no empty object types
 
+**NEVER use `any` type** - always use exact types. In tests with partial objects, use `as unknown as Type` for type assertion.
+
 ## Project Structure
 
 `src/app/` (pages) | `src/components/ui/` (UI) | `src/test/` (test utils)
@@ -96,6 +98,13 @@ Provider: `<ChakraProvider value={defaultSystem}>`
 **Removed**: `@emotion/styled`, `framer-motion`, Chakra's `forwardRef`, Image `fallbackSrc`, Link `isExternal`
 
 **New**: Better TypeScript, performance, accessibility, `asChild` prop
+
+**Padding**: Most components have sensible defaults, but some containers need explicit padding:
+- Buttons/Inputs: Have default padding via size prop (`size="sm"`, `size="lg"`)
+- Dialog containers: **Always use `p={3}`** (`<Dialog.Body p={3}>`, `<Dialog.Header p={3}>`, `<Dialog.Footer p={3}>`)
+- Popover/Menu content: **Always use `p={3}`** (`<Popover.Content p={3}>`, `<Menu.Content p={3}>`)
+- Card/Box containers: **Always use `p={3}`** (`<Card.Root p={3}>`, `<Box p={3}>`)
+- **Consistency rule**: Use `p={3}` for all container padding to maintain visual consistency
 
 ## CodeMirror 6
 

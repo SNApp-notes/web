@@ -130,7 +130,7 @@ const MiddlePanel = memo(function MiddlePanel({
       <Flex
         justify="space-between"
         align="center"
-        p={4}
+        p={3}
         borderBottom="1px solid"
         borderColor="border"
       >
