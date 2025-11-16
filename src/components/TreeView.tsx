@@ -267,9 +267,8 @@ const TreeNodeComponent = <T = unknown,>({
   };
 
   return (
-    <VStack align="stretch" gap={0}>
+    <VStack align="stretch" gap={0} ref={nodeRef} scrollMargin="6px">
       <HStack
-        ref={nodeRef}
         role="treeitem"
         cursor="pointer"
         onClick={hasChildren ? handleToggle : handleNodeSelect}
