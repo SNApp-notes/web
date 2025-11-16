@@ -70,7 +70,7 @@ const TopNavigationBar = memo(function TopNavigationBar({
 }: TopNavigationBarProps) {
   return (
     <Box as="header" borderBottom="1px solid" borderColor="border" bg="bg" px={4} py={2}>
-      <Flex justify="space-between" align="center">
+      <Flex justify="space-between" align="center" minH={10}>
         <Text fontSize="lg" fontWeight="semibold">
           SNApp
         </Text>
