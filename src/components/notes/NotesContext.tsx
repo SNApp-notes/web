@@ -72,7 +72,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useCallback, type ReactNode } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import { useNodeSelection } from '@/hooks/useNodeSelection';
@@ -218,6 +218,7 @@ export function NotesProvider({
   initialNotes = [],
   initialSelectedNoteId = null
 }: NotesProviderProps) {
+  const params = useParams();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -273,13 +274,12 @@ export function NotesProvider({
 
   // Sync URL to state on URL changes
   useEffect(() => {
-    const noteMatch = pathname.match(/\/note\/(\d+)/);
-    const urlNoteId = noteMatch ? parseInt(noteMatch[1], 10) : null;
+    const urlNoteId = params?.id ? parseInt(params.id as string, 10) : null;
 
     if (urlNoteId !== null) {
       updateSelection(urlNoteId);
     }
-  }, [pathname, updateSelection]);
+  }, [params, updateSelection]);
 
   // Auto-select first note when at root with notes available
   useEffect(() => {

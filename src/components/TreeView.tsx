@@ -105,6 +105,7 @@ import {
   FiTrash2
 } from 'react-icons/fi';
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { useParams } from 'next/navigation';
 import clsx from 'clsx';
 import type { TreeNode, TreeViewProps } from '@/types/tree';
 
@@ -246,15 +247,22 @@ const TreeNodeComponent = <T = unknown,>({
     }
   }, [isEditing]);
 
-  // Scroll selected node into view
+  // Get current note ID from URL params
+  const params = useParams();
+  const urlNoteId = params?.id ? parseInt(params.id as string, 10) : null;
+
+  // Scroll node into view BEFORE it becomes selected (based on URL match)
   useEffect(() => {
-    if (isSelected && !hasChildren && nodeRef?.current?.scrollIntoView) {
+    const shouldScrollIntoView =
+      !hasChildren && urlNoteId !== null && node.id === urlNoteId;
+
+    if (shouldScrollIntoView && nodeRef?.current?.scrollIntoView) {
       nodeRef.current.scrollIntoView({
         block: 'nearest',
         inline: 'nearest'
       });
     }
-  }, [isSelected, hasChildren]);
+  }, [urlNoteId, node.id, hasChildren]);
 
   const handleArrowClick = (e: React.MouseEvent) => {
     e.stopPropagation();

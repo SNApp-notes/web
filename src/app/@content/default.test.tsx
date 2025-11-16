@@ -43,10 +43,12 @@ const mockRouter = {
   prefetch: vi.fn()
 };
 let mockPathname = '/note/1';
+let mockParams: Record<string, string | undefined> = { id: '1' };
 
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(() => mockRouter),
-  usePathname: vi.fn(() => mockPathname)
+  usePathname: vi.fn(() => mockPathname),
+  useParams: vi.fn(() => mockParams)
 }));
 
 vi.mock('@/components/notes/MiddlePanel', () => ({
@@ -75,7 +77,7 @@ import { useNotesContext } from '@/components/notes/NotesContext';
 import { updateNote } from '@/app/actions/notes';
 import { extractHeaders } from '@/lib/markdown-parser';
 import { useQueryState } from 'nuqs';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useParams } from 'next/navigation';
 
 const mockUseNotesContext = vi.mocked(useNotesContext);
 const mockUpdateNote = vi.mocked(updateNote);
@@ -83,6 +85,7 @@ const mockExtractHeaders = vi.mocked(extractHeaders);
 const mockUseQueryState = vi.mocked(useQueryState);
 const mockUseRouter = vi.mocked(useRouter);
 const mockUsePathname = vi.mocked(usePathname);
+const mockUseParams = vi.mocked(useParams);
 
 describe('ContentSlotDefault', () => {
   let mockContext: MockNotesContextValue;
@@ -98,7 +101,9 @@ describe('ContentSlotDefault', () => {
 
     // Reset next/navigation mocks
     mockPathname = '/note/1';
+    mockParams = { id: '1' };
     mockUsePathname.mockReturnValue(mockPathname);
+    mockUseParams.mockReturnValue(mockParams);
     mockUseRouter.mockReturnValue(mockRouter);
 
     // Mock window.location
@@ -411,7 +416,9 @@ describe('ContentSlotDefault', () => {
     it('ignores line parameter when not on note page', () => {
       window.location.pathname = '/settings';
       mockPathname = '/settings';
+      mockParams = {}; // No id param on non-note pages
       mockUsePathname.mockReturnValue(mockPathname);
+      mockUseParams.mockReturnValue(mockParams);
       mockLineParam = 42;
       mockUseQueryState.mockReturnValue([mockLineParam, mockSetLineParam]);
 

@@ -8,3 +8,7 @@ export const createMockRouter = () => ({
   replace: vi.fn(),
   prefetch: vi.fn()
 });
+
+export const useRouter = vi.fn(() => createMockRouter());
+export const usePathname = vi.fn(() => '/');
+export const useParams = vi.fn(() => ({}));
