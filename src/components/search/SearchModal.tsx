@@ -77,7 +77,7 @@ export function SearchModal() {
         <Dialog.Content maxW="600px" w="90%" p={4} maxH="80vh">
           <Dialog.Header>
             <Dialog.Title>Search Notes</Dialog.Title>
-            <Dialog.CloseTrigger />
+            <Dialog.CloseTrigger aria-label="Close dialog" />
           </Dialog.Header>
 
           <Dialog.Body overflowY="auto" maxH="calc(80vh - 120px)">

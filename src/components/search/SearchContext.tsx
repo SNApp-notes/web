@@ -163,6 +163,25 @@ const SearchContext = createContext<SearchContextValue | undefined>(undefined);
 export function useSearchContext() {
   const context = useContext(SearchContext);
   if (context === undefined) {
+    // During server-side rendering or hydration, context might not be available
+    // Return a noop implementation instead of throwing
+    if (typeof window === 'undefined') {
+      return {
+        searchQuery: '',
+        setSearchQuery: () => {},
+        searchResults: [],
+        currentPage: 1,
+        totalPages: 1,
+        totalResults: 0,
+        isLoading: false,
+        error: null,
+        isModalOpen: false,
+        openModal: () => {},
+        closeModal: () => {},
+        executeSearch: async () => {},
+        setPage: async () => {}
+      } as SearchContextValue;
+    }
     throw new Error('useSearchContext must be used within a SearchProvider');
   }
   return context;

@@ -29,7 +29,7 @@ export default function Navigation() {
 
     try {
       await signOutAction();
-      refetch();
+      await refetch();
       router.push('/login');
     } catch (error) {
       console.error('Logout failed:', error);

@@ -11,9 +11,9 @@
  *
  * @remarks
  * - All functions require active user session
- * - Uses MySQL full-text search with @@fulltext index
- * - Returns paginated results (5 results per page)
- * - Generates content snippets around first match (150 chars)
+ * - Database-agnostic: MySQL full-text search (prod) or SQLite LIKE (test)
+ * - Returns paginated results (3 results per page)
+ * - Generates content snippets around first match (80 chars)
  * - Counts total matches per note for "X more matches" indicator
  * - Case-insensitive search with partial matching
  *
@@ -200,13 +200,15 @@ function countMatches(content: string, query: string): number {
  *
  * @remarks
  * - Requires active user session
- * - Uses MySQL full-text search with MATCH AGAINST
- * - Returns 5 results per page
- * - Results ordered by relevance (match score)
- * - Generates 150-char snippets with match context
+ * - Database-agnostic: MySQL MATCH AGAINST (prod) or SQLite LIKE (test)
+ * - Returns 3 results per page
+ * - MySQL: Results ordered by relevance score
+ * - SQLite: Results ordered by noteId (newest first)
+ * - Generates 80-char snippets with match context
  * - Includes line number of first match
  * - Counts total matches per note
  * - Only searches user's own notes
+ * - SQLite searches both name and content fields
  */
 export async function searchNotes(
   query: string,
@@ -229,31 +231,67 @@ export async function searchNotes(
     const userId = session.user.id;
     const skip = (page - 1) * RESULTS_PER_PAGE;
 
-    // MySQL full-text search with MATCH AGAINST
-    // Note: Prisma doesn't have native support for MATCH AGAINST, so we use raw query
-    const searchResults = await prisma.$queryRaw<
-      Array<{
-        noteId: number;
-        name: string;
-        content: string;
-      }>
-    >`
-      SELECT noteId, name, content
-      FROM note
-      WHERE userId = ${userId}
-        AND MATCH(content) AGAINST(${query} IN NATURAL LANGUAGE MODE)
-      ORDER BY MATCH(content) AGAINST(${query} IN NATURAL LANGUAGE MODE) DESC
-      LIMIT ${RESULTS_PER_PAGE}
-      OFFSET ${skip}
-    `;
+    // Detect database provider: CI environment uses SQLite, otherwise MySQL
+    const isSQLite = process.env.CI === 'true' || process.env.NODE_ENV === 'test';
 
-    // Count total results
-    const totalResultsQuery = await prisma.$queryRaw<Array<{ count: bigint }>>`
-      SELECT COUNT(*) as count
-      FROM note
-      WHERE userId = ${userId}
-        AND MATCH(content) AGAINST(${query} IN NATURAL LANGUAGE MODE)
-    `;
+    let searchResults: Array<{
+      noteId: number;
+      name: string;
+      content: string;
+    }>;
+    let totalResultsQuery: Array<{ count: bigint }>;
+
+    if (isSQLite) {
+      // SQLite: Use LIKE for simple pattern matching
+      const searchPattern = `%${query}%`;
+
+      searchResults = await prisma.$queryRaw<
+        Array<{
+          noteId: number;
+          name: string;
+          content: string;
+        }>
+      >`
+        SELECT noteId, name, content
+        FROM note
+        WHERE userId = ${userId}
+          AND (content LIKE ${searchPattern} OR name LIKE ${searchPattern})
+        ORDER BY noteId DESC
+        LIMIT ${RESULTS_PER_PAGE}
+        OFFSET ${skip}
+      `;
+
+      totalResultsQuery = await prisma.$queryRaw<Array<{ count: bigint }>>`
+        SELECT COUNT(*) as count
+        FROM note
+        WHERE userId = ${userId}
+          AND (content LIKE ${searchPattern} OR name LIKE ${searchPattern})
+      `;
+    } else {
+      // MySQL: Use full-text search with MATCH AGAINST
+      searchResults = await prisma.$queryRaw<
+        Array<{
+          noteId: number;
+          name: string;
+          content: string;
+        }>
+      >`
+        SELECT noteId, name, content
+        FROM note
+        WHERE userId = ${userId}
+          AND MATCH(content) AGAINST(${query} IN NATURAL LANGUAGE MODE)
+        ORDER BY MATCH(content) AGAINST(${query} IN NATURAL LANGUAGE MODE) DESC
+        LIMIT ${RESULTS_PER_PAGE}
+        OFFSET ${skip}
+      `;
+
+      totalResultsQuery = await prisma.$queryRaw<Array<{ count: bigint }>>`
+        SELECT COUNT(*) as count
+        FROM note
+        WHERE userId = ${userId}
+          AND MATCH(content) AGAINST(${query} IN NATURAL LANGUAGE MODE)
+      `;
+    }
 
     const totalResults = Number(totalResultsQuery[0]?.count || 0);
     const totalPages = Math.ceil(totalResults / RESULTS_PER_PAGE);

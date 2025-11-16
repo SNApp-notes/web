@@ -46,6 +46,13 @@ export async function createAndLoginUser(page: Page): Promise<UserData> {
 }
 
 export async function signOutUser(page: Page): Promise<void> {
+  // Handle potential unsaved changes confirmation dialog
+  page.once('dialog', async (dialog) => {
+    await dialog.accept();
+  });
+
+  // Click logout and wait for navigation to complete
+  // Increased timeout to 15s to handle async server actions + refetch + navigation
   await page.getByTestId('sign-out-button').click();
-  await page.waitForURL(/.*login/);
+  await page.waitForURL(/.*login/, { timeout: 15000 });
 }

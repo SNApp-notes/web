@@ -129,6 +129,7 @@ export function SearchResultItem({
       cursor="pointer"
       _hover={{ bg: 'gray.50', _dark: { bg: 'gray.800' } }}
       onClick={onSelect}
+      data-testid="search-result-item"
     >
       {/* Note name */}
       <Tooltip
