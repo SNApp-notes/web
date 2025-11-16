@@ -497,6 +497,55 @@ information quickly. Acceptance Criteria:
 - Performance: Search queries complete within 500ms for collections up to 1000
   notes with average 5KB size each.
 
+US-021 Title: As a user, I want to sort my notes in the left sidebar so that I
+can organize my note collection according to my workflow preferences.
+Description: Users can sort the notes list by creation time (note ID), last
+update time, or alphabetically by name. The selected sorting option persists
+across sessions and is applied immediately when the notes are first rendered,
+without any visual flicker or delay. This helps users with large note
+collections organize their workspace efficiently, whether prioritizing recently
+modified notes, chronological order, or alphabetical lookup. Acceptance
+Criteria:
+
+- Given an authenticated session with notes, when the left sidebar loads, a
+  sorting control (Chakra UI Select component) is displayed above or below the
+  notes filter input, showing the current sort option.
+- The Select component offers three sorting options: "Creation Time (oldest
+  first)" (default), "Last Updated", and "Name (A-Z)".
+- When the user selects a different sorting option, the notes list immediately
+  reorders according to the selected criteria without requiring a page refresh.
+- The selected sorting option is saved to localStorage immediately upon change,
+  using a key like `snapp-notes-sort-order`.
+- When the application loads, the sorting preference is read from localStorage
+  before the initial notes render, ensuring the notes are displayed in the
+  correct order from the first render without flickering or reordering.
+- If no sorting preference exists in localStorage (first-time users or cleared
+  storage), the default sorting is by creation time (note ID ascending).
+- Sorting by "Creation Time" orders notes by noteId in ascending order (1, 2,
+  3...), which corresponds to creation order.
+- Sorting by "Last Updated" orders notes by their updatedAt timestamp in
+  descending order (most recently updated first).
+- Sorting by "Name" orders notes alphabetically (A-Z) using case-insensitive
+  string comparison.
+- The sorting persists across browser sessions, page refreshes, and when
+  navigating between different notes.
+- When combined with the name filter (existing search functionality), sorting is
+  applied to the filtered results, not just the full list.
+- Creating a new note places it in the correct position according to the current
+  sort order without requiring manual re-sorting.
+- Renaming a note automatically repositions it in the list when sorted by name,
+  maintaining sort order integrity.
+- The sorting control remains visible and functional when scrolling through a
+  long notes list.
+- Edge case: If localStorage is unavailable or disabled, the application
+  defaults to creation time sorting without errors.
+- Edge case: Notes with identical names (when sorted by name) maintain stable
+  secondary sorting by creation time to ensure consistent ordering.
+- Edge case: The sorting state is user-specific (stored in browser localStorage)
+  and does not affect other users or devices.
+- Performance: Sorting operations complete instantly for collections up to 1000
+  notes without noticeable delay or UI freezing.
+
 
 ## 6. Success Metrics
 
