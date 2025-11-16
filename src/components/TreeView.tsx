@@ -251,18 +251,21 @@ const TreeNodeComponent = <T = unknown,>({
   const params = useParams();
   const urlNoteId = params?.id ? parseInt(params.id as string, 10) : null;
 
+  if (urlNoteId !== null && node.id === urlNoteId) {
+    console.log('render');
+  }
   // Scroll node into view BEFORE it becomes selected (based on URL match)
   useEffect(() => {
-    const shouldScrollIntoView =
-      !hasChildren && urlNoteId !== null && node.id === urlNoteId;
+    const shouldScrollIntoView = urlNoteId !== null && node.id === urlNoteId;
 
     if (shouldScrollIntoView && nodeRef?.current?.scrollIntoView) {
+      console.log('scroll');
       nodeRef.current.scrollIntoView({
         block: 'nearest',
         inline: 'nearest'
       });
     }
-  }, [urlNoteId, node.id, hasChildren]);
+  }, [nodeRef]);
 
   const handleArrowClick = (e: React.MouseEvent) => {
     e.stopPropagation();
