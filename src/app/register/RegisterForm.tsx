@@ -1,7 +1,6 @@
 'use client';
 
 import { useActionState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useSession } from '@/lib/auth-client';
 import { Button, Box, Heading, VStack, Input, Text, Alert } from '@chakra-ui/react';
 import { signUpAction } from '@/app/actions/auth';
@@ -26,32 +25,17 @@ type RegisterFormProps = {
 
 export default function RegisterForm({ isDevelopment }: RegisterFormProps) {
   const [state, formAction, isPending] = useActionState(signUpAction, initialState);
-  const router = useRouter();
   const { refetch } = useSession();
 
   useEffect(() => {
     // success in dev mode (no email verification)
     if (state.success && !state.message) {
-      const refreshAndRedirect = async () => {
-        try {
-          // Refresh Better Auth session
-          await refetch();
-          // Force Next.js to revalidate server data
-          // router.refresh() doesn't return a promise, so we need to wait longer
-          router.refresh();
-          // Wait longer to ensure refresh completes before navigation
-          await new Promise((resolve) => setTimeout(resolve, 300));
-          // Navigate to home page
-          router.push('/');
-        } catch (error) {
-          console.error('Failed to refresh session after registration:', error);
-          // Still redirect, as the user is registered
-          router.push('/');
-        }
-      };
-      refreshAndRedirect();
+      // Refresh Better Auth session
+      refetch();
+      // full page reload to make sure that everything revalidate
+      window.location.href = '/';
     }
-  }, [state, refetch, router]);
+  }, [state, refetch]);
 
   return (
     <Box

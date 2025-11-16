@@ -57,6 +57,15 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
   plugins: [nextCookies()],
+  trustedOrigins: [
+    'http://localhost:3000',
+    'http://localhost:45678', // E2E test server
+    'http://host.docker.internal:45678' // E2E tests from Docker container
+  ],
+  advanced: {
+    // Disable secure cookies in test/dev mode to allow HTTP testing in Docker
+    useSecureCookies: process.env.NODE_ENV === 'production'
+  },
   databaseHooks: {
     account: {
       create: {
@@ -83,7 +92,7 @@ export const auth = betterAuth({
               }
             });
           } catch (error) {
-            console.error('Error creating welcome note for new user:', error);
+            console.error('[Auth Hook] Error creating welcome note for new user:', error);
             // Don't throw - this shouldn't break the auth flow
           }
         }
@@ -92,6 +101,7 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+    autoSignIn: true,
     requireEmailVerification: process.env.NODE_ENV === 'production',
     sendResetPassword: async ({
       user,

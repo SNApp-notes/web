@@ -37,6 +37,8 @@ Never import from `@prisma/client` or schema directories. Ensures type consisten
 
 Default branch: `master` (not `main`)
 
+**BLOCKED**: Commands that modify staging or remote are blocked in OpenCode config. Never run `git add`, `git commit`, `git push`, `git pull`, `git merge`, `git rebase`.
+
 ## Testing
 
 **Frameworks**: Vitest (unit) + React Testing Library + Playwright (E2E) + jsdom
