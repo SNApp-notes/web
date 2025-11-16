@@ -18,7 +18,23 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'SNApp - Smart Note-Taking',
   description:
-    'A smart note-taking application with markdown support and intelligent organization'
+    'A smart note-taking application with markdown support and intelligent organization',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
+    ],
+    apple: '/apple-touch-icon.png',
+    other: [
+      {
+        rel: 'mask-icon',
+        url: '/safari-pinned-tab.svg',
+        color: '#5bbad5'
+      }
+    ]
+  },
+  manifest: '/site.webmanifest'
 };
 
 interface RootLayoutProps {
