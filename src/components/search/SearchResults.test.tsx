@@ -4,12 +4,17 @@ import { SearchResults } from './SearchResults';
 import { useSearchContext } from './SearchContext';
 import type { SearchResult } from './SearchContext';
 import { useRouter } from 'next/navigation';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 // Mock dependencies
 vi.mock('./SearchContext', () => ({
   useSearchContext: vi.fn()
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn()
 }));
 
 vi.mock('next/navigation', () => ({
@@ -49,7 +54,7 @@ describe('SearchResults', () => {
     vi.clearAllMocks();
     vi.mocked(useRouter).mockReturnValue({
       push: mockPush
-    } as any);
+    } as unknown as AppRouterInstance);
   });
 
   describe('Empty state', () => {
@@ -62,7 +67,7 @@ describe('SearchResults', () => {
         totalResults: 0,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -78,7 +83,7 @@ describe('SearchResults', () => {
         totalResults: 0,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -96,7 +101,7 @@ describe('SearchResults', () => {
         totalResults: 3,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -114,7 +119,7 @@ describe('SearchResults', () => {
         totalResults: 1,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -130,7 +135,7 @@ describe('SearchResults', () => {
         totalResults: 3,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -146,7 +151,7 @@ describe('SearchResults', () => {
         totalResults: 1,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -168,7 +173,7 @@ describe('SearchResults', () => {
         totalResults: 1,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -189,7 +194,7 @@ describe('SearchResults', () => {
         totalResults: 1,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -210,7 +215,7 @@ describe('SearchResults', () => {
         totalResults: 3,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -232,7 +237,7 @@ describe('SearchResults', () => {
         totalResults: 3,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -249,7 +254,7 @@ describe('SearchResults', () => {
         totalResults: 30,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -267,7 +272,7 @@ describe('SearchResults', () => {
         totalResults: 30,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -284,7 +289,7 @@ describe('SearchResults', () => {
         totalResults: 30,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -301,7 +306,7 @@ describe('SearchResults', () => {
         totalResults: 30,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -323,7 +328,7 @@ describe('SearchResults', () => {
         totalResults: 30,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -344,7 +349,7 @@ describe('SearchResults', () => {
         totalResults: 30,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -363,7 +368,7 @@ describe('SearchResults', () => {
         totalResults: 50,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -381,7 +386,7 @@ describe('SearchResults', () => {
         totalResults: 1,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -398,7 +403,7 @@ describe('SearchResults', () => {
         totalResults: 1000,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
@@ -415,7 +420,7 @@ describe('SearchResults', () => {
         totalResults: 3,
         setPage: mockSetPage,
         closeModal: mockCloseModal
-      } as any);
+      } as unknown as ReturnType<typeof useSearchContext>);
 
       render(<SearchResults />);
 
