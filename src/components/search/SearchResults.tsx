@@ -75,7 +75,7 @@ export function SearchResults() {
       <Stack gap={3} mb={4}>
         {searchResults.map((result) => (
           <SearchResultItem
-            key={result.noteId}
+            key={`${result.noteId}-${result.lineNumber}`}
             result={result}
             searchQuery={searchQuery}
             onSelect={() => handleSelectResult(result.noteId, result.lineNumber)}

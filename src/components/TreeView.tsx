@@ -265,7 +265,7 @@ const TreeNodeComponent = <T = unknown,>({
         inline: 'nearest'
       });
     }
-  }, [nodeRef]);
+  }, [nodeRef, node.id, urlNoteId]);
 
   const handleArrowClick = (e: React.MouseEvent) => {
     e.stopPropagation();

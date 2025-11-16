@@ -9,6 +9,15 @@
  * 1. Reads notes from the legacy SQLite database for a specific legacy user (or all users)
  * 2. Converts old text-based headers to Markdown format
  * 3. Imports notes for the specified new user ID in the Prisma database
+ *
+ * IMPORTANT: After running this migration, you MUST rebuild the full-text index:
+ *
+ *   mysql -u demo -pdemo -D 10xDevs -e "
+ *     ALTER TABLE note DROP INDEX note_content_idx;
+ *     CREATE FULLTEXT INDEX note_content_idx ON note(content);
+ *   "
+ *
+ * This ensures the search functionality works correctly with migrated data.
  */
 
 const fs = require('fs');
