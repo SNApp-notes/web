@@ -5,8 +5,14 @@ import { useNotesContext } from '@/components/notes/NotesContext';
 import { createNote, deleteNote, updateNote } from '@/app/actions/notes';
 import LeftPanelComponent from '@/components/notes/LeftPanel';
 import type { NoteTreeNode } from '@/types/tree';
+import { SortKey, SortOrder } from '@/types/notes';
 
-export default function LeftPanel() {
+interface LeftPanelProps {
+  initialSortKey?: SortKey;
+  initialSortOrder?: SortOrder;
+}
+
+export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPanelProps) {
   const { notes, selectedNoteId, setNotes, updateNoteName, selectNote } =
     useNotesContext();
 
@@ -70,6 +76,8 @@ export default function LeftPanel() {
       onNewNote={handleNewNote}
       onDeleteNote={handleDeleteNote}
       onRenameNote={handleRenameNote}
+      initialSortKey={initialSortKey}
+      initialSortOrder={initialSortOrder}
     />
   );
 }

@@ -17,7 +17,9 @@ function convertNoteToTreeNode(note: Note): NoteTreeNode {
     selected: false,
     data: {
       content: note.content, // Preserve null for example notes
-      dirty: false
+      dirty: false,
+      createdAt: note.createdAt,
+      updatedAt: note.updatedAt
     }
   };
 }

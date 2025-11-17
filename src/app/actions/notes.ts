@@ -44,6 +44,9 @@ import prisma, { type Note } from '@/lib/prisma';
 import { headers } from 'next/headers';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { getSettings } from '@/app/actions/settings';
+import { getSortedNotes } from '@/lib/sort-notes';
+import { SortKey, SortOrder } from '@/types/notes';
 
 /**
  * In-memory cache for welcome.md content.
@@ -81,7 +84,7 @@ async function getWelcomeContent(): Promise<string> {
 
 /**
  * Retrieves all notes for the currently authenticated user.
- * Returns notes ordered by creation date with welcome content for null content.
+ * Returns notes sorted by user settings with welcome content for null content.
  *
  * @async
  * @returns {Promise<Note[]>} Array of user's notes, empty array if not authenticated
@@ -95,9 +98,10 @@ async function getWelcomeContent(): Promise<string> {
  * @remarks
  * - Requires active user session
  * - Returns empty array if user is not authenticated (no error thrown)
- * - Notes ordered by createdAt ascending (oldest first)
+ * - Notes sorted according to user settings (sortBy + sortOrder)
  * - Null content is replaced with welcome.md content
  * - Welcome content comes from public/samples/welcome.md
+ * - Server-side sorting eliminates flicker on initial page load
  */
 export async function getNotes(): Promise<Note[]> {
   const session = await auth.api.getSession({
@@ -111,9 +115,6 @@ export async function getNotes(): Promise<Note[]> {
   const notes = await prisma.note.findMany({
     where: {
       userId: session.user.id
-    },
-    orderBy: {
-      createdAt: 'asc'
     }
   });
 
@@ -129,7 +130,15 @@ export async function getNotes(): Promise<Note[]> {
     return note;
   });
 
-  return notesWithContent;
+  // Apply server-side sorting using user settings
+  const settings = await getSettings();
+  const sortedNotes = getSortedNotes(
+    notesWithContent,
+    settings.sortBy as SortKey,
+    settings.sortOrder as SortOrder
+  );
+
+  return sortedNotes;
 }
 
 /**

@@ -19,6 +19,7 @@ model User {
   accounts      Account[]
   notes         Note[]
   sessions      Session[]
+  settings      Settings?
 
   @@map("user")
 }
@@ -79,4 +80,15 @@ model Note {
   @@id([noteId, userId])
   @@index([userId])
   @@map("note")
+}
+
+model Settings {
+  userId    String   @id
+  sortBy    String   @default("creationTime")
+  sortOrder String   @default("asc")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("settings")
 }

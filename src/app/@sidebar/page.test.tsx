@@ -3,6 +3,25 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import SidebarPage from './page';
 import { useNotesContext } from '@/components/notes/NotesContext';
 import type { NoteTreeNode } from '@/types/tree';
+import { SortKey, SortOrder } from '@/types/notes';
+
+// Mock next/headers
+vi.mock('next/headers', () => ({
+  headers: vi.fn(() => Promise.resolve(new Headers()))
+}));
+
+// Mock auth
+vi.mock('@/lib/auth', () => ({
+  auth: {
+    api: {
+      getSession: vi.fn(() =>
+        Promise.resolve({
+          user: { id: 'test-user', email: 'test@example.com' }
+        })
+      )
+    }
+  }
+}));
 
 // Mock the NotesContext
 vi.mock('@/components/notes/NotesContext', () => ({
@@ -14,6 +33,20 @@ vi.mock('@/app/actions/notes', () => ({
   createNote: vi.fn(),
   deleteNote: vi.fn(),
   updateNote: vi.fn()
+}));
+
+// Mock the settings server action
+vi.mock('@/app/actions/settings', () => ({
+  getSettings: vi.fn(() =>
+    Promise.resolve({
+      userId: 'test-user',
+      sortBy: SortKey.CreationTime,
+      sortOrder: SortOrder.Ascending,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    })
+  ),
+  updateSettings: vi.fn()
 }));
 
 describe('SidebarPage', () => {
@@ -49,30 +82,34 @@ describe('SidebarPage', () => {
   });
 
   describe('Component Rendering', () => {
-    it('should render without errors', () => {
-      render(<SidebarPage />);
+    it('should render without errors', async () => {
+      const component = await SidebarPage();
+      render(component);
 
       expect(screen.getByRole('button', { name: 'New Note' })).toBeInTheDocument();
     });
 
-    it('should render LeftPanel component', () => {
-      render(<SidebarPage />);
+    it('should render LeftPanel component', async () => {
+      const component = await SidebarPage();
+      render(component);
 
       // Verify LeftPanel is rendered by checking for its key elements
       expect(screen.getByRole('complementary')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'New Note' })).toBeInTheDocument();
     });
 
-    it('should render sidebar structure', () => {
-      render(<SidebarPage />);
+    it('should render sidebar structure', async () => {
+      const component = await SidebarPage();
+      render(component);
 
       const sidebar = screen.getByRole('complementary');
       expect(sidebar).toBeInTheDocument();
       expect(sidebar).toHaveStyle({ display: 'flex' });
     });
 
-    it('should display filter input', () => {
-      render(<SidebarPage />);
+    it('should display filter input', async () => {
+      const component = await SidebarPage();
+      render(component);
 
       const filterInput = screen.getByPlaceholderText('Filter notes...');
       expect(filterInput).toBeInTheDocument();
@@ -80,29 +117,32 @@ describe('SidebarPage', () => {
   });
 
   describe('LeftPanel Integration', () => {
-    it('should pass through notes from context to LeftPanel', () => {
+    it('should pass through notes from context to LeftPanel', async () => {
       const mockNotes = [
         createMockNote(1, 'First Note'),
         createMockNote(2, 'Second Note')
       ];
       mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes));
 
-      render(<SidebarPage />);
+      const component = await SidebarPage();
+      render(component);
 
       expect(screen.getByText('First Note')).toBeInTheDocument();
       expect(screen.getByText('Second Note')).toBeInTheDocument();
     });
 
-    it('should render empty state when no notes', () => {
+    it('should render empty state when no notes', async () => {
       mockUseNotesContext.mockReturnValue(createMockNotesContext([]));
 
-      render(<SidebarPage />);
+      const component = await SidebarPage();
+      render(component);
 
       expect(screen.getByText('No notes yet')).toBeInTheDocument();
     });
 
-    it('should render new note button from LeftPanel', () => {
-      render(<SidebarPage />);
+    it('should render new note button from LeftPanel', async () => {
+      const component = await SidebarPage();
+      render(component);
 
       const newNoteButton = screen.getByRole('button', { name: 'New Note' });
       expect(newNoteButton).toBeInTheDocument();
@@ -111,20 +151,22 @@ describe('SidebarPage', () => {
   });
 
   describe('Server Component Behavior', () => {
-    it('should be a server component (no client-side hooks)', () => {
+    it('should be a server component (no client-side hooks)', async () => {
       // This test verifies that the component itself doesn't use client hooks
       // The LeftPanel child component handles all client-side logic
-      render(<SidebarPage />);
+      const component = await SidebarPage();
+      render(component);
 
       // Should render successfully without any client-side state management
       expect(screen.getByRole('complementary')).toBeInTheDocument();
     });
 
-    it('should delegate all functionality to LeftPanel', () => {
+    it('should delegate all functionality to LeftPanel', async () => {
       const mockNotes = [createMockNote(1, 'Test Note')];
       mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes));
 
-      render(<SidebarPage />);
+      const component = await SidebarPage();
+      render(component);
 
       // All interactive elements should come from LeftPanel
       expect(screen.getByRole('button', { name: 'New Note' })).toBeInTheDocument();
@@ -134,15 +176,17 @@ describe('SidebarPage', () => {
   });
 
   describe('Layout Structure', () => {
-    it('should maintain consistent layout structure', () => {
-      render(<SidebarPage />);
+    it('should maintain consistent layout structure', async () => {
+      const component = await SidebarPage();
+      render(component);
 
       const sidebar = screen.getByRole('complementary');
       expect(sidebar).toBeInTheDocument();
     });
 
-    it('should render with proper semantic HTML', () => {
-      render(<SidebarPage />);
+    it('should render with proper semantic HTML', async () => {
+      const component = await SidebarPage();
+      render(component);
 
       // Check for proper semantic structure
       const aside = screen.getByRole('complementary');

@@ -5,6 +5,8 @@ export type { Note, User } from '@/lib/prisma';
 export interface NoteData {
   content: string | null;
   dirty: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Header {
@@ -30,6 +32,18 @@ export interface SelectionState {
 export interface SessionExpiry {
   isExpired: boolean;
   expiresAt?: Date;
+}
+
+// Sorting types
+export enum SortKey {
+  CreationTime = 'creationTime',
+  Name = 'name',
+  UpdateTime = 'updateTime'
+}
+
+export enum SortOrder {
+  Ascending = 'asc',
+  Descending = 'desc'
 }
 
 // Component-specific types
