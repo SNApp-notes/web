@@ -15,7 +15,7 @@
 /.nyc_output
 
 # next.js
-/.next/
+/.next*/
 /out/
 
 # production

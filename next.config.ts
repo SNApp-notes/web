@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  distDir: process.env.E2E_TEST === 'true' ? '.next-e2e' : '.next',
   experimental: {
     optimizePackageImports: ['@chakra-ui/react']
   },
