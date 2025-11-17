@@ -189,7 +189,13 @@ On systems where Playwright binaries are not available, use Docker for E2E testi
 
 1. **Install Docker and Docker Compose** on your system
 
-2. **Build the Docker image** (first time only, or after modifying Docker files):
+2. **Download Playwright Image** (only once, even when modifiing docker config files)
+
+   ```bash
+   npm run test:e2e:docker:setup
+   ```
+
+3. **Build the Docker image** (first time only, or after modifying Docker files):
 
    ```bash
    npm run test:e2e:docker:build
@@ -201,7 +207,7 @@ On systems where Playwright binaries are not available, use Docker for E2E testi
    - All project dependencies
    - Isolated SQLite test database
 
-3. **Run E2E tests in Docker:**
+4. **Run E2E tests in Docker:**
 
    ```bash
    npm run test:e2e:docker
