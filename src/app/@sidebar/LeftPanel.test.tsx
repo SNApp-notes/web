@@ -155,7 +155,9 @@ describe('LeftPanel', () => {
           selected: false,
           data: {
             content: 'Test content',
-            dirty: false
+            dirty: false,
+            createdAt: new Date(NaN),
+            updatedAt: new Date(NaN)
           }
         },
         ...mockPrevNotes

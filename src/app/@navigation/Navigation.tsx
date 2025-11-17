@@ -29,12 +29,11 @@ export default function Navigation() {
 
     try {
       await signOutAction();
-      await refetch();
       router.push('/login');
     } catch (error) {
       console.error('Logout failed:', error);
     }
-  }, [hasUnsavedChanges, router, refetch]);
+  }, [hasUnsavedChanges, router]);
 
   const handleSettingsClick = useCallback(() => {
     router.push('/settings');

@@ -52,7 +52,6 @@ export async function signOutUser(page: Page): Promise<void> {
   });
 
   // Click logout and wait for navigation to complete
-  // Increased timeout to 15s to handle async server actions + refetch + navigation
   await page.getByTestId('sign-out-button').click();
-  await page.waitForURL(/.*login/, { timeout: 15000 });
+  await page.waitForURL(/.*login/, { timeout: 2000 });
 }

@@ -26,7 +26,9 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
         selected: false,
         data: {
           content: newNote.content || '',
-          dirty: false
+          dirty: false,
+          createdAt: new Date(newNote.createdAt),
+          updatedAt: new Date(newNote.updatedAt)
         }
       };
 

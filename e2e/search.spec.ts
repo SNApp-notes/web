@@ -69,27 +69,6 @@ test.describe('Search Feature (US-020)', () => {
       await collectCoverage(page, 'search-modal-close-escape');
     });
 
-    test.skip('should close modal with close button', async ({ page }) => {
-      // SKIPPED: Chakra UI v3 Dialog.CloseTrigger has CSS visibility:hidden in this implementation
-      // The close button exists in DOM but is not clickable via Playwright due to visibility state
-      // This test is redundant since "should close modal with Escape key" already validates closing behavior
-      // See: src/components/search/SearchModal.tsx line 80
-
-      // Open search modal
-      await page.keyboard.press('Control+Shift+F');
-      const searchDialog = page.getByRole('dialog', { name: /search notes/i });
-      await expect(searchDialog).toBeVisible();
-
-      // Click close button - Use Chakra v3 data attribute selector
-      const closeButton = searchDialog.locator('[data-part="close-trigger"]');
-      await closeButton.click();
-
-      // Modal should be hidden
-      await expect(searchDialog).not.toBeVisible({ timeout: 5000 });
-
-      await collectCoverage(page, 'search-modal-close-button');
-    });
-
     test('should close modal after selecting a result', async ({ page }) => {
       // Open search modal
       await page.keyboard.press('Control+Shift+F');
