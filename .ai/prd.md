@@ -554,6 +554,56 @@ Criteria:
 - Performance: Sorting operations complete instantly for collections up to 1000
   notes without noticeable delay or UI freezing.
 
+US-022 Title: As a user, I want my note sorting preferences to be stored on the
+server and applied during initial page load so that I see my notes in the
+correct order immediately without flickering or client-side reordering.
+Description: Note sorting preferences (sort key and order) are stored in a
+database Settings table associated with the user account, ensuring consistent
+ordering across devices and eliminating the visual flicker that occurs when
+notes are initially rendered unsorted and then reordered on the client. The
+server applies sorting during data retrieval, and the same sorting function is
+used on both server and client to guarantee consistency. Acceptance Criteria:
+
+- Given an authenticated user, when they first access the application, a
+  Settings record is automatically created with default values (sortBy:
+  'creationTime', sortOrder: 'asc') if one doesn't already exist.
+- The Settings table contains fields: userId (foreign key to User), sortBy
+  (enum: 'creationTime', 'name', 'updateTime'), and sortOrder (enum: 'asc',
+  'desc').
+- When the user changes the sorting option in the UI, a server action
+  (updateSettings) is called to save the new preferences to the database before
+  the client-side reordering occurs.
+- When the notes are fetched via the getNotes server action, the sorting is
+  applied on the server using the user's Settings record before returning the
+  data.
+- The sorting logic is implemented in a shared utility function (getSortedNotes)
+  that works identically on both server (Node.js) and client (browser),
+  ensuring consistent sort order.
+- When the page initially renders (server-side), notes are pre-sorted according
+  to the user's saved preferences, eliminating any visual flicker or reordering
+  on the client.
+- The sorting control in the left sidebar is initialized with the current
+  settings from the server, ensuring the UI reflects the actual applied sort
+  order.
+- Client-side sorting still occurs when the user changes preferences (for
+  immediate feedback) but is synchronized with the server via the updateSettings
+  action.
+- The Settings table uses userId as the primary key (one-to-one relationship
+  with User) to ensure each user has exactly one settings record.
+- Edge case: If the Settings record is deleted or corrupted, the application
+  creates a new one with default values on the next data fetch.
+- Edge case: If the updateSettings action fails, the client continues to
+  function with the new sort order in memory, and retries on the next sort
+  change.
+- Edge case: Concurrent updates to settings (from multiple devices) use
+  last-write-wins strategy, with the most recent update persisting in the
+  database.
+- Performance: Sorting on the server adds no more than 10ms overhead to the
+  notes fetch operation for collections up to 1000 notes.
+- Migration: Existing users with localStorage sorting preferences are migrated
+  to database settings on their next login, preserving their preferred sort
+  order.
+
 
 ## 6. Success Metrics
 
