@@ -510,8 +510,9 @@ Criteria:
 - Given an authenticated session with notes, when the left sidebar loads, a
   sorting control (Chakra UI Select component) is displayed above or below the
   notes filter input, showing the current sort option.
-- The Select component offers three sorting options: "Creation Time (oldest
-  first)" (default), "Last Updated", and "Name (A-Z)".
+- The Select component offers six sorting options: "Creation Time (oldest
+  first)" (default), "Creation Time (newest first)", "Last Updated (newest
+  first)", "Last Updated (oldest first)", "Name (A-Z)", and "Name (Z-A)".
 - When the user selects a different sorting option, the notes list immediately
   reorders according to the selected criteria without requiring a page refresh.
 - The selected sorting option is saved to localStorage immediately upon change,
@@ -520,13 +521,20 @@ Criteria:
   before the initial notes render, ensuring the notes are displayed in the
   correct order from the first render without flickering or reordering.
 - If no sorting preference exists in localStorage (first-time users or cleared
-  storage), the default sorting is by creation time (note ID ascending).
-- Sorting by "Creation Time" orders notes by noteId in ascending order (1, 2,
-  3...), which corresponds to creation order.
-- Sorting by "Last Updated" orders notes by their updatedAt timestamp in
-  descending order (most recently updated first).
-- Sorting by "Name" orders notes alphabetically (A-Z) using case-insensitive
-  string comparison.
+  storage), the default sorting is by creation time ascending (note ID
+  ascending, oldest first).
+- Sorting by "Creation Time (oldest first)" orders notes by noteId in ascending
+  order (1, 2, 3...), showing oldest notes first.
+- Sorting by "Creation Time (newest first)" orders notes by noteId in
+  descending order (highest ID first), showing newest notes first.
+- Sorting by "Last Updated (newest first)" orders notes by their updatedAt
+  timestamp in descending order (most recently updated first).
+- Sorting by "Last Updated (oldest first)" orders notes by their updatedAt
+  timestamp in ascending order (least recently updated first).
+- Sorting by "Name (A-Z)" orders notes alphabetically in ascending order using
+  case-insensitive string comparison.
+- Sorting by "Name (Z-A)" orders notes alphabetically in descending order using
+  case-insensitive string comparison.
 - The sorting persists across browser sessions, page refreshes, and when
   navigating between different notes.
 - When combined with the name filter (existing search functionality), sorting is
