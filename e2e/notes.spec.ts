@@ -5,7 +5,7 @@ test.describe('Notes Application - CRUD Operations', () => {
   // Clean up before each test by refreshing the page
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('[data-testid="note-list"]')).toBeVisible({
+    await expect(page.locator('[data-testid="sign-out-button"]')).toBeVisible({
       timeout: 10000
     });
   });
