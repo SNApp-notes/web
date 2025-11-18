@@ -9,6 +9,7 @@ const eslintConfig = defineConfig([
     'node_modules/**',
     '.next/**',
     'coverage/**',
+    '.next-e2e/**',
     'next-env.d.ts',
     'prisma-*',
     '**/**.js'

@@ -27,6 +27,8 @@ TypeScript strict mode, no empty object types
 
 **NEVER use `any` type** - always use exact types. In tests with partial objects, use `as unknown as Type` for type assertion.
 
+**Workflow**: After writing code and tests, ALWAYS run `npm run lint` to check for errors before finishing.
+
 ## Project Structure
 
 `src/app/` (pages) | `src/components/ui/` (UI) | `src/test/` (test utils)

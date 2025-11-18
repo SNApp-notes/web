@@ -76,9 +76,12 @@ const SegmentGroupItem = ({
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
           // Skip Indicator and HiddenInput, render ItemText content
-          const childType = child.type as any;
+          const childType = child.type as
+            | typeof SegmentGroupItemText
+            | typeof SegmentGroupIndicator
+            | typeof SegmentGroupItemHiddenInput;
           if (childType === SegmentGroupItemText) {
-            return (child.props as any).children;
+            return (child.props as { children: React.ReactNode }).children;
           }
           if (
             childType === SegmentGroupIndicator ||

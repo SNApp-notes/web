@@ -48,6 +48,7 @@ import { getSortedNotes } from '@/lib/sort-notes';
 import { SortKey, SortOrder } from '@/types/notes';
 import { SortControls } from '@/components/notes/SortControls';
 import { updateSettings } from '@/app/actions/settings';
+import type { Note } from '@/lib/prisma';
 
 /**
  * Props for the LeftPanel component.
@@ -140,8 +141,12 @@ const LeftPanel = memo(function LeftPanel({
       updatedAt: node.data?.updatedAt || new Date(0)
     }));
 
-    // Apply sorting
-    const sorted = getSortedNotes(notesWithTimestamps as any, sortKey, sortOrder);
+    // Apply sorting (type assertion is safe as we provide all required sortable fields)
+    const sorted = getSortedNotes(
+      notesWithTimestamps as unknown as Note[],
+      sortKey,
+      sortOrder
+    );
 
     // Map back to NoteTreeNode[] and filter
     const filtered = sorted
