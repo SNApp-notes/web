@@ -40,9 +40,13 @@
 
 import { useState, useMemo, memo, useCallback } from 'react';
 import { Box, Button, Input, Stack, Text } from '@chakra-ui/react';
-import type { NoteTreeNode, TreeNode } from '@/types/tree';
+import type { NoteTreeNode, TreeNode as TreeNodeType } from '@/types/tree';
+import Link from 'next/link';
+import clsx from 'clsx';
+import { FiTrash2 } from 'react-icons/fi';
 
-import TreeView from '@/components/TreeView';
+import { TreeView, TreeNode } from '@/components/TreeView';
+import type { TreeNodeRenderProps } from '@/components/TreeView';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { getSortedNotes } from '@/lib/sort-notes';
 import { SortKey, SortOrder } from '@/types/notes';
@@ -158,7 +162,7 @@ const LeftPanel = memo(function LeftPanel({
 
   // Handle TreeNode selection
   const handleTreeNodeSelect = useCallback(
-    (node: TreeNode) => {
+    (node: TreeNodeType) => {
       onNoteSelect((node as NoteTreeNode).id);
     },
     [onNoteSelect]
@@ -166,7 +170,7 @@ const LeftPanel = memo(function LeftPanel({
 
   // Handle TreeNode rename
   const handleTreeNodeRename = useCallback(
-    async (node: TreeNode, newName: string) => {
+    async (node: TreeNodeType, newName: string) => {
       try {
         await onRenameNote?.((node as NoteTreeNode).id, newName);
       } catch {
@@ -177,7 +181,7 @@ const LeftPanel = memo(function LeftPanel({
   );
 
   // Handle TreeNode delete
-  const handleTreeNodeDelete = useCallback((node: TreeNode) => {
+  const handleTreeNodeDelete = useCallback((node: TreeNodeType) => {
     setDeleteDialog({ isOpen: true, note: node as NoteTreeNode });
   }, []);
 
@@ -191,12 +195,105 @@ const LeftPanel = memo(function LeftPanel({
     setDeleteDialog({ isOpen: false, note: null });
   }, []);
 
-  const generateName = useCallback(
-    (node: NoteTreeNode) => `${node.data?.dirty ? '* ' : ''}${node.name}`,
-    []
-  );
+  const renderTreeNode = useCallback(
+    ({ node, selected, editing, hasChildren }: TreeNodeRenderProps) => {
+      const typedNode = node as NoteTreeNode;
+      const displayName = `${typedNode.data?.dirty ? '* ' : ''}${typedNode.name}`;
 
-  const generateTitle = useCallback((node: NoteTreeNode) => `/note/${node.id}`, []);
+      const nodeContent = (
+        <>
+          <TreeNode.ExpandIcon color="fg.subtle" fontSize="xs" />
+
+          <TreeNode.Icon
+            color={selected ? 'currentColor' : 'fg.muted'}
+            className="tree-node-icon"
+          />
+
+          {editing ? (
+            <TreeNode.Edit
+              p={2}
+              fontSize="sm"
+              fontWeight="medium"
+              color="black"
+              flex={1}
+              size="sm"
+              variant="outline"
+              bg="white"
+              _dark={{ bg: 'gray.700', color: 'white' }}
+              _selection={{ bg: 'blue.solid', color: 'white' }}
+              className="tree-node-input"
+            />
+          ) : (
+            <>
+              <TreeNode.Text
+                fontSize="sm"
+                fontWeight="medium"
+                color="currentColor"
+                flex={1}
+                lineClamp={1}
+                className="tree-node-label"
+                title={`/note/${typedNode.id}`}
+              >
+                {displayName}
+              </TreeNode.Text>
+
+              {!hasChildren && (
+                <TreeNode.DeleteButton
+                  variant="ghost"
+                  colorScheme="red"
+                  size="xs"
+                  className="tree-node-delete"
+                  data-testid={`delete-node-${typedNode.id}`}
+                  _hover={{ color: 'red.500' }}
+                >
+                  <FiTrash2 size={12} />
+                </TreeNode.DeleteButton>
+              )}
+            </>
+          )}
+        </>
+      );
+
+      const wrappedContent =
+        !hasChildren && !editing ? (
+          <Link
+            href={`/note/${typedNode.id}`}
+            style={{
+              display: 'contents',
+              textDecoration: 'none',
+              color: 'inherit'
+            }}
+            onClick={() => onNoteSelect(typedNode.id)}
+          >
+            {nodeContent}
+          </Link>
+        ) : (
+          nodeContent
+        );
+
+      return (
+        <TreeNode.Content
+          bg={selected ? 'blue.solid' : 'transparent'}
+          color={selected ? 'white' : 'fg'}
+          _hover={{ bg: selected ? 'blue.solid' : 'bg.muted' }}
+          borderRadius="md"
+          px={2}
+          py={2}
+          outline={selected && !hasChildren ? '2px solid' : 'none'}
+          outlineColor="blue.500"
+          outlineOffset="2px"
+          className={clsx('tree-item', 'tree-node', {
+            'tree-node-selected': selected,
+            'tree-node-expandable': hasChildren,
+            'tree-node-leaf': !hasChildren
+          })}
+        >
+          {wrappedContent}
+        </TreeNode.Content>
+      );
+    },
+    [onNoteSelect]
+  );
 
   return (
     <Box as="aside" h="100%" display="flex" flexDirection="column" bg="bg.subtle">
@@ -237,11 +334,10 @@ const LeftPanel = memo(function LeftPanel({
         ) : (
           <TreeView
             data={treeData}
+            render={renderTreeNode}
             onNodeSelect={handleTreeNodeSelect}
             onNodeRename={handleTreeNodeRename}
             onNodeDelete={handleTreeNodeDelete}
-            generateName={generateName}
-            generateTitle={generateTitle}
             title=""
           />
         )}
