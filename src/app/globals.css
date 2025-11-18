@@ -10,11 +10,6 @@ body {
   margin: 0;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
 /* 80 characters line in Editor */
 .cm-editor .cm-content::before {
   width: calc(80ch + 5px);

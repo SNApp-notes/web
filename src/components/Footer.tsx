@@ -41,6 +41,7 @@
 'use client';
 
 import { Box, Text } from '@chakra-ui/react';
+import Link from '@/components/Link';
 
 /**
  * Application footer with copyright and license information.
@@ -89,8 +90,9 @@ export default function Footer() {
     >
       <Text fontSize="xs" color="fg.muted" textAlign="center">
         Copyright (C) {currentYear}{' '}
-        <a href="https://jakub.jankiewicz.org/">Jakub T. Jankiewicz</a>{' '}
-        &lt;jcubic@onet.pl&gt; | AGPL-3.0-or-later
+        <Link href="https://jakub.jankiewicz.org/">Jakub T. Jankiewicz</Link>{' '}
+        | AGPL-3.0-or-later |{' '}
+        <Link href="https://github.com/SNApp-notes/web">source code</Link>
       </Text>
     </Box>
   );
