@@ -213,10 +213,7 @@ interface NotesProviderProps {
  * }
  * ```
  */
-export function NotesProvider({
-  children,
-  initialNotes = [],
-}: NotesProviderProps) {
+export function NotesProvider({ children, initialNotes = [] }: NotesProviderProps) {
   const params = useParams();
   const pathname = usePathname();
   const router = useRouter();

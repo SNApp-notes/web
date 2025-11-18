@@ -42,9 +42,5 @@ export default async function NotesLayoutWrapper({ children }: NotesLayoutWrappe
     }
   }
 
-  return (
-    <NotesProvider initialNotes={treeNodes}>
-      {children}
-    </NotesProvider>
-  );
+  return <NotesProvider initialNotes={treeNodes}>{children}</NotesProvider>;
 }

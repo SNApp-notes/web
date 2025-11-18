@@ -90,8 +90,8 @@ export default function Footer() {
     >
       <Text fontSize="xs" color="fg.muted" textAlign="center">
         Copyright (C) {currentYear}{' '}
-        <Link href="https://jakub.jankiewicz.org/">Jakub T. Jankiewicz</Link>{' '}
-        | AGPL-3.0-or-later |{' '}
+        <Link href="https://jakub.jankiewicz.org/">Jakub T. Jankiewicz</Link> |
+        AGPL-3.0-or-later |{' '}
         <Link href="https://github.com/SNApp-notes/web">source code</Link>
       </Text>
     </Box>

@@ -81,7 +81,7 @@ interface LinkProps {
  *
  * @public
  */
-export default function ({ children, ...props }: LinkProps) {
+function GenericLink({ children, ...props }: LinkProps) {
   return (
     <Link {...props} colorPalette="blue" variant="underline">
       {children}
@@ -89,3 +89,5 @@ export default function ({ children, ...props }: LinkProps) {
     </Link>
   );
 }
+
+export default GenericLink;
