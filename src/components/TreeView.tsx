@@ -251,15 +251,11 @@ const TreeNodeComponent = <T = unknown,>({
   const params = useParams();
   const urlNoteId = params?.id ? parseInt(params.id as string, 10) : null;
 
-  if (urlNoteId !== null && node.id === urlNoteId) {
-    console.log('render');
-  }
   // Scroll node into view BEFORE it becomes selected (based on URL match)
   useEffect(() => {
     const shouldScrollIntoView = urlNoteId !== null && node.id === urlNoteId;
 
     if (shouldScrollIntoView && nodeRef?.current?.scrollIntoView) {
-      console.log('scroll');
       nodeRef.current.scrollIntoView({
         block: 'nearest',
         inline: 'nearest'

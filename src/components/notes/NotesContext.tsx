@@ -71,7 +71,14 @@
  */
 'use client';
 
-import { createContext, useContext, useEffect, useCallback, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useCallback,
+  useMemo,
+  type ReactNode
+} from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
@@ -219,8 +226,11 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
   const router = useRouter();
 
   // list of notes that with marked selected node if it exists in URL
-  const initSelectedNodeId = parseId(params);
-  const updatedNotes = selectNode(initialNotes, initSelectedNodeId);
+  const initSelectedNodeId = useMemo(() => parseId(params), [params]);
+  const updatedNotes = useMemo(
+    () => selectNode(initialNotes, initSelectedNodeId),
+    [initialNotes, initSelectedNodeId]
+  );
 
   // Use the hook that manages all the state
   const {
@@ -306,6 +316,6 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;
 }
 
-function parseId(params: ReturnType<typeof useParams>): number | null {
+function parseId(params: ReturnType<typeof useParams>) {
   return params?.id ? parseInt(params.id as string, 10) : null;
 }
