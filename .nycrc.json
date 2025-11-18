@@ -9,7 +9,7 @@
     "**/*.config.*",
     "prisma-main/**/*",
     "prisma-e2e/**/*",
-    "src/lib/parser/parser.js",
+    "src/components/ui/*",
     "src/lib/email.ts"
   ],
   "reporter": ["lcov", "text", "html", "json"],
