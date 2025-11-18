@@ -42,6 +42,7 @@
 import { useState, useCallback } from 'react';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
+import { selectNode } from '@/lib/utils';
 
 /**
  * Custom hook for managing note selection and state in the note tree.
@@ -95,20 +96,7 @@ export function useNodeSelection(
 
   const updateSelection = useCallback((newSelectedId: number | null) => {
     setNotes((prevNotes) => {
-      const newNotes = prevNotes.map((node) => {
-        // If this is the old selected node, deselect it
-        if (node.selected && node.id !== newSelectedId) {
-          return { ...node, selected: false };
-        }
-        // If this is the new selected node, select it
-        if (node.id === newSelectedId && !node.selected) {
-          return { ...node, selected: true };
-        }
-        // Otherwise return the same node reference
-        return node;
-      });
-
-      return newNotes;
+      return selectNode(prevNotes, newSelectedId);
     });
 
     setSelectedNoteId(newSelectedId);

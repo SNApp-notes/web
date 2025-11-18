@@ -76,6 +76,7 @@ import { useParams, usePathname, useRouter } from 'next/navigation';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import { useNodeSelection } from '@/hooks/useNodeSelection';
+import { selectNode } from '@/lib/utils';
 
 /**
  * NotesContext value interface exposing all notes state and operations.
@@ -156,7 +157,6 @@ export function useNotesContext() {
 interface NotesProviderProps {
   children: ReactNode;
   initialNotes?: NoteTreeNode[];
-  initialSelectedNoteId?: number | null;
 }
 
 /**
@@ -216,11 +216,14 @@ interface NotesProviderProps {
 export function NotesProvider({
   children,
   initialNotes = [],
-  initialSelectedNoteId = null
 }: NotesProviderProps) {
   const params = useParams();
   const pathname = usePathname();
   const router = useRouter();
+
+  // list of notes that with marked selected node if it exists in URL
+  const initSelectedNodeId = parseId(params);
+  const updatedNotes = selectNode(initialNotes, initSelectedNodeId);
 
   // Use the hook that manages all the state
   const {
@@ -233,7 +236,7 @@ export function NotesProvider({
     updateDirtyFlag,
     updateNoteContent,
     updateNoteName
-  } = useNodeSelection(initialNotes, initialSelectedNoteId);
+  } = useNodeSelection(updatedNotes, initSelectedNodeId);
 
   // Sync notes state when initialNotes prop changes (e.g., after redirect)
   useEffect(() => {
@@ -274,7 +277,7 @@ export function NotesProvider({
 
   // Sync URL to state on URL changes
   useEffect(() => {
-    const urlNoteId = params?.id ? parseInt(params.id as string, 10) : null;
+    const urlNoteId = parseId(params);
 
     if (urlNoteId !== null) {
       updateSelection(urlNoteId);
@@ -304,4 +307,8 @@ export function NotesProvider({
   };
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;
+}
+
+function parseId(params: ReturnType<typeof useParams>): number | null {
+  return params?.id ? parseInt(params.id as string, 10) : null;
 }

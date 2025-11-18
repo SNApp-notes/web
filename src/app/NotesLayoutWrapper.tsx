@@ -43,7 +43,7 @@ export default async function NotesLayoutWrapper({ children }: NotesLayoutWrappe
   }
 
   return (
-    <NotesProvider initialNotes={treeNodes} initialSelectedNoteId={null}>
+    <NotesProvider initialNotes={treeNodes}>
       {children}
     </NotesProvider>
   );
