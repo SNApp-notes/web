@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['@chakra-ui/react']
   },
+  // Externalize Prisma to prevent webpack from bundling/processing it
+  serverExternalPackages: ['@prisma/client', 'prisma'],
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production'
   },
@@ -25,8 +27,13 @@ const nextConfig: NextConfig = {
       // This ensures E2E coverage respects the same exclusions as unit tests
       const excludePatterns = [
         /node_modules/,
+        // Explicitly exclude Prisma generated clients to prevent webpack from breaking them
+        /prisma-main\//,
+        /prisma-e2e\//,
         ...coverageConfig.exclude
-          .filter((pattern: string) => pattern.startsWith('src/') && !pattern.includes('prisma'))
+          .filter(
+            (pattern: string) => pattern.startsWith('src/') && !pattern.includes('prisma')
+          )
           .map((pattern: string) => globToRegExp(pattern))
       ];
 
