@@ -16,7 +16,7 @@
 SNApp is a lightweight note-taking web application designed to replace a legacy
 [AngularJS-based notes app](https://github.com/SNApp-notes/web-legacy).
 
-![SNApp Screenshot](https://github.com/SNApp-notes/web/blob/master/.github/screenshot.png?raw=true)
+![SNApp Screenshot](https://github.com/SNApp-notes/web/blob/master/.github/window.png?raw=true)
 
 ## Table of Contents
 
