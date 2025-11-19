@@ -15,6 +15,12 @@
 import { test, expect } from 'playwright-test-coverage';
 
 test.describe('Search Feature', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('[data-testid="sign-out-button"]')).toBeVisible({
+      timeout: 10000
+    });
+  });
   test.describe('Opening Search Modal', () => {
     test('should open search modal with Ctrl+Shift+F', async ({ page }) => {
       // Press Ctrl+Shift+F to open search modal
