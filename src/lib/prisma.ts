@@ -49,6 +49,7 @@
 
 import { PrismaClient as mainClient } from '../../prisma-main/types';
 import { PrismaClient as e2eClient, Prisma } from '../../prisma-e2e/types';
+import { prismaAdapter } from 'better-auth/adapters/prisma';
 
 /**
  * Re-export ALL Prisma types from prisma-main.
@@ -132,5 +133,32 @@ const globalForPrisma = global as unknown as {
 const prisma = globalForPrisma.prisma || getPrisma();
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+/**
+ * Better Auth Prisma adapter configured with correct provider.
+ * Automatically detects SQLite (CI) vs MySQL (production/dev) at runtime.
+ *
+ * @constant {ReturnType<typeof prismaAdapter>} authPrismaAdapter
+ *
+ * @remarks
+ * - Provider detection happens at runtime to avoid webpack optimization issues
+ * - Ensures Better Auth uses the correct SQL dialect for the active database
+ * - Use this in Better Auth configuration instead of creating adapter inline
+ *
+ * @example
+ * ```ts
+ * import { authPrismaAdapter } from '@/lib/prisma';
+ * import { betterAuth } from 'better-auth';
+ *
+ * export const auth = betterAuth({
+ *   database: authPrismaAdapter,
+ *   // ... other config
+ * });
+ * ```
+ */
+export const authPrismaAdapter = prismaAdapter(prisma, {
+  provider: process.env.CI ? 'sqlite' : 'mysql',
+  usePlural: false
+});
 
 export default prisma;

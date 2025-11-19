@@ -17,10 +17,9 @@
  */
 
 import { betterAuth } from 'better-auth';
-import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
 
-import prisma from '@/lib/prisma';
+import prisma, { authPrismaAdapter } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 
 /**
@@ -230,10 +229,7 @@ If you didn't create an account with SNApp, you can safely ignore this email.
         }
       }
     : {}),
-  database: prismaAdapter(prisma, {
-    provider: process.env.CI ? 'sqlite' : 'mysql',
-    usePlural: false
-  }),
+  database: authPrismaAdapter,
   telemetry: {
     enabled: false
   }
