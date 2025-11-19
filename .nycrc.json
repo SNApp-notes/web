@@ -9,11 +9,11 @@
     "**/*.config.*",
     "prisma-main/**/*",
     "prisma-e2e/**/*",
-    "src/app/api/auth/[...all]/route.ts",
+    "src/app/api/auth/\\[...all\\]/route.ts",
     "src/components/ui/*",
     "src/lib/email.ts"
   ],
-  "reporter": ["lcov", "text", "html", "json"],
+  "reporter": ["lcov", "text", "json"],
   "report-dir": "coverage/merged",
   "temp-dir": ".nyc_output",
   "extension": [".ts", ".tsx"],
