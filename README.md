@@ -1,6 +1,6 @@
 <h1 align="center">
-  <a href="https://github.com/jcubic/tsdocu" title="SNApp - Simple Notes App">
-    <img src="https://github.com/jcubic/tsdocu/blob/master/.github/logo.svg?raw=true" alt="SNApp logo: snapping fingers and text SNApp"/>
+  <a href="https://github.com/SNApp-notes/web" title="SNApp - Simple Notes App">
+    <img src="https://github.com/SNApp-notes/web/blob/master/.github/logo.svg?raw=true" alt="SNApp logo: snapping fingers and text SNApp"/>
   </a>
 </h1>
 
