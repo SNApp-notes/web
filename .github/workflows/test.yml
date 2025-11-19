@@ -170,7 +170,7 @@ jobs:
         run: |
           if [ -d .nyc_output ] && [ "$(ls -A .nyc_output)" ]; then
             echo "E2E Coverage Report:"
-            npx nyc report --reporter=text --temp-dir=.nyc_output
+            npx nyc report --reporter=text --temp-dir=.nyc_output --exclude ["./src/components/ui/**"]
           else
             echo "No E2E coverage collected (requires webpack mode, not available in CI)"
           fi
