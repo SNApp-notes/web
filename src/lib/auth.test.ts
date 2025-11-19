@@ -14,13 +14,23 @@ vi.mock('nodemailer', () => ({
 }));
 
 // Mock Prisma
+const mockPrismaTransaction = vi.fn();
+const mockNoteFindMany = vi.fn();
+const mockNoteCreate = vi.fn();
+
 vi.mock('@/lib/prisma', () => ({
   default: {
     user: {},
     session: {},
     account: {},
-    verification: {}
-  }
+    verification: {},
+    note: {
+      findMany: mockNoteFindMany,
+      create: mockNoteCreate
+    },
+    $transaction: mockPrismaTransaction
+  },
+  authPrismaAdapter: {}
 }));
 
 // Mock better-auth to capture configuration
@@ -75,6 +85,26 @@ describe('Better Auth Email Configuration', () => {
     vi.stubEnv('SMTP_USERNAME', 'test@test.com');
     vi.stubEnv('SMTP_PASSWORD', 'test-password');
     vi.stubEnv('SMTP_FROM_EMAIL', 'noreply@test-app.com');
+
+    // Reset Prisma mocks
+    mockPrismaTransaction.mockImplementation(async (callback) => {
+      // Mock transaction by providing a tx object with our mock methods
+      return callback({
+        note: {
+          findMany: mockNoteFindMany,
+          create: mockNoteCreate
+        }
+      });
+    });
+    mockNoteFindMany.mockResolvedValue([]);
+    mockNoteCreate.mockResolvedValue({
+      noteId: 1,
+      userId: 'test-user-id',
+      name: 'Welcome to SNApp',
+      content: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
 
     // Clear module cache to force re-import with new env vars
     vi.resetModules();
@@ -472,6 +502,211 @@ describe('Better Auth Email Configuration', () => {
       expect(emailOptions.html).toContain(
         "If the button doesn't work, copy and paste this link"
       );
+    });
+  });
+
+  describe('Database Hooks', () => {
+    it('should create welcome note for new users on account creation', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      await import('@/lib/auth');
+
+      // Get the database hooks from the auth config
+      const accountHook = (
+        authConfig as unknown as {
+          databaseHooks?: {
+            account?: {
+              create?: { after?: (account: { userId: string }) => Promise<void> };
+            };
+          };
+        }
+      )?.databaseHooks?.account?.create?.after;
+      expect(accountHook).toBeDefined();
+
+      // Simulate account creation for a new user
+      const newAccount = { userId: 'new-user-id' };
+
+      // No existing notes (first account/note for this user)
+      mockNoteFindMany.mockResolvedValue([]);
+
+      await accountHook!(newAccount);
+
+      // Verify transaction was called
+      expect(mockPrismaTransaction).toHaveBeenCalledTimes(1);
+
+      // Verify we checked for existing notes
+      expect(mockNoteFindMany).toHaveBeenCalledWith({
+        where: { userId: 'new-user-id' }
+      });
+
+      // Verify welcome note was created
+      expect(mockNoteCreate).toHaveBeenCalledWith({
+        data: {
+          noteId: 1,
+          name: 'Welcome to SNApp',
+          content: null,
+          userId: 'new-user-id'
+        }
+      });
+    });
+
+    it('should not create welcome note if user already has notes', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      await import('@/lib/auth');
+
+      const accountHook = (
+        authConfig as unknown as {
+          databaseHooks?: {
+            account?: {
+              create?: { after?: (account: { userId: string }) => Promise<void> };
+            };
+          };
+        }
+      )?.databaseHooks?.account?.create?.after;
+      expect(accountHook).toBeDefined();
+
+      const newAccount = { userId: 'existing-user-id' };
+
+      // User already has notes (e.g., OAuth user adding email/password)
+      mockNoteFindMany.mockResolvedValue([
+        {
+          noteId: 1,
+          userId: 'existing-user-id',
+          name: 'Existing Note',
+          content: 'Some content',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ]);
+
+      await accountHook!(newAccount);
+
+      // Verify transaction was called
+      expect(mockPrismaTransaction).toHaveBeenCalledTimes(1);
+
+      // Verify we checked for existing notes
+      expect(mockNoteFindMany).toHaveBeenCalledWith({
+        where: { userId: 'existing-user-id' }
+      });
+
+      // Verify NO welcome note was created
+      expect(mockNoteCreate).not.toHaveBeenCalled();
+    });
+
+    it('should not break auth flow if welcome note creation fails', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await import('@/lib/auth');
+
+      const accountHook = (
+        authConfig as unknown as {
+          databaseHooks?: {
+            account?: {
+              create?: { after?: (account: { userId: string }) => Promise<void> };
+            };
+          };
+        }
+      )?.databaseHooks?.account?.create?.after;
+      expect(accountHook).toBeDefined();
+
+      const newAccount = { userId: 'error-user-id' };
+
+      // Simulate database error
+      mockNoteFindMany.mockResolvedValue([]);
+      mockPrismaTransaction.mockRejectedValue(new Error('Database connection failed'));
+
+      // Should not throw - error is caught and logged
+      await expect(accountHook!(newAccount)).resolves.not.toThrow();
+
+      // Verify error was logged
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[Auth Hook] Error creating welcome note for new user:',
+        expect.any(Error)
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should work for both OAuth and email/password users', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      await import('@/lib/auth');
+
+      const accountHook = (
+        authConfig as unknown as {
+          databaseHooks?: {
+            account?: {
+              create?: { after?: (account: { userId: string }) => Promise<void> };
+            };
+          };
+        }
+      )?.databaseHooks?.account?.create?.after;
+      expect(accountHook).toBeDefined();
+
+      // Test email/password account
+      mockNoteFindMany.mockResolvedValue([]);
+      await accountHook!({ userId: 'email-user-id' });
+
+      expect(mockNoteCreate).toHaveBeenCalledWith({
+        data: {
+          noteId: 1,
+          name: 'Welcome to SNApp',
+          content: null,
+          userId: 'email-user-id'
+        }
+      });
+
+      // Reset mocks
+      vi.clearAllMocks();
+      mockPrismaTransaction.mockImplementation(async (callback) => {
+        return callback({
+          note: {
+            findMany: mockNoteFindMany,
+            create: mockNoteCreate
+          }
+        });
+      });
+
+      // Test OAuth account (GitHub)
+      mockNoteFindMany.mockResolvedValue([]);
+      await accountHook!({ userId: 'oauth-user-id' });
+
+      expect(mockNoteCreate).toHaveBeenCalledWith({
+        data: {
+          noteId: 1,
+          name: 'Welcome to SNApp',
+          content: null,
+          userId: 'oauth-user-id'
+        }
+      });
+    });
+
+    it('should create welcome note with content null for onboarding', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      await import('@/lib/auth');
+
+      const accountHook = (
+        authConfig as unknown as {
+          databaseHooks?: {
+            account?: {
+              create?: { after?: (account: { userId: string }) => Promise<void> };
+            };
+          };
+        }
+      )?.databaseHooks?.account?.create?.after;
+      expect(accountHook).toBeDefined();
+
+      mockNoteFindMany.mockResolvedValue([]);
+      await accountHook!({ userId: 'onboarding-user-id' });
+
+      // Verify content is null (triggers display of /public/samples/welcome.md)
+      expect(mockNoteCreate).toHaveBeenCalledWith({
+        data: {
+          noteId: 1,
+          name: 'Welcome to SNApp',
+          content: null, // Important: null triggers onboarding content
+          userId: 'onboarding-user-id'
+        }
+      });
     });
   });
 });
