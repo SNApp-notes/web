@@ -1,4 +1,8 @@
-# SNApp - Simple Notes App
+<h1 align="center">
+  <a href="https://github.com/jcubic/tsdocu" title="SNApp - Simple Notes App">
+    <img src="https://github.com/jcubic/tsdocu/blob/master/.github/logo.svg?raw=true" alt="SNApp logo: snapping fingers and text SNApp"/>
+  </a>
+</h1>
 
 [![Test](https://github.com/SNApp-notes/web/actions/workflows/test.yml/badge.svg?branch=master&v=1)](https://github.com/jcubic/10xDevs/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/SNApp-notes/web/badge.svg?branch=master&v=1)](https://coveralls.io/github/SNApp-notes/web?branch=master)
