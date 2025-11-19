@@ -170,7 +170,7 @@ jobs:
         run: |
           if [ -d .nyc_output ] && [ "$(ls -A .nyc_output)" ]; then
             echo "E2E Coverage Report:"
-            npx nyc report --reporter=text --temp-dir=.nyc_output --exclude ["./src/components/ui/**"]
+            npx nyc report --reporter=text --temp-dir=.nyc_output --exclude '**/components/ui/**'
           else
             echo "No E2E coverage collected (requires webpack mode, not available in CI)"
           fi
@@ -180,7 +180,7 @@ jobs:
           mkdir -p coverage/e2e
           if [ -d .nyc_output ] && [ "$(ls -A .nyc_output)" ]; then
             echo "Converting E2E coverage to lcov format..."
-            npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=.nyc_output
+            npx nyc report --reporter=lcov --report-dir=coverage/e2e --temp-dir=.nyc_output --exclude '**/components/ui/**'
             echo "E2E coverage converted"
           else
             echo "No E2E coverage found (webpack mode not used in CI)"

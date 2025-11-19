@@ -12,5 +12,6 @@ module.exports = {
   extension: ['.ts', '.tsx'],
   cache: false,
   sourceMap: true,
-  instrument: true
+  instrument: true,
+  excludeAfterRemap: true
 };
