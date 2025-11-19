@@ -1,9 +1,5 @@
 name: 'Test & Deploy'
 
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
 on:
   workflow_dispatch:
   push:
@@ -201,6 +197,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: [unit-integration-tests, e2e-tests]
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
