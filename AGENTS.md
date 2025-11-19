@@ -62,7 +62,7 @@ Mock props, use `userEvent` for interactions. E2E: clean state in `beforeEach()`
 Rebuild after Docker file changes: `npm run test:e2e:docker:build`
 
 **Agent Command**: `npm run test:e2e:docker 2>&1 | tee e2e.log` (saves log + displays output)
-Examine logs: `tail -n 100 e2e.log`
+**Long-running commands**: Always use `tee` to save output to log file, then read last N lines with `tail -n 100 logfile.log`. Never pipe directly to `tail` or `head` - you won't see output.
 
 Config: `e2e/playwright.config.ts` | Docker: `e2e/docker-compose.yml`, `e2e/Dockerfile`
 
