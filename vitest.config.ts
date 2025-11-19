@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import coverageConfig from './coverage.config.js';
 
 export default defineConfig({
   plugins: [react()],
@@ -20,27 +21,9 @@ export default defineConfig({
     },
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov', 'html', 'json'],
+      reporter: ['text', 'lcov', 'json'],
       reportsDirectory: './coverage/unit',
-      exclude: [
-        'node_modules/',
-        'src/test/',
-        'src/components/ui/**/*',
-        '**/*.d.ts',
-        '**/*.config.*',
-        'coverage/',
-        '.next/',
-        'build/',
-        'dist/',
-        'src/types/**',
-        '**/*.test.*',
-        '**/*.spec.*',
-        'prisma-main/**/*',
-        'prisma-e2e/**/*',
-        'src/lib/parser/parser.js',
-        'src/lib/email.ts'
-      ],
-      include: ['src/**/*.{ts,tsx}', '!src/test/**/*']
+      ...coverageConfig
     }
   },
   resolve: {

@@ -12,7 +12,8 @@ const eslintConfig = defineConfig([
     '.next-e2e/**',
     'next-env.d.ts',
     'prisma-*',
-    '**/**.js'
+    '**/*.js',
+    '**/*.cjs'
   ]),
   {
     rules: {
