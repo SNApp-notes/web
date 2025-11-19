@@ -1,4 +1,4 @@
-name: 'Test'
+name: 'Test & Deploy'
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -215,7 +215,9 @@ jobs:
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          url="$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})"
+          vercel alias --scope jcubics-projects --token=${{ secrets.VERCEL_TOKEN }} set "$url" app.snapp.md
 
   merge-coverage:
     runs-on: ubuntu-latest
