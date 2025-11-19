@@ -1,3 +1,4 @@
+import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin';
 import type { NextConfig } from 'next';
 import { createRequire } from 'module';
 import globToRegExp from 'glob-to-regexp';
@@ -16,12 +17,14 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ['host.docker.internal'],
   turbopack: {},
   webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.plugins = [...config.plugins, new PrismaPlugin()];
+    }
     if (process.env.COVERAGE === 'true' && !isServer) {
       // Convert glob patterns from coverage.config.js to webpack-compatible regexes
       // This ensures E2E coverage respects the same exclusions as unit tests
       const excludePatterns = [
         /node_modules/,
-        // Convert coverage.config.js exclude patterns to regexes using glob-to-regexp
         ...coverageConfig.exclude
           .filter((pattern: string) => pattern.startsWith('src/'))
           .map((pattern: string) => globToRegExp(pattern))

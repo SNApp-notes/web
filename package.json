@@ -1,6 +1,6 @@
 {
-  "name": "10x-devs",
-  "version": "0.1.0",
+  "name": "SNApp",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -54,6 +54,7 @@
     "@jsdevtools/coverage-istanbul-loader": "^3.0.5",
     "@playwright/test": "^1.56.1",
     "@prisma/client": "^6.19.0",
+    "@prisma/nextjs-monorepo-workaround-plugin": "^7.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
