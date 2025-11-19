@@ -1,8 +1,6 @@
-import { test, expect } from '@playwright/test';
-import { collectCoverage } from './helpers/coverage';
+import { test, expect } from 'playwright-test-coverage';
 
 test.describe('Notes Application - CRUD Operations', () => {
-  // Clean up before each test by refreshing the page
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('[data-testid="sign-out-button"]')).toBeVisible({
@@ -27,8 +25,6 @@ test.describe('Notes Application - CRUD Operations', () => {
     await expect(page.locator('[data-testid="note-list"]')).toContainText('New Note', {
       timeout: 5000
     });
-
-    await collectCoverage(page, 'create-note-authenticated');
   });
 
   test('should create first manual note with noteId: 2 (after welcome note)', async ({
@@ -81,8 +77,6 @@ test.describe('Notes Application - CRUD Operations', () => {
 
     // Verify note ID is at least 2 (after welcome note with ID 1)
     expect(noteId).toBeGreaterThanOrEqual(2);
-
-    await collectCoverage(page, 'first-manual-note-id-is-two');
   });
 
   test('should rename a note via double-click and Enter key', async ({ page }) => {
@@ -131,8 +125,6 @@ test.describe('Notes Application - CRUD Operations', () => {
     await expect(
       page.locator('.tree-node-label').filter({ hasText: 'My Renamed Note' })
     ).toBeVisible({ timeout: 5000 });
-
-    await collectCoverage(page, 'rename-note-enter');
   });
 
   test('should rename a note via double-click and blur', async ({ page }) => {
@@ -181,8 +173,6 @@ test.describe('Notes Application - CRUD Operations', () => {
     await expect(
       page.locator('.tree-node-label').filter({ hasText: 'Note Renamed via Blur' })
     ).toBeVisible({ timeout: 5000 });
-
-    await collectCoverage(page, 'rename-note-blur');
   });
 
   test('should cancel rename with Escape key', async ({ page }) => {
@@ -238,8 +228,6 @@ test.describe('Notes Application - CRUD Operations', () => {
     await expect(
       page.locator('.tree-node-label').filter({ hasText: 'This Should Not Be Saved' })
     ).not.toBeVisible();
-
-    await collectCoverage(page, 'cancel-rename-escape');
   });
 
   test('should create note, edit content, and save with Ctrl+S', async ({ page }) => {
@@ -337,8 +325,6 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Verify the content was saved and persisted
     await expect(editor).toContainText('My Test Note', { timeout: 10000 });
     await expect(editor).toContainText('This is some test content', { timeout: 5000 });
-
-    await collectCoverage(page, 'save-note-ctrl-s');
   });
 
   test('should show save status indicators correctly', async ({ page }) => {
@@ -392,8 +378,6 @@ test.describe('Notes Application - CRUD Operations', () => {
 
     // Verify "Unsaved changes" disappears from top bar
     await expect(page.getByText('Unsaved changes')).not.toBeVisible({ timeout: 5000 });
-
-    await collectCoverage(page, 'save-status-indicators');
   });
 
   test('should complete full note workflow: create, rename, edit, save', async ({
@@ -516,19 +500,16 @@ test.describe('Notes Application - CRUD Operations', () => {
     await expect(editor).toContainText('Renamed the note', { timeout: 5000 });
     await expect(editor).toContainText('Added content', { timeout: 5000 });
     await expect(editor).toContainText('Save the note', { timeout: 5000 });
-
-    await collectCoverage(page, 'complete-note-workflow');
   });
 });
 
 test.describe('Header Navigation and URL Updates', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('[data-testid="note-list"]')).toBeVisible({
+    await expect(page.locator('[data-testid="sign-out-button"]')).toBeVisible({
       timeout: 10000
     });
   });
-
   test('should update URL when clicking header in right panel', async ({ page }) => {
     // Create a note with headers
     const newNoteButton = page.getByRole('button', { name: /new note/i });
@@ -576,8 +557,6 @@ test.describe('Header Navigation and URL Updates', () => {
     // Verify the URL contains the exact line number
     const urlAfterClick = page.url();
     expect(urlAfterClick).toContain(`/note/${noteId}?line=${expectedLine}`);
-
-    await collectCoverage(page, 'header-click-updates-url');
   });
 
   test('should scroll to correct line when refreshing page with line parameter', async ({
@@ -667,8 +646,6 @@ test.describe('Header Navigation and URL Updates', () => {
     await activeLineGutter.waitFor({ timeout: 5000 });
     const activeLineText = await activeLineGutter.innerText();
     expect(activeLineText).toBe(expectedLine);
-
-    await collectCoverage(page, 'refresh-with-line-parameter');
   });
 
   test('should highlight current header in right panel when scrolling', async ({
@@ -735,8 +712,6 @@ test.describe('Header Navigation and URL Updates', () => {
     expect(firstLine).not.toBe(secondLine);
     expect(secondLine).not.toBe(thirdLine);
     expect(firstLine).not.toBe(thirdLine);
-
-    await collectCoverage(page, 'header-navigation-updates-url');
   });
 
   test('should handle headers with dash syntax (--- delimiters)', async ({ page }) => {
@@ -783,8 +758,6 @@ test.describe('Header Navigation and URL Updates', () => {
 
     const urlAfterClick = page.url();
     expect(urlAfterClick).toContain(`?line=${expectedLine}`);
-
-    await collectCoverage(page, 'dash-syntax-headers');
   });
 
   test('should auto-select first note when navigating to / with notes available', async ({
@@ -824,8 +797,6 @@ test.describe('Header Navigation and URL Updates', () => {
     // Verify the first note is selected in the UI
     const selectedNote = page.locator('.tree-node-selected').first();
     await expect(selectedNote).toBeVisible();
-
-    await collectCoverage(page, 'auto-select-first-note');
   });
 
   test('should verify active line gutter matches URL line parameter', async ({
@@ -935,7 +906,5 @@ test.describe('Header Navigation and URL Updates', () => {
     const activeLineText4 = await activeLineGutter4.innerText();
     expect(activeLineText4).toBe(header2Line);
     expect(page.url()).toContain(`?line=${header2Line}`);
-
-    await collectCoverage(page, 'active-line-gutter-verification');
   });
 });

@@ -1,7 +1,8 @@
 services:
   playwright:
     build:
-      context: .
+      context: ..
+      dockerfile: e2e/Dockerfile
       tags:
         - playwright-e2e:latest
     volumes:

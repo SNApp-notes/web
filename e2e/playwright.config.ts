@@ -3,7 +3,6 @@ import path from 'path';
 
 export default defineConfig({
   testDir: '.',
-  testMatch: '*.spec.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -18,16 +17,17 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'setup',
-      testMatch: /.*\.setup\.ts/
+      name: 'setup auth',
+      testMatch: /auth\.setup\.ts/
     },
     {
       name: 'chromium',
+      testMatch: '*.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
         storageState: path.join(__dirname, '.auth', 'user.json')
       },
-      dependencies: ['setup']
+      dependencies: ['setup auth']
     }
   ],
   webServer: process.env.CI

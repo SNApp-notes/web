@@ -12,18 +12,9 @@
  * @requires Docker - Run with: npm run test:e2e:docker
  */
 
-import { test, expect } from '@playwright/test';
-import { collectCoverage } from './helpers/coverage';
+import { test, expect } from 'playwright-test-coverage';
 
 test.describe('Search Feature', () => {
-  test.beforeEach(async ({ page }) => {
-    // Navigate to home page and wait for notes to load
-    await page.goto('/');
-    await expect(page.locator('[data-testid="note-list"]')).toBeVisible({
-      timeout: 10000
-    });
-  });
-
   test.describe('Opening Search Modal', () => {
     test('should open search modal with Ctrl+Shift+F', async ({ page }) => {
       // Press Ctrl+Shift+F to open search modal
@@ -37,8 +28,6 @@ test.describe('Search Feature', () => {
       const searchInput = page.getByPlaceholder(/enter search query/i);
       await expect(searchInput).toBeVisible();
       await expect(searchInput).toBeFocused();
-
-      await collectCoverage(page, 'search-modal-open-keyboard');
     });
 
     test('should open search modal with Cmd+Shift+F on Mac', async ({ page }) => {
@@ -48,8 +37,6 @@ test.describe('Search Feature', () => {
       // Search modal should be visible (use dialog role)
       const searchDialog = page.getByRole('dialog', { name: /search notes/i });
       await expect(searchDialog).toBeVisible({ timeout: 5000 });
-
-      await collectCoverage(page, 'search-modal-open-mac');
     });
   });
 
@@ -65,8 +52,6 @@ test.describe('Search Feature', () => {
 
       // Modal should be hidden
       await expect(searchDialog).not.toBeVisible({ timeout: 5000 });
-
-      await collectCoverage(page, 'search-modal-close-escape');
     });
 
     test('should close modal after selecting a result', async ({ page }) => {
@@ -95,8 +80,6 @@ test.describe('Search Feature', () => {
 
       // Modal should close
       await expect(searchDialog).not.toBeVisible({ timeout: 5000 });
-
-      await collectCoverage(page, 'search-modal-close-result-select');
     });
   });
 
@@ -128,8 +111,6 @@ test.describe('Search Feature', () => {
           timeout: 5000
         });
       }
-
-      await collectCoverage(page, 'search-execute');
     });
 
     test('should display empty state when no results found', async ({ page }) => {
@@ -153,8 +134,6 @@ test.describe('Search Feature', () => {
       await expect(page.getByText(/no notes found/i)).toBeVisible({
         timeout: 5000
       });
-
-      await collectCoverage(page, 'search-empty-state');
     });
 
     test('should highlight search terms in results', async ({ page }) => {
@@ -179,8 +158,6 @@ test.describe('Search Feature', () => {
       if ((await marks.count()) > 0) {
         await expect(marks.first()).toBeVisible({ timeout: 5000 });
       }
-
-      await collectCoverage(page, 'search-highlight');
     });
 
     test('should show loading spinner while searching', async ({ page }) => {
@@ -200,8 +177,6 @@ test.describe('Search Feature', () => {
       // Spinner should appear briefly (may be very fast)
       // Note: This may not always be visible due to fast search
       // We're just checking it doesn't cause errors
-
-      await collectCoverage(page, 'search-loading');
     });
   });
 
@@ -239,8 +214,6 @@ test.describe('Search Feature', () => {
           await expect(searchDialog).not.toBeVisible({ timeout: 2000 });
         }
       }
-
-      await collectCoverage(page, 'search-navigate-result');
     });
 
     test('should navigate to specific line number in note', async ({ page }) => {
@@ -276,8 +249,6 @@ test.describe('Search Feature', () => {
           expect(page.url()).toMatch(/line=\d+/);
         }
       }
-
-      await collectCoverage(page, 'search-navigate-line');
     });
   });
 
@@ -305,8 +276,6 @@ test.describe('Search Feature', () => {
       if ((await resultsText.count()) > 0) {
         await expect(resultsText).toBeVisible();
       }
-
-      await collectCoverage(page, 'search-pagination-check');
     });
 
     test('should navigate between pages', async ({ page }) => {
@@ -347,8 +316,6 @@ test.describe('Search Feature', () => {
           await expect(prevButton).toBeEnabled();
         }
       }
-
-      await collectCoverage(page, 'search-pagination-navigate');
     });
 
     test('should disable Previous button on first page', async ({ page }) => {
@@ -373,8 +340,6 @@ test.describe('Search Feature', () => {
       if ((await prevButton.count()) > 0) {
         await expect(prevButton).toBeDisabled();
       }
-
-      await collectCoverage(page, 'search-pagination-first-page');
     });
   });
 
@@ -391,8 +356,6 @@ test.describe('Search Feature', () => {
 
       // Modal should remain open and functional
       await expect(searchDialog).toBeVisible();
-
-      await collectCoverage(page, 'search-empty-query');
     });
 
     test('should handle special characters in search', async ({ page }) => {
@@ -414,8 +377,6 @@ test.describe('Search Feature', () => {
 
       // Should handle gracefully (either results or empty state)
       await expect(searchDialog).toBeVisible();
-
-      await collectCoverage(page, 'search-special-chars');
     });
   });
 
@@ -446,8 +407,6 @@ test.describe('Search Feature', () => {
       // Previous search query should be cleared or results should be reset
       // Input should be empty or ready for new search
       await expect(searchInput).toBeVisible();
-
-      await collectCoverage(page, 'search-modal-state-reset');
     });
 
     test('should maintain focus in search input', async ({ page }) => {
@@ -465,8 +424,6 @@ test.describe('Search Feature', () => {
 
       // Input should contain typed text
       await expect(searchInput).toHaveValue('test query');
-
-      await collectCoverage(page, 'search-input-focus');
     });
   });
 
@@ -510,8 +467,6 @@ test.describe('Search Feature', () => {
         // Should have at least 2 line numbers
         expect(lineNumberCount).toBeGreaterThanOrEqual(2);
       }
-
-      await collectCoverage(page, 'search-multiple-occurrences');
     });
 
     test('should display different line numbers for each occurrence', async ({
@@ -551,8 +506,6 @@ test.describe('Search Feature', () => {
         expect(firstLine).toBeDefined();
         expect(secondLine).toBeDefined();
       }
-
-      await collectCoverage(page, 'search-different-line-numbers');
     });
 
     test('should show total matches count for each note', async ({ page }) => {
@@ -587,8 +540,6 @@ test.describe('Search Feature', () => {
         expect(matchCount).toBeDefined();
         expect(parseInt(matchCount || '0')).toBeGreaterThan(0);
       }
-
-      await collectCoverage(page, 'search-total-matches-count');
     });
 
     test('should paginate when occurrences exceed page size', async ({ page }) => {
@@ -629,8 +580,6 @@ test.describe('Search Feature', () => {
           await expect(searchDialog.getByText(/Page 2/)).toBeVisible();
         }
       }
-
-      await collectCoverage(page, 'search-occurrences-pagination');
     });
 
     test('should navigate to specific line when clicking occurrence', async ({
@@ -674,8 +623,6 @@ test.describe('Search Feature', () => {
           await expect(searchDialog).not.toBeVisible({ timeout: 2000 });
         }
       }
-
-      await collectCoverage(page, 'search-navigate-to-occurrence');
     });
 
     test('should show different snippets for occurrences on different lines', async ({
@@ -722,8 +669,6 @@ test.describe('Search Feature', () => {
           expect(secondSnippetText?.length).toBeGreaterThan(0);
         }
       }
-
-      await collectCoverage(page, 'search-different-snippets');
     });
 
     test('should handle notes with single occurrence correctly', async ({ page }) => {
@@ -759,8 +704,6 @@ test.describe('Search Feature', () => {
           await expect(matchText.first()).toBeVisible();
         }
       }
-
-      await collectCoverage(page, 'search-single-occurrence');
     });
   });
 });

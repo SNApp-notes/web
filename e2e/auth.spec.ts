@@ -1,5 +1,4 @@
-import { test, expect } from '@playwright/test';
-import { collectCoverage } from './helpers/coverage';
+import { test, expect } from 'playwright-test-coverage';
 import { createTestUser, signOutUser, loginUser } from './helpers/auth';
 
 test.describe('Home Page', () => {
@@ -10,8 +9,6 @@ test.describe('Home Page', () => {
 
     await expect(page).toHaveURL(/.*login/);
     await expect(page).toHaveTitle(/SNApp/);
-
-    await collectCoverage(page, 'home-page-redirect');
   });
 });
 
@@ -24,8 +21,6 @@ test.describe('Settings Route Protection', () => {
     await page.goto('/settings');
 
     await expect(page).toHaveURL(/.*login/);
-
-    await collectCoverage(page, 'settings-unauthenticated-redirect');
   });
 
   test('should allow authenticated users to access /settings', async ({ page }) => {
@@ -43,8 +38,6 @@ test.describe('Settings Route Protection', () => {
     await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
     await expect(page.getByText('Appearance')).toBeVisible();
     await expect(page.getByText('Dark Mode')).toBeVisible();
-
-    await collectCoverage(page, 'settings-authenticated-access');
   });
 
   test('should show password section for email/password users', async ({ page }) => {
@@ -59,8 +52,6 @@ test.describe('Settings Route Protection', () => {
 
     await expect(page.getByRole('heading', { name: 'Password' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Change Password' })).toBeVisible();
-
-    await collectCoverage(page, 'settings-password-section');
   });
 
   test('should navigate back to home from settings', async ({ page }) => {
@@ -77,8 +68,6 @@ test.describe('Settings Route Protection', () => {
 
     // Should auto-select first note (welcome note with id 1)
     await expect(page).toHaveURL('/note/1');
-
-    await collectCoverage(page, 'settings-back-navigation');
   });
 });
 
@@ -91,8 +80,6 @@ test.describe('Authentication', () => {
     await page.getByRole('link', { name: /create one/i }).click();
 
     await expect(page).toHaveURL(/.*register/);
-
-    await collectCoverage(page, 'navigate-to-register');
   });
 
   test('should navigate to login page from register page', async ({ page }) => {
@@ -101,8 +88,6 @@ test.describe('Authentication', () => {
     await page.getByRole('link', { name: /sign in/i }).click();
 
     await expect(page).toHaveURL(/.*login/);
-
-    await collectCoverage(page, 'navigate-to-login');
   });
 
   test('should show login form on login page', async ({ page }) => {
@@ -111,8 +96,6 @@ test.describe('Authentication', () => {
     await expect(page.getByPlaceholder('Email')).toBeVisible();
     await expect(page.getByPlaceholder('Password')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign In' })).toBeVisible();
-
-    await collectCoverage(page, 'login-form-visibility');
   });
 
   test('should show register form on register page', async ({ page }) => {
@@ -122,8 +105,6 @@ test.describe('Authentication', () => {
     await expect(page.getByPlaceholder('Email')).toBeVisible();
     await expect(page.getByPlaceholder(/password/i)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Create Account' })).toBeVisible();
-
-    await collectCoverage(page, 'register-form-visibility');
   });
 });
 
@@ -160,8 +141,6 @@ test.describe('Welcome Note Creation', () => {
 
     const noteName = await noteItems[0].textContent();
     expect(noteName).toContain('Welcome');
-
-    await collectCoverage(page, 'create-one-note');
   });
 
   test('should not create duplicate welcome notes on page refresh', async ({ page }) => {
@@ -203,7 +182,6 @@ test.describe('Welcome Note Creation', () => {
       .all();
 
     expect(notesAfterSecondRefresh.length).toBe(1);
-    await collectCoverage(page, 'no-duplicated-note');
   });
 
   test('should always create welcome note with noteId: 1 for new users', async ({
@@ -234,8 +212,6 @@ test.describe('Welcome Note Creation', () => {
     // Verify the URL ends with /note/1
     const url = page.url();
     expect(url).toMatch(/\/note\/1$/);
-
-    await collectCoverage(page, 'welcome-note-id-is-one');
   });
 
   test('should allow multiple users to each have noteId: 1 independently', async ({
@@ -289,8 +265,6 @@ test.describe('Welcome Note Creation', () => {
     await page.waitForURL(/\/note\/1$/, { timeout: 10000 });
     const url2 = page.url();
     expect(url2).toMatch(/\/note\/1$/);
-
-    await collectCoverage(page, 'multiple-users-independent-note-ids');
   });
 });
 
@@ -310,8 +284,6 @@ test.describe('Sign In Flow', () => {
     await loginUser(page, testUser.email, testUser.password);
 
     await expect(page).toHaveURL('/');
-
-    await collectCoverage(page, 'login-valid');
   });
 
   test('should show error for invalid email', async ({ page }) => {
@@ -324,8 +296,6 @@ test.describe('Sign In Flow', () => {
     await expect(errorAlert).toBeVisible({ timeout: 10000 });
     await expect(errorAlert).toContainText('Invalid email or password');
     await expect(page).toHaveURL(/.*login/);
-
-    await collectCoverage(page, 'login-not-valid');
   });
 
   test('should show error for wrong password', async ({ page }) => {
@@ -346,8 +316,6 @@ test.describe('Sign In Flow', () => {
     await expect(errorAlert).toBeVisible({ timeout: 10000 });
     await expect(errorAlert).toContainText('Invalid email or password');
     await expect(page).toHaveURL(/.*login/);
-
-    await collectCoverage(page, 'login-wrong-password');
   });
 });
 
@@ -371,8 +339,6 @@ test.describe('Session Management', () => {
 
     await page.goto('/');
     await expect(page).toHaveURL(/.*login/);
-
-    await collectCoverage(page, 'logout');
   });
 
   test('should persist session across page refreshes', async ({ page }) => {
@@ -387,8 +353,6 @@ test.describe('Session Management', () => {
     await page.reload();
 
     await expect(page).toHaveURL('/');
-
-    await collectCoverage(page, 'login-refresh');
   });
 });
 
@@ -411,8 +375,6 @@ test.describe('Registration Validation', () => {
     await expect(page.getByText(/valid email|email.*invalid/i)).toBeVisible();
 
     await expect(page).toHaveURL(/.*register/);
-
-    await collectCoverage(page, 'register-validation');
   });
 
   test('should validate password length requirement', async ({ page }) => {
@@ -430,8 +392,6 @@ test.describe('Registration Validation', () => {
 
     await expect(page.getByText(/at least 8 characters|password.*8/i)).toBeVisible();
     await expect(page).toHaveURL(/.*register/);
-
-    await collectCoverage(page, 'register-password-length');
   });
 
   test('should require all fields for registration', async ({ page }) => {
@@ -455,8 +415,6 @@ test.describe('Registration Validation', () => {
     await expect(
       page.getByText('Please enter a valid email address', { exact: true })
     ).toBeVisible();
-
-    await collectCoverage(page, 'register-require-fields');
   });
 
   test('should prevent duplicate email registration', async ({ page }) => {
@@ -480,7 +438,5 @@ test.describe('Registration Validation', () => {
       page.getByText(/already exists|already registered|email.*use/i)
     ).toBeVisible();
     await expect(page).toHaveURL(/.*register/);
-
-    await collectCoverage(page, 'register-duplicate-email');
   });
 });
