@@ -15,7 +15,7 @@
 import { test, expect } from '@playwright/test';
 import { collectCoverage } from './helpers/coverage';
 
-test.describe('Search Feature (US-020)', () => {
+test.describe('Search Feature', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to home page and wait for notes to load
     await page.goto('/');
@@ -261,7 +261,7 @@ test.describe('Search Feature (US-020)', () => {
       await page.waitForTimeout(1000);
 
       // Check if results exist and have line numbers
-      const lineNumberText = page.getByText(/Line \d+/);
+      const lineNumberText = searchDialog.getByText(/Line \d+/);
       if ((await lineNumberText.count()) > 0) {
         // Get the line number from the first result
         const lineText = await lineNumberText.first().textContent();
