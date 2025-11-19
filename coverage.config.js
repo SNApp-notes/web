@@ -21,7 +21,7 @@ module.exports = {
     'prisma-e2e/**/*',
 
     // UI components (Chakra UI wrappers - generated/boilerplate)
-    'src/components/ui/**/*',
+    'src/components/ui/*',
 
     // Email service (requires SMTP server for integration testing)
     'src/lib/email.ts',
