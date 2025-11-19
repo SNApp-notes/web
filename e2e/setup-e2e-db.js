@@ -11,7 +11,6 @@ if (fs.existsSync(nextDir)) {
   console.log('Removed .next cache directory');
 }
 
-
 console.log('Generating Prisma client for E2E tests (SQLite)...');
 execSync('npx prisma generate --schema=prisma-e2e/schema.prisma', {
   stdio: 'inherit'
