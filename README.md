@@ -4,9 +4,13 @@
   </a>
 </h1>
 
+<div align="center">
+
 [![Test](https://github.com/SNApp-notes/web/actions/workflows/test.yml/badge.svg?branch=master&v=1)](https://github.com/jcubic/10xDevs/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/SNApp-notes/web/badge.svg?branch=master&v=1)](https://coveralls.io/github/SNApp-notes/web?branch=master)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
+</div>
 
 SNApp is a lightweight note-taking web application designed to replace a legacy
 [AngularJS-based notes app](https://github.com/SNApp-notes/web-legacy).
