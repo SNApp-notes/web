@@ -1,4 +1,9 @@
 import type { NextConfig } from 'next';
+import { createRequire } from 'module';
+import globToRegExp from 'glob-to-regexp';
+
+const require = createRequire(import.meta.url);
+const coverageConfig = require('./coverage.config.js');
 
 const nextConfig: NextConfig = {
   distDir: process.env.E2E_TEST === 'true' ? '.next-e2e' : '.next',
@@ -12,9 +17,21 @@ const nextConfig: NextConfig = {
   turbopack: {},
   webpack: (config, { isServer }) => {
     if (process.env.COVERAGE === 'true' && !isServer) {
+      // Convert glob patterns from coverage.config.js to webpack-compatible regexes
+      // This ensures E2E coverage respects the same exclusions as unit tests
+      const excludePatterns = [
+        /node_modules/,
+        // Convert coverage.config.js exclude patterns to regexes using glob-to-regexp
+        ...coverageConfig.exclude
+          .filter((pattern: string) => pattern.startsWith('src/'))
+          .map((pattern: string) => globToRegExp(pattern))
+      ];
+
       config.module.rules.push({
         test: /\.(tsx|ts|js|jsx)$/,
-        exclude: /node_modules/,
+        exclude: (filePath: string) => {
+          return excludePatterns.some((pattern) => pattern.test(filePath));
+        },
         use: {
           loader: '@jsdevtools/coverage-istanbul-loader',
           options: { esModules: true }

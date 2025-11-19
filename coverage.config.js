@@ -3,12 +3,12 @@
 
 module.exports = {
   // Files to include in coverage
-  include: ['src/**/*.{ts,tsx}', '!src/test/**/*'],
+  include: ['src/**/*.{ts,tsx}'],
 
   // Files to exclude from coverage
   exclude: [
     // Test files
-    'src/test/**/*',
+    'src/test/**',
     '**/*.test.{ts,tsx}',
     '**/*.spec.{ts,tsx}',
 
@@ -17,11 +17,13 @@ module.exports = {
     '**/*.config.*',
 
     // Prisma schemas
-    'prisma-main/**/*',
-    'prisma-e2e/**/*',
+    'prisma-main/**',
+    'prisma-e2e/**',
+
+    'src/mocks/**',
 
     // UI components (Chakra UI wrappers - generated/boilerplate)
-    'src/components/ui/*',
+    'src/components/ui/**',
 
     // Email service (requires SMTP server for integration testing)
     'src/lib/email.ts',
@@ -33,7 +35,7 @@ module.exports = {
     'src/lib/parser/parser.js',
 
     // Type definitions directory
-    'src/types/**/*',
+    'src/types/**',
 
     // Build artifacts (primarily for Vitest, NYC doesn't instrument these)
     'coverage/',
