@@ -48,7 +48,7 @@ Default branch: `master` (not `main`)
 **Frameworks**: Vitest (unit) + React Testing Library + Playwright (E2E) + jsdom
 
 **Database**: Two schemas - `prisma-main/` (MySQL prod/dev), `prisma-e2e/` (SQLite test)
-`NODE_ENV=test` → SQLite (`test-vitest.db` unit, `test-e2e.db` E2E in Docker)
+`CI=true` → SQLite (`test.db`)
 
 **Structure**: Tests next to components (`Component.test.tsx`), use `@/test/utils` for Chakra render
 Setup: `src/test/setup.ts`, `src/lib/prisma.ts` (unified client), `src/lib/auth.ts` (adapts to DB)

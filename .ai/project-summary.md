@@ -176,13 +176,13 @@ export async function actionName() {
 
 **Unit Tests (Vitest + React Testing Library):**
 - Located next to components (`Component.test.tsx`)
-- Uses SQLite (`test-vitest.db`) via `NODE_ENV=test`
+- Uses SQLite (`test.db`) via `CI=test`
 - Setup: `src/test/setup.ts`, `src/test/utils.tsx` (Chakra render)
 - Mock external dependencies (auth, router, nuqs)
 
 **E2E Tests (Playwright):**
 - Located in `e2e/` directory
-- Uses SQLite (`test-e2e.db`) in Docker container
+- Uses SQLite (`test.db`)
 - Config: `e2e/playwright.config.ts`
 - Docker: `e2e/Dockerfile`, `e2e/docker-compose.yml`
 - Tests critical flows: auth, note CRUD, search, settings
@@ -203,7 +203,7 @@ export async function actionName() {
 
 **Databases:**
 - `NODE_ENV=production` or `NODE_ENV=development` → MySQL (via `DATABASE_URL`)
-- `NODE_ENV=test` or `CI=true` → SQLite (`test-vitest.db` or `test-e2e.db`)
+- `NODE_ENV=test` or `CI=true` → SQLite (`test.db`)
 
 **Email:**
 - Production: SMTP (requires `SMTP_*` env vars)

@@ -135,7 +135,7 @@ This project uses a comprehensive testing strategy with separate database config
 
 The application automatically switches between databases based on `NODE_ENV`:
 
-- `NODE_ENV=test` → Uses SQLite (`test-vitest.db` for unit tests, `test-e2e.db` for E2E tests)
+- `CI=test` → Uses SQLite (`test.db`)
 - Otherwise → Uses MySQL/MariaDB from `DATABASE_URL`
 
 ### Unit and Integration Tests
@@ -225,7 +225,7 @@ On systems where Playwright binaries are not available, use Docker for E2E testi
 **Docker Architecture:**
 
 - **Image**: Ubuntu-based with Playwright dependencies pre-installed
-- **Database**: Isolated SQLite database (`test-e2e.db`) created fresh for each test run
+- **Database**: Isolated SQLite database (`test.db`)
 - **Network**: Isolated Docker network for secure testing
 - **Cleanup**: Automatic container and volume cleanup after tests complete
 
