@@ -392,14 +392,17 @@ describe('SearchContext', () => {
         totalPages: 4
       });
 
-      await act(async () => {
-        await result.current.setPage(2);
+      act(() => {
+        result.current.setPage(2);
       });
 
       // Wait for loading to complete before checking state
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
+      await waitFor(
+        () => {
+          expect(result.current.isLoading).toBe(false);
+        },
+        { timeout: 3000 }
+      );
 
       await waitFor(() => {
         expect(result.current.currentPage).toBe(2);
@@ -473,18 +476,23 @@ describe('SearchContext', () => {
 
       await waitFor(() => {
         expect(result.current.currentPage).toBe(1);
+        expect(result.current.isLoading).toBe(false);
       });
 
       // Mock error on page 2
       mockSearchNotes.mockRejectedValue(new Error('Page not found'));
 
-      await act(async () => {
-        await result.current.setPage(2);
+      act(() => {
+        result.current.setPage(2);
       });
 
-      await waitFor(() => {
-        expect(result.current.error).toBe('Page not found');
-      });
+      // Wait for error to be set (startTransition is async)
+      await waitFor(
+        () => {
+          expect(result.current.error).toBe('Page not found');
+        },
+        { timeout: 3000 }
+      );
 
       consoleSpy.mockRestore();
     });
