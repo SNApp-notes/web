@@ -94,7 +94,7 @@ const getPrismaE2E = () => new e2eClient(options);
  * @returns {mainClient | e2eClient} Prisma client instance
  *
  * @remarks
- * - In CI environment (NODE_ENV=test or CI=true): uses SQLite
+ * - In CI environment (CI=true): uses SQLite
  * - In production/development: uses MySQL
  */
 const getPrisma = () => (process.env.CI ? getPrismaE2E() : getPrismaMain());

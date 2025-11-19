@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
       const excludePatterns = [
         /node_modules/,
         ...coverageConfig.exclude
-          .filter((pattern: string) => pattern.startsWith('src/'))
+          .filter((pattern: string) => pattern.startsWith('src/') && !pattern.includes('prisma'))
           .map((pattern: string) => globToRegExp(pattern))
       ];
 
