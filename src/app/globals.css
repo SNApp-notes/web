@@ -1,3 +1,8 @@
+:root {
+  --selection-bg: var(--chakra-colors-blue-solid);
+  --selection-color: white;
+}
+
 html,
 body {
   max-width: 100vw;
@@ -8,6 +13,17 @@ body {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+}
+
+/* Global text selection styling */
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-color);
+}
+
+::-moz-selection {
+  background: var(--selection-bg);
+  color: var(--selection-color);
 }
 
 /* 80 characters line in Editor */
@@ -36,10 +52,11 @@ body {
   width: 18px;
 }
 
+/* CodeMirror selection styling (uses same variables as global selection) */
 .cm-editor.cm-focused .cm-selectionBackground,
 .cm-editor .cm-line::selection,
 .cm-editor .cm-selectionLayer .cm-selectionBackground,
 .cm-editor .cm-content ::selection {
-  background: var(--chakra-colors-blue-solid) !important;
-  color: white;
+  background: var(--selection-bg) !important;
+  color: var(--selection-color) !important;
 }
