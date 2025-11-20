@@ -1,8 +1,7 @@
 import { beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import fs from 'fs';
-import { PrismaClient as e2eClient } from '../../prisma-e2e/types/client';
 import { TEMPLATE_DB_PATH, TEST_DB_PATH } from './constants';
-
+import { getPrismaE2E } from '@/lib/prisma';
 let prisma: e2eClient;
 
 vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -46,13 +45,7 @@ export async function setupTestDatabase(): Promise<void> {
   // Ensure the copied file has write permissions (0666 = rw-rw-rw-)
   fs.chmodSync(TEST_DB_PATH, 0o666);
 
-  prisma = new e2eClient({
-    datasources: {
-      db: {
-        url: `file:./${TEST_DB_PATH}`
-      }
-    }
-  });
+  prisma = getPrismaE2E();
 }
 
 export async function cleanDatabase(): Promise<void> {

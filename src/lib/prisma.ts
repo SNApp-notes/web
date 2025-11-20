@@ -87,7 +87,14 @@ const getPrismaMain = () => new mainClient(options);
  *
  * @returns {e2eClient} Prisma client instance for SQLite
  */
-const getPrismaE2E = () => new e2eClient(options);
+
+import { PrismaLibSql } from '@prisma/adapter-libsql';
+
+const adapter = new PrismaLibSql({
+  url: process.env.DATABASE_URL ?? ''
+});
+
+export const getPrismaE2E = () => new e2eClient({ adapter });
 
 /**
  * Selects appropriate Prisma client based on environment.
