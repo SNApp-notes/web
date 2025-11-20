@@ -25,7 +25,7 @@ execSync('npx prisma generate --schema=prisma-e2e/schema.prisma', {
 });
 
 console.log('Creating E2E test database...');
-execSync('npx prisma db push --skip-generate --schema=prisma-e2e/schema.prisma', {
+execSync('npx prisma db push --schema=prisma-e2e/schema.prisma', {
   stdio: 'inherit',
   env: { ...process.env }
 });

@@ -24,7 +24,7 @@ export async function setup() {
   fs.writeFileSync(TEMP_SCHEMA_PATH, modifiedSchema);
 
   try {
-    execSync(`npx prisma db push --skip-generate --schema=${TEMP_SCHEMA_PATH}`, {
+    execSync(`npx prisma db push --schema=${TEMP_SCHEMA_PATH}`, {
       stdio: 'pipe',
       encoding: 'utf-8'
     });
