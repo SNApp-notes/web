@@ -1,6 +1,6 @@
 import { beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import fs from 'fs';
-import { PrismaClient as e2eClient } from '../../prisma-e2e/types';
+import { PrismaClient as e2eClient } from '../../prisma-e2e/types/client';
 import { TEMPLATE_DB_PATH, TEST_DB_PATH } from './constants';
 
 let prisma: e2eClient;

@@ -47,8 +47,8 @@
  * ```
  */
 
-import { PrismaClient as mainClient } from '../../prisma-main/types';
-import { PrismaClient as e2eClient, Prisma } from '../../prisma-e2e/types';
+import { PrismaClient as mainClient } from '../../prisma-main/types/client';
+import { PrismaClient as e2eClient, Prisma } from '../../prisma-e2e/types/client';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 
 /**
@@ -59,7 +59,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
  * This ensures type consistency across the application regardless of which
  * database engine is used at runtime.
  */
-export * from '../../prisma-main/types';
+export * from '../../prisma-main/types/client';
 
 /**
  * Prisma client options for logging configuration.
