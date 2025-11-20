@@ -46,7 +46,13 @@ export async function setupTestDatabase(): Promise<void> {
   // Ensure the copied file has write permissions (0666 = rw-rw-rw-)
   fs.chmodSync(TEST_DB_PATH, 0o666);
 
-  prisma = new e2eClient();
+  prisma = new e2eClient({
+    datasources: {
+      db: {
+        url: `file:./${TEST_DB_PATH}`
+      }
+    }
+  });
 }
 
 export async function cleanDatabase(): Promise<void> {
