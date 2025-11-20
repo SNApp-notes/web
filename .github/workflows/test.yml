@@ -3,6 +3,8 @@ name: 'Test & Deploy'
 on:
   workflow_dispatch:
   push:
+    branches:
+      - master
     paths:
       - 'src/**'
       - 'e2e/**'
@@ -197,6 +199,7 @@ jobs:
           retention-days: 1
 
   deploy:
+    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: [unit-integration-tests, e2e-tests]
     env:
