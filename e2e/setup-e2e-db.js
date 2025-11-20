@@ -21,13 +21,14 @@ const dbUrl = `file:${dbFile}`;
 
 console.log('Generating Prisma client for E2E tests (SQLite)...');
 execSync('npx prisma generate --schema=prisma-e2e/schema.prisma', {
-  stdio: 'inherit'
+  stdio: 'inherit',
+  env: { ...process.env, CI: true }
 });
 
 console.log('Creating E2E test database...');
 execSync('npx prisma db push --schema=prisma-e2e/schema.prisma', {
   stdio: 'inherit',
-  env: { ...process.env }
+  env: { ...process.env, CI: true }
 });
 
 console.log('E2E test database ready');
