@@ -29,7 +29,7 @@ describe('SearchModal', () => {
     isModalOpen: false,
     closeModal: mockCloseModal,
     searchQuery: '',
-        executedQuery: '',
+    executedQuery: '',
     setSearchQuery: mockSetSearchQuery,
     executeSearch: mockExecuteSearch,
     isLoading: false,
