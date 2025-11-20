@@ -39,7 +39,7 @@ import { SearchResultItem } from './SearchResultItem';
 export function SearchResults() {
   const {
     searchResults,
-    searchQuery,
+    executedQuery,
     currentPage,
     totalPages,
     totalResults,
@@ -77,7 +77,7 @@ export function SearchResults() {
           <SearchResultItem
             key={`${result.noteId}-${result.lineNumber}`}
             result={result}
-            searchQuery={searchQuery}
+            searchQuery={executedQuery}
             onSelect={() => handleSelectResult(result.noteId, result.lineNumber)}
           />
         ))}

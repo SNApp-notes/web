@@ -29,6 +29,7 @@ describe('SearchModal', () => {
     isModalOpen: false,
     closeModal: mockCloseModal,
     searchQuery: '',
+        executedQuery: '',
     setSearchQuery: mockSetSearchQuery,
     executeSearch: mockExecuteSearch,
     isLoading: false,
@@ -317,6 +318,7 @@ describe('SearchModal', () => {
         ...defaultContextValue,
         isModalOpen: true,
         searchQuery: 'test',
+        executedQuery: 'test',
         searchResults: [
           {
             noteId: 1,
@@ -340,6 +342,7 @@ describe('SearchModal', () => {
         ...defaultContextValue,
         isModalOpen: true,
         searchQuery: 'test',
+        executedQuery: 'test',
         searchResults: [
           {
             noteId: 1,
@@ -363,6 +366,7 @@ describe('SearchModal', () => {
         ...defaultContextValue,
         isModalOpen: true,
         searchQuery: 'test',
+        executedQuery: 'test',
         searchResults: [
           {
             noteId: 1,
@@ -386,6 +390,7 @@ describe('SearchModal', () => {
         ...defaultContextValue,
         isModalOpen: true,
         searchQuery: 'test',
+        executedQuery: 'test',
         searchResults: [],
         isLoading: false,
         error: null
@@ -403,6 +408,7 @@ describe('SearchModal', () => {
         ...defaultContextValue,
         isModalOpen: true,
         searchQuery: 'nonexistent',
+        executedQuery: 'nonexistent',
         searchResults: [],
         isLoading: false,
         error: null
@@ -419,6 +425,7 @@ describe('SearchModal', () => {
         ...defaultContextValue,
         isModalOpen: true,
         searchQuery: '',
+        executedQuery: '',
         searchResults: [],
         isLoading: false,
         error: null
@@ -434,6 +441,7 @@ describe('SearchModal', () => {
         ...defaultContextValue,
         isModalOpen: true,
         searchQuery: 'test',
+        executedQuery: 'test',
         searchResults: [],
         isLoading: true,
         error: null
@@ -449,6 +457,7 @@ describe('SearchModal', () => {
         ...defaultContextValue,
         isModalOpen: true,
         searchQuery: 'test',
+        executedQuery: 'test',
         searchResults: [],
         isLoading: false,
         error: 'Database error'

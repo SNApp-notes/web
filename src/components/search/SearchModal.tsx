@@ -29,7 +29,8 @@ export function SearchModal() {
     executeSearch,
     isLoading,
     error,
-    searchResults
+    searchResults,
+    executedQuery
   } = useSearchContext();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,16 +42,19 @@ export function SearchModal() {
     }
   });
 
-  // Auto-focus input when modal opens
+  // Auto-focus and select all text when modal opens
   useEffect(() => {
     if (isModalOpen) {
       // Increased delay to ensure dialog is fully rendered and focus trap is ready
       const timeoutId = setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
-          // Fallback: if focus didn't work, try selecting the input
+          // Select all text so user can immediately type to replace
+          inputRef.current.select();
+          // Fallback: if focus didn't work, try again
           if (document.activeElement !== inputRef.current) {
             inputRef.current.focus();
+            inputRef.current.select();
           }
         }
       }, 350);
@@ -122,9 +126,9 @@ export function SearchModal() {
               {!isLoading && !error && searchResults.length > 0 && <SearchResults />}
 
               {/* Empty state after search */}
-              {!isLoading && !error && searchQuery && searchResults.length === 0 && (
+              {!isLoading && !error && executedQuery && searchResults.length === 0 && (
                 <Box textAlign="center" py={8} color="gray.500">
-                  No notes found matching &quot;{searchQuery}&quot;
+                  No notes found matching &quot;{executedQuery}&quot;
                 </Box>
               )}
             </Stack>

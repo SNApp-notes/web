@@ -108,8 +108,9 @@ export interface SearchResponse {
  * SearchContext value interface exposing all search state and operations.
  *
  * @interface SearchContextValue
- * @property {string} searchQuery - Current search query
+ * @property {string} searchQuery - Current search query (input field value)
  * @property {(query: string) => void} setSearchQuery - Update search query
+ * @property {string} executedQuery - The query that was actually executed (used for highlighting)
  * @property {SearchResult[]} searchResults - Array of search results
  * @property {number} currentPage - Current page number (1-based)
  * @property {number} totalPages - Total number of pages
@@ -125,6 +126,7 @@ export interface SearchResponse {
 interface SearchContextValue {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  executedQuery: string;
   searchResults: SearchResult[];
   currentPage: number;
   totalPages: number;
@@ -169,6 +171,7 @@ export function useSearchContext() {
       return {
         searchQuery: '',
         setSearchQuery: () => {},
+        executedQuery: '',
         searchResults: [],
         currentPage: 1,
         totalPages: 1,
@@ -235,6 +238,7 @@ interface SearchProviderProps {
  */
 export function SearchProvider({ children }: SearchProviderProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [executedQuery, setExecutedQuery] = useState(''); // The query that was actually searched
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -258,12 +262,15 @@ export function SearchProvider({ children }: SearchProviderProps) {
     }
 
     setError(null);
+    // Store the query that is being executed for pagination
+    const queryToExecute = searchQuery.trim();
+    setExecutedQuery(queryToExecute);
 
     startTransition(async () => {
       try {
         // Dynamic import to avoid circular dependencies
         const { searchNotes } = await import('@/app/actions/search');
-        const response = await searchNotes(searchQuery, 1);
+        const response = await searchNotes(queryToExecute, 1);
 
         setSearchResults(response.results);
         setCurrentPage(response.currentPage);
@@ -282,7 +289,7 @@ export function SearchProvider({ children }: SearchProviderProps) {
 
   const setPage = useCallback(
     async (page: number) => {
-      if (page < 1 || page > totalPages) {
+      if (page < 1 || page > totalPages || !executedQuery) {
         return;
       }
 
@@ -291,7 +298,8 @@ export function SearchProvider({ children }: SearchProviderProps) {
       startTransition(async () => {
         try {
           const { searchNotes } = await import('@/app/actions/search');
-          const response = await searchNotes(searchQuery, page);
+          // Use the executed query, not the current input value
+          const response = await searchNotes(executedQuery, page);
 
           setSearchResults(response.results);
           setCurrentPage(response.currentPage);
@@ -303,12 +311,13 @@ export function SearchProvider({ children }: SearchProviderProps) {
         }
       });
     },
-    [searchQuery, totalPages]
+    [executedQuery, totalPages]
   );
 
   const value: SearchContextValue = {
     searchQuery,
     setSearchQuery,
+    executedQuery,
     searchResults,
     currentPage,
     totalPages,

@@ -62,6 +62,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: [],
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 0,
         totalResults: 0,
@@ -78,6 +79,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: [],
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 0,
         totalResults: 0,
@@ -96,6 +98,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 1,
         totalResults: 3,
@@ -114,6 +117,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: [mockResults[0]],
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 1,
         totalResults: 1,
@@ -130,6 +134,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 1,
         totalResults: 3,
@@ -146,6 +151,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: [mockResults[0]],
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 1,
         totalResults: 1,
@@ -168,6 +174,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: [mockResults[0]],
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 1,
         totalResults: 1,
@@ -189,6 +196,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: [mockResults[0]],
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 1,
         totalResults: 1,
@@ -210,6 +218,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 1,
         totalResults: 3,
@@ -232,6 +241,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 1,
         totalResults: 3,
@@ -249,6 +259,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 3,
         totalResults: 30,
@@ -267,6 +278,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 3,
         totalResults: 30,
@@ -284,6 +296,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 3,
         totalPages: 3,
         totalResults: 30,
@@ -301,6 +314,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 2,
         totalPages: 3,
         totalResults: 30,
@@ -323,6 +337,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 2,
         totalPages: 3,
         totalResults: 30,
@@ -344,6 +359,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 2,
         totalPages: 3,
         totalResults: 30,
@@ -363,6 +379,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 2,
         totalPages: 5,
         totalResults: 50,
@@ -381,6 +398,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: [mockResults[0]],
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 1,
         totalResults: 1,
@@ -398,6 +416,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: 'test',
+        executedQuery: 'test',
         currentPage: 1,
         totalPages: 100,
         totalResults: 1000,
@@ -415,6 +434,7 @@ describe('SearchResults', () => {
       vi.mocked(useSearchContext).mockReturnValue({
         searchResults: mockResults,
         searchQuery: '',
+        executedQuery: '',
         currentPage: 1,
         totalPages: 1,
         totalResults: 3,
