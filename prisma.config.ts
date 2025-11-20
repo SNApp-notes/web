@@ -5,7 +5,7 @@ export default defineConfig({
   datasource:
     process.env.CI === 'true'
       ? {
-          url: 'file:./test.db'
+          url: process.env.DB_FILE ? process.env.DB_FILE : 'file:./test.db'
         }
       : {
           url: env('DATABASE_URL'),

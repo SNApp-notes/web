@@ -2,7 +2,7 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 import {
   SCHEMA_PATH,
-  TEMP_SCHEMA_PATH,
+  DB_FILE,
   TEMPLATE_DB_PATH,
   TEST_DB_PATH,
   TEST_DB_JOURNAL_PATH
@@ -15,30 +15,20 @@ export async function setup() {
     fs.unlinkSync(TEMPLATE_DB_PATH);
   }
 
-  const schemaContent = fs.readFileSync(SCHEMA_PATH, 'utf-8');
-  const modifiedSchema = schemaContent.replace(
-    'url      = "file:./test.db"',
-    'url      = "file:./template.db"'
-  );
+  execSync(`npx prisma db push --schema=${SCHEMA_PATH}`, {
+    stdio: 'pipe',
+    env: {
+      ...process.env,
+      DB_FILE: `file:./${DB_FILE}`
+    },
+    encoding: 'utf-8'
+  });
 
-  fs.writeFileSync(TEMP_SCHEMA_PATH, modifiedSchema);
-
-  try {
-    execSync(`npx prisma db push --schema=${TEMP_SCHEMA_PATH}`, {
-      stdio: 'pipe',
-      encoding: 'utf-8'
-    });
-
-    if (!fs.existsSync(TEMPLATE_DB_PATH)) {
-      throw new Error(`Template database was not created at ${TEMPLATE_DB_PATH}`);
-    }
-
-    console.log('Template database created successfully');
-  } finally {
-    if (fs.existsSync(TEMP_SCHEMA_PATH)) {
-      fs.unlinkSync(TEMP_SCHEMA_PATH);
-    }
+  if (!fs.existsSync(TEMPLATE_DB_PATH)) {
+    throw new Error(`Template database was not created at ${TEMPLATE_DB_PATH}`);
   }
+
+  console.log('Template database created successfully');
 }
 
 export async function teardown() {
