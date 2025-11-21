@@ -8,13 +8,14 @@
 // Database configuration in prisma.config.ts
 
 generator client {
-  provider = "prisma-client"
-  output   = "../prisma-main/types"
-  binaryTargets = ["native", "linux-musl", "rhel-openssl-3.0.x"]
+  provider             = "prisma-client"
+  output               = "../prisma-main/types"
+  binaryTargets        = ["native", "linux-musl", "rhel-openssl-3.0.x"]
+  importFileExtension  = "ts"
 }
 
 datasource db {
-  provider          = "mysql"
+  provider = "mysql"
 }
 
 model User {
