@@ -10,22 +10,29 @@
  * DB_FILE for test environments.
  */
 import 'dotenv/config';
-import path from 'node:path';
 import { defineConfig, env } from 'prisma/config';
 
-export default defineConfig({
-  // Datasource configuration - switches between SQLite (CI) and MySQL (prod/dev)
-  datasource:
-    process.env.CI === 'true'
-      ? {
-          // SQLite configuration for CI/test environment
+export default defineConfig(
+  process.env.CI
+    ? {
+        schema: 'prisma-e2e/schema.prisma',
+        migrations: {
+          path: 'prisma-e2e/migrations',
+          seed: 'tsx prisma-e2e/seed.ts'
+        },
+        datasource: {
           url: process.env.DB_FILE ? process.env.DB_FILE : 'file:./prisma-e2e/test.db'
         }
-      : {
-          // MySQL/MariaDB configuration for production/development
+      }
+    : {
+        schema: 'prisma-main/schema.prisma',
+        migrations: {
+          path: 'prisma-main/migrations',
+          seed: 'tsx prisma-main/seed.ts'
+        },
+        datasource: {
           url: env('DATABASE_URL'),
           shadowDatabaseUrl: env('SHADOW_DATABASE_URL')
-        },
-  // Schema selection - conditionally loads MySQL or SQLite schema
-  schema: path.join(process.env.CI ? 'prisma-e2e' : 'prisma-main', 'schema.prisma')
-});
+        }
+      }
+);
