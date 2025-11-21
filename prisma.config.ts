@@ -19,7 +19,7 @@ export default defineConfig({
     process.env.CI === 'true'
       ? {
           // SQLite configuration for CI/test environment
-          url: process.env.DB_FILE ? process.env.DB_FILE : 'file:./prisma-main/test.db'
+          url: process.env.DB_FILE ? process.env.DB_FILE : 'file:./prisma-e2e/test.db'
         }
       : {
           // MySQL/MariaDB configuration for production/development

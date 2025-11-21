@@ -72,7 +72,7 @@ export * from '../../prisma-main/types/client';
 
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
-const url = new URL(process.env.DATABASE_URL as string);
+const url = new URL(process.env.DATABASE_URL as string ?? 'mysql://localhost:3306');
 
 const getPrismaMain = () =>
   new mainClient({
@@ -90,12 +90,12 @@ const getPrismaMain = () =>
  */
 
 import { PrismaLibSql } from '@prisma/adapter-libsql';
-import { TEST_DB_PATH } from '@/test/constants';
+import { DB_FILE } from '@/test/constants';
 
 export const getPrismaE2E = () =>
   new e2eClient({
     adapter: new PrismaLibSql({
-      url: `file:${TEST_DB_PATH}`
+      url: `file:./${DB_FILE}`
     })
   });
 
