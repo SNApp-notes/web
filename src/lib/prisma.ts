@@ -72,7 +72,7 @@ export * from '../../prisma-main/types/client';
 
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
-const url = new URL(process.env.DATABASE_URL as string ?? 'mysql://localhost:3306');
+const url = new URL((process.env.DATABASE_URL as string) ?? 'mysql://localhost:3306');
 
 const getPrismaMain = () =>
   new mainClient({
