@@ -3,6 +3,17 @@ import fs from 'fs';
 import { TEMPLATE_DB_PATH, TEST_DB_PATH } from './constants';
 import { getPrismaE2E } from '@/lib/prisma';
 
+/**
+ * Test database setup utilities for Vitest
+ *
+ * Provides clean database state for each test suite.
+ *
+ * Process:
+ * - beforeAll: Copies template database to test.db and creates Prisma client
+ * - beforeEach: Cleans all tables for fresh test state
+ * - afterAll: Disconnects Prisma client
+ */
+
 let prisma: ReturnType<typeof getPrismaE2E>;
 
 vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -46,6 +57,7 @@ export async function setupTestDatabase(): Promise<void> {
   // Ensure the copied file has write permissions (0666 = rw-rw-rw-)
   fs.chmodSync(TEST_DB_PATH, 0o666);
 
+  // Create Prisma client with LibSQL adapter
   prisma = getPrismaE2E();
 }
 

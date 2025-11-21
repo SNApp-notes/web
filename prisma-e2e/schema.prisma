@@ -1,3 +1,17 @@
+// Prisma Schema - SQLite (CI/Test Environment)
+//
+// Used for:
+// - CI environment (GitHub Actions, process.env.CI=true)
+// - Unit and integration tests (Vitest)
+// - E2E tests (Playwright)
+//
+// Structurally identical to prisma-main/schema.prisma except:
+// - provider: "sqlite" instead of "mysql"
+// - Removed @db.Text, @db.LongText, @db.VarChar (MySQL-specific)
+// - Removed @@fulltext (MySQL-specific, not supported in SQLite)
+//
+// Database configuration in prisma.config.ts
+
 generator client {
   provider = "prisma-client"
   output   = "../prisma-e2e/types"

@@ -5,13 +5,15 @@
  * and SQLite (CI/test) based on environment variables.
  *
  * @dependencies
- * - ../../prisma-main/types: MySQL schema types (production/development)
- * - ../../prisma-e2e/types: SQLite schema types (CI/test)
+ * - ../../prisma-main/types/client: MySQL schema types (production/development)
+ * - ../../prisma-e2e/types/client: SQLite schema types (CI/test)
+ * - @prisma/adapter-mariadb: MySQL/MariaDB driver adapter
+ * - @prisma/adapter-libsql: SQLite driver adapter
  *
  * @remarks
  * - Both schemas are identical in structure, only the database engine differs
- * - In CI environment, uses SQLite for faster, isolated testing
- * - In production/development, uses MySQL for persistence and scalability
+ * - In CI environment, uses SQLite with LibSQL adapter for faster, isolated testing
+ * - In production/development, uses MySQL/MariaDB with MariaDB adapter
  * - Singleton pattern prevents multiple instances in hot-reload during development
  * - Re-exports all Prisma types from prisma-main for consistent imports
  *
@@ -23,7 +25,7 @@
  *
  * // ❌ Wrong - Do not import from schema directories
  * import { type Note } from '@prisma/client';
- * import { type Note } from '../../prisma-main/types';
+ * import { type Note } from '../../prisma-main/types/client';
  * ```
  *
  * @example
@@ -48,7 +50,7 @@
  */
 
 import { PrismaClient as mainClient } from '../../prisma-main/types/client';
-import { PrismaClient as e2eClient, Prisma } from '../../prisma-e2e/types/client';
+import { PrismaClient as e2eClient } from '../../prisma-e2e/types/client';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 
 /**
@@ -62,18 +64,8 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 export * from '../../prisma-main/types/client';
 
 /**
- * Prisma client options for logging configuration.
- *
- * @constant {Prisma.PrismaClientOptions} options
- * @property {string[]} log - Log levels: only errors and warnings
- *
- * @remarks
- * Logging is kept minimal to reduce noise in production.
- * Add 'query' and 'info' for development debugging if needed.
- */
-
-/**
  * Creates a Prisma client for MySQL database (production/development).
+ * Uses MariaDB adapter for MySQL connections.
  *
  * @returns {mainClient} Prisma client instance for MySQL
  */
@@ -82,15 +74,17 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 const url = new URL(process.env.DATABASE_URL as string);
 
-const getPrismaMain = () => new mainClient({
-  adapter: new PrismaMariaDb({
-    host: url.host,
-    port: parseInt(url.port)
-  })
-});
+const getPrismaMain = () =>
+  new mainClient({
+    adapter: new PrismaMariaDb({
+      host: url.host,
+      port: parseInt(url.port)
+    })
+  });
 
 /**
  * Creates a Prisma client for SQLite database (CI/test).
+ * Uses LibSQL adapter for SQLite connections.
  *
  * @returns {e2eClient} Prisma client instance for SQLite
  */
@@ -98,11 +92,12 @@ const getPrismaMain = () => new mainClient({
 import { PrismaLibSql } from '@prisma/adapter-libsql';
 import { TEST_DB_PATH } from '@/test/constants';
 
-export const getPrismaE2E = () => new e2eClient({
-  adapter: new PrismaLibSql({
-    url: `file:${TEST_DB_PATH}`
-  })
-}});
+export const getPrismaE2E = () =>
+  new e2eClient({
+    adapter: new PrismaLibSql({
+      url: `file:${TEST_DB_PATH}`
+    })
+  });
 
 /**
  * Selects appropriate Prisma client based on environment.

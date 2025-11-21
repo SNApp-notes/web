@@ -1,3 +1,12 @@
+// Prisma Schema - MySQL/MariaDB (Production/Development)
+//
+// Used for:
+// - Production environment (DATABASE_URL from .env)
+// - Development environment (DATABASE_URL from .env)
+// - Migrations: npx prisma migrate dev --schema=prisma-main/schema.prisma
+//
+// Database configuration in prisma.config.ts
+
 generator client {
   provider = "prisma-client"
   output   = "../prisma-main/types"

@@ -8,6 +8,17 @@ import {
   TEST_DB_JOURNAL_PATH
 } from './constants';
 
+/**
+ * Vitest global setup for database testing
+ *
+ * Creates a template SQLite database used for fast test initialization.
+ *
+ * Process:
+ * 1. Deletes existing template database
+ * 2. Runs prisma db push with DB_FILE env to create template database
+ * 3. Template database is copied for each test suite (see setup-db.ts)
+ */
+
 export async function setup() {
   console.log('Creating template database for integration tests...');
 
@@ -15,6 +26,8 @@ export async function setup() {
     fs.unlinkSync(TEMPLATE_DB_PATH);
   }
 
+  // Use DB_FILE environment variable for database path
+  // prisma.config.ts reads DB_FILE when CI=true to determine database location
   execSync(`npx prisma db push --schema=${SCHEMA_PATH}`, {
     stdio: 'pipe',
     env: {
