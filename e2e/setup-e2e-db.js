@@ -18,7 +18,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const dbFile = path.join(__dirname, './prisma-e2e/test.db');
+const dbFile = path.join(__dirname, '../prisma-e2e/test.db');
 const nextDir = path.join(__dirname, '../.next');
 
 if (fs.existsSync(dbFile)) {

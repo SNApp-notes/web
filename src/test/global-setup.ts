@@ -2,7 +2,7 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 import {
   SCHEMA_PATH,
-  DB_FILE,
+  TEMPLATE_DB_FILE,
   TEMPLATE_DB_PATH,
   TEST_DB_PATH,
   TEST_DB_JOURNAL_PATH
@@ -15,7 +15,7 @@ import {
  *
  * Process:
  * 1. Deletes existing template database
- * 2. Runs prisma db push with DB_FILE env to create template database
+ * 2. Runs prisma db push with TEMPLATE_DB_FILE env to create template database
  * 3. Template database is copied for each test suite (see setup-db.ts)
  */
 
@@ -26,13 +26,13 @@ export async function setup() {
     fs.unlinkSync(TEMPLATE_DB_PATH);
   }
 
-  // Use DB_FILE environment variable for database path
-  // prisma.config.ts reads DB_FILE when CI=true to determine database location
+  // Use TEMPLATE_DB_FILE environment variable for database path
+  // prisma.config.ts reads TEMPLATE_DB_FILE when CI=true to determine database location
   execSync(`npx prisma db push --schema=${SCHEMA_PATH}`, {
     stdio: 'pipe',
     env: {
       ...process.env,
-      DB_FILE: `file:./${DB_FILE}`
+      DB_FILE: `file:./${TEMPLATE_DB_FILE}`
     },
     encoding: 'utf-8'
   });

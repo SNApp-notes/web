@@ -1,6 +1,6 @@
 import { beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import fs from 'fs';
-import { TEMPLATE_DB_PATH, TEST_DB_PATH } from './constants';
+import { TEMPLATE_DB_PATH, TEST_DB_PATH, DB_FILE } from './constants';
 import { getPrismaE2E } from '@/lib/prisma';
 
 /**
@@ -19,7 +19,7 @@ let prisma: ReturnType<typeof getPrismaE2E>;
 vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
 export async function setupTestDatabase(): Promise<void> {
-  process.env.DB_FILE = `file:${TEST_DB_PATH}`;
+  process.env.DB_FILE = `file:${DB_FILE}`;
 
   if (!fs.existsSync(TEMPLATE_DB_PATH)) {
     throw new Error('Template database not found. Global setup may have failed.');
