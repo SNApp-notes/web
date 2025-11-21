@@ -2,7 +2,8 @@ import { beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import fs from 'fs';
 import { TEMPLATE_DB_PATH, TEST_DB_PATH } from './constants';
 import { getPrismaE2E } from '@/lib/prisma';
-let prisma: e2eClient;
+
+let prisma: ReturnType<typeof getPrismaE2E>;
 
 vi.spyOn(console, 'log').mockImplementation(() => undefined);
 

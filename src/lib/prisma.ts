@@ -71,16 +71,23 @@ export * from '../../prisma-main/types/client';
  * Logging is kept minimal to reduce noise in production.
  * Add 'query' and 'info' for development debugging if needed.
  */
-const options: Prisma.PrismaClientOptions = {
-  log: ['error', 'warn']
-};
 
 /**
  * Creates a Prisma client for MySQL database (production/development).
  *
  * @returns {mainClient} Prisma client instance for MySQL
  */
-const getPrismaMain = () => new mainClient(options);
+
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+
+const url = new URL(process.env.DATABASE_URL as string);
+
+const getPrismaMain = () => new mainClient({
+  adapter: new PrismaMariaDb({
+    host: url.host,
+    port: parseInt(url.port)
+  })
+});
 
 /**
  * Creates a Prisma client for SQLite database (CI/test).
@@ -89,12 +96,13 @@ const getPrismaMain = () => new mainClient(options);
  */
 
 import { PrismaLibSql } from '@prisma/adapter-libsql';
+import { TEST_DB_PATH } from '@/test/constants';
 
-const adapter = new PrismaLibSql({
-  url: process.env.DATABASE_URL ?? ''
-});
-
-export const getPrismaE2E = () => new e2eClient({ adapter });
+export const getPrismaE2E = () => new e2eClient({
+  adapter: new PrismaLibSql({
+    url: `file:${TEST_DB_PATH}`
+  })
+}});
 
 /**
  * Selects appropriate Prisma client based on environment.
@@ -114,7 +122,7 @@ const getPrisma = () => (process.env.CI ? getPrismaE2E() : getPrismaMain());
  * This prevents creating multiple Prisma instances during hot-reload in development.
  */
 const globalForPrisma = global as unknown as {
-  prisma: ReturnType<typeof getPrismaMain>;
+  prisma: ReturnType<typeof getPrisma>;
 };
 
 /**

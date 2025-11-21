@@ -38,6 +38,7 @@
     "@codemirror/language-data": "^6.5.2",
     "@emotion/react": "^11.14.0",
     "@prisma/adapter-libsql": "^7.0.0",
+    "@prisma/adapter-mariadb": "^7.0.0",
     "@prisma/client": "^7.0.0",
     "@snapp-notes/markdown-parser": "^0.1.2",
     "@uiw/codemirror-theme-basic": "^4.25.3",
