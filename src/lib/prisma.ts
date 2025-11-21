@@ -72,15 +72,14 @@ export * from '../../prisma-main/types/client';
 
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
-const url = new URL((process.env.DATABASE_URL as string) ?? 'mysql://localhost:3306');
-
-const getPrismaMain = () =>
-  new mainClient({
-    adapter: new PrismaMariaDb({
-      host: url.host,
-      port: parseInt(url.port)
-    })
+const getPrismaMain = () => {
+  const url = new URL(process.env.DATABASE_URL as string);
+  const adapter = new PrismaMariaDb({
+    host: url.host,
+    port: parseInt(url.port)
   });
+  return new mainClient({ adapter });
+};
 
 /**
  * Creates a Prisma client for SQLite database (CI/test).
@@ -92,12 +91,12 @@ const getPrismaMain = () =>
 import { PrismaLibSql } from '@prisma/adapter-libsql';
 import { DB_FILE } from '@/test/constants';
 
-export const getPrismaE2E = () =>
-  new e2eClient({
-    adapter: new PrismaLibSql({
-      url: `file:./${DB_FILE}`
-    })
+export const getPrismaE2E = () => {
+  const adapter = new PrismaLibSql({
+    url: process.env.DB_FILE ?? `file:./${DB_FILE}`
   });
+  return new e2eClient({ adapter });
+};
 
 /**
  * Selects appropriate Prisma client based on environment.

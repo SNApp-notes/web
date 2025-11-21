@@ -19,7 +19,7 @@ let prisma: ReturnType<typeof getPrismaE2E>;
 vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
 export async function setupTestDatabase(): Promise<void> {
-  process.env.DATABASE_URL = `file:${TEST_DB_PATH}`;
+  process.env.DB_FILE = `file:${TEST_DB_PATH}`;
 
   if (!fs.existsSync(TEMPLATE_DB_PATH)) {
     throw new Error('Template database not found. Global setup may have failed.');
