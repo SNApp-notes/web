@@ -66,6 +66,10 @@ test.describe('Settings Route Protection', () => {
 
     await page.getByRole('button', { name: 'Back to Notes' }).click();
 
+    // Wait for navigation to complete and page to stabilize
+    await page.waitForURL(/\/note\/\d+/, { timeout: 10000, waitUntil: 'load' });
+    await page.waitForLoadState('networkidle', { timeout: 5000 });
+
     // Should auto-select first note (welcome note with id 1)
     await expect(page).toHaveURL('/note/1');
   });

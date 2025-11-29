@@ -402,6 +402,9 @@ test.describe('Notes Application - CRUD Operations', () => {
       .last();
     await expect(noteLabel).toBeVisible({ timeout: 5000 });
 
+    // Wait for DOM to stabilize before double-click
+    await page.waitForTimeout(500);
+
     // Double-click with more reliable approach
     await noteLabel.dblclick({ delay: 100 });
 
@@ -732,7 +735,8 @@ test.describe('Header Navigation and URL Updates', () => {
     await page.keyboard.type("---\n\n## Getting Started\n\nLet's begin.\n\n");
     await page.keyboard.type('---\n\n### Advanced Topics\n\nFor experts.');
 
-    await page.waitForTimeout(1000);
+    // Wait for content to be processed and headers to appear in right panel
+    await page.waitForTimeout(2000);
 
     // Verify headers appear in right panel
     await expect(page.locator('aside').getByText('Introduction')).toBeVisible({

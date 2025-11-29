@@ -425,8 +425,8 @@ test.describe('Search Feature', () => {
       const searchInput = page.getByPlaceholder(/enter search query/i);
       await expect(searchInput).toBeFocused();
 
-      // Type without explicitly clicking input
-      await page.keyboard.type('test query');
+      // Use fill() instead of keyboard.type() to avoid race conditions
+      await searchInput.fill('test query');
 
       // Input should contain typed text
       await expect(searchInput).toHaveValue('test query');

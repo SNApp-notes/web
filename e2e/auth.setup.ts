@@ -18,12 +18,15 @@ setup('authenticate', async ({ browser }) => {
   await authPage.click('button[type="submit"]');
 
   // Wait for successful redirect to home page
-  await authPage.waitForURL('/', { timeout: 10000 });
+  await authPage.waitForURL('/', { timeout: 10000, waitUntil: 'load' });
 
   // Verify authentication was successful by checking for authenticated content
   await expect(authPage.locator('[data-testid="note-list"]')).toBeVisible({
     timeout: 10000
   });
+
+  // Wait for page to stabilize after initial load
+  await authPage.waitForLoadState('networkidle', { timeout: 5000 });
 
   // Save signed-in state
   await authPage.context().storageState({ path: authFile });
