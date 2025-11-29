@@ -2,7 +2,6 @@
   "name": "SNApp",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "next dev",
     "dev:coverage": "next dev --webpack",
@@ -38,8 +37,8 @@
     "@codemirror/lang-markdown": "^6.5.0",
     "@codemirror/language-data": "^6.5.2",
     "@emotion/react": "^11.14.0",
-    "@prisma/adapter-libsql": "^7.0.0",
-    "@prisma/adapter-mariadb": "^7.0.0",
+    "@prisma/adapter-libsql": "^7.0.1",
+    "@prisma/adapter-mariadb": "^7.0.1",
     "@prisma/client": "^7.0.0",
     "@snapp-notes/markdown-parser": "^0.1.2",
     "@uiw/codemirror-theme-basic": "^4.25.3",
@@ -83,7 +82,7 @@
     "nyc": "^17.1.0",
     "playwright-test-coverage": "^1.2.12",
     "prettier": "^3.6.2",
-    "prisma": "^7.0.0",
+    "prisma": "^7.0.1",
     "sqlite3": "^5.1.7",
     "typescript": "^5",
     "vitest": "^4.0.9"

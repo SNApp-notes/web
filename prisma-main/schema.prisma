@@ -11,7 +11,9 @@ generator client {
   provider             = "prisma-client"
   output               = "../prisma-main/types"
   binaryTargets        = ["native", "linux-musl", "rhel-openssl-3.0.x"]
-  importFileExtension  = "ts"
+  moduleFormat = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension = "ts"
 }
 
 datasource db {

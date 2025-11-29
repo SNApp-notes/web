@@ -73,11 +73,7 @@ export * from '../../prisma-main/types/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 const getPrismaMain = () => {
-  const url = new URL(process.env.DATABASE_URL as string);
-  const adapter = new PrismaMariaDb({
-    host: url.host,
-    port: parseInt(url.port)
-  });
+  const adapter = new PrismaMariaDb(process.env.DATABASE_URL as string);
   return new mainClient({ adapter });
 };
 

@@ -15,6 +15,9 @@
 generator client {
   provider = "prisma-client"
   output   = "../prisma-e2e/types"
+  moduleFormat = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension = "ts"
 }
 
 datasource db {
