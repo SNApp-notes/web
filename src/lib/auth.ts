@@ -65,6 +65,12 @@ export const auth = betterAuth({
     // Disable secure cookies in test/dev mode to allow HTTP testing in Docker
     useSecureCookies: process.env.NODE_ENV === 'production'
   },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ['github'],
+    }
+  },
   databaseHooks: {
     account: {
       create: {

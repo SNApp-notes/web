@@ -487,6 +487,19 @@ const changePasswordSchema = z.object({
 });
 
 /**
+ * Zod schema for set password validation (OAuth users).
+ *
+ * @remarks
+ * - New password must be at least 8 characters
+ * - Confirmation password is required
+ * - No current password needed (user has no password yet)
+ */
+const setPasswordSchema = z.object({
+  newPassword: z.string().min(8, 'Password must be at least 8 characters long'),
+  confirmPassword: z.string().min(1, 'Please confirm your new password')
+});
+
+/**
  * Checks if the current user has password authentication enabled.
  * Used to determine if password change is available.
  *
@@ -533,6 +546,59 @@ export async function getUserAuthMethod() {
   } catch (error) {
     console.error('Error checking user auth method:', error);
     return { hasPassword: false };
+  }
+}
+
+/**
+ * Gets the account linking status for the current user.
+ * Returns information about connected authentication providers.
+ *
+ * @async
+ * @returns {Promise<{hasPassword: boolean; hasGitHub: boolean}>} Object with provider status
+ *
+ * @example
+ * ```tsx
+ * const { hasPassword, hasGitHub } = await getAccountLinkingStatus();
+ * ```
+ *
+ * @remarks
+ * - Returns false for both if no active session
+ * - hasPassword: user has email/password authentication
+ * - hasGitHub: user has GitHub OAuth connected
+ */
+export async function getAccountLinkingStatus() {
+  try {
+    const headersList = await headers();
+    const session = await auth.api.getSession({
+      headers: headersList
+    });
+
+    if (!session?.user) {
+      return { hasPassword: false, hasGitHub: false };
+    }
+
+    const accounts = await prisma.account.findMany({
+      where: {
+        userId: session.user.id
+      },
+      select: {
+        providerId: true,
+        password: true
+      }
+    });
+
+    const hasPassword = accounts.some(
+      (acc) => acc.providerId === 'credential' && !!acc.password
+    );
+    const hasGitHub = accounts.some((acc) => acc.providerId === 'github');
+
+    return {
+      hasPassword,
+      hasGitHub
+    };
+  } catch (error) {
+    console.error('Error checking account linking status:', error);
+    return { hasPassword: false, hasGitHub: false };
   }
 }
 
@@ -665,6 +731,106 @@ export async function changePasswordAction(
       message: 'Password changed successfully'
     };
   } catch (error) {
+    return {
+      message: 'An unexpected error occurred. Please try again.'
+    };
+  }
+}
+
+/**
+ * Server action to set password for OAuth-only users.
+ * Allows users who signed up with GitHub to add password authentication.
+ *
+ * @async
+ * @param {FormDataState} _prevState - Previous form state (unused)
+ * @param {FormData} formData - Form data with newPassword and confirmPassword
+ *
+ * @returns {Promise<FormDataState>} State object with success status or error messages
+ *
+ * @example
+ * ```tsx
+ * const [state, action] = useActionState(setPasswordAction, {});
+ *
+ * <form action={action}>
+ *   <input name="newPassword" type="password" minLength={8} required />
+ *   <input name="confirmPassword" type="password" required />
+ * </form>
+ * ```
+ *
+ * @remarks
+ * - Requires active user session
+ * - Only available for OAuth-only accounts (no existing password)
+ * - Password must be at least 8 characters
+ * - Passwords must match between newPassword and confirmPassword
+ * - Uses Better Auth's setPassword API for secure password creation
+ */
+export async function setPasswordAction(_prevState: FormDataState, formData: FormData) {
+  const validatedFields = setPasswordSchema.safeParse({
+    newPassword: formData.get('newPassword'),
+    confirmPassword: formData.get('confirmPassword')
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Please check your input'
+    };
+  }
+
+  const { newPassword, confirmPassword } = validatedFields.data;
+
+  if (newPassword !== confirmPassword) {
+    return {
+      errors: { confirmPassword: ['Passwords do not match'] },
+      message: 'Passwords do not match'
+    };
+  }
+
+  try {
+    const headersList = await headers();
+    const session = await auth.api.getSession({
+      headers: headersList
+    });
+
+    if (!session?.user) {
+      return {
+        message: 'You must be logged in to set a password'
+      };
+    }
+
+    if (!session.user.email) {
+      return {
+        message: 'Email address is required to set a password'
+      };
+    }
+
+    const existingAccount = await prisma.account.findFirst({
+      where: {
+        userId: session.user.id,
+        providerId: 'credential'
+      }
+    });
+
+    if (existingAccount?.password) {
+      return {
+        message: 'You already have a password. Use Change Password instead.'
+      };
+    }
+
+    await auth.api.setPassword({
+      body: {
+        newPassword: newPassword
+      },
+      headers: headersList,
+      asResponse: false
+    });
+
+    return {
+      success: true,
+      message: 'Password set successfully'
+    };
+  } catch (error) {
+    console.error('Set password error:', error);
     return {
       message: 'An unexpected error occurred. Please try again.'
     };
