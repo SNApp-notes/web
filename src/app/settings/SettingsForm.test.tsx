@@ -4,7 +4,7 @@ import SettingsForm from './SettingsForm';
 import {
   requestAccountDeletionAction,
   changePasswordAction,
-  getUserAuthMethod
+  getAccountLinkingStatus
 } from '@/app/actions/auth';
 import { toaster } from '@/components/ui/toaster';
 
@@ -25,7 +25,13 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/app/actions/auth', () => ({
   requestAccountDeletionAction: vi.fn(),
   changePasswordAction: vi.fn(),
-  getUserAuthMethod: vi.fn()
+  getAccountLinkingStatus: vi.fn(),
+  setPasswordAction: vi.fn()
+}));
+
+// Mock auth client
+vi.mock('@/lib/auth-client', () => ({
+  linkSocial: vi.fn()
 }));
 
 // Mock toaster
@@ -69,7 +75,10 @@ describe('SettingsForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSearchParams.clear();
-    vi.mocked(getUserAuthMethod).mockResolvedValue({ hasPassword: true });
+    vi.mocked(getAccountLinkingStatus).mockResolvedValue({
+      hasPassword: true,
+      hasGitHub: false
+    });
   });
 
   it('should render settings form with all sections', async () => {
@@ -108,8 +117,11 @@ describe('SettingsForm', () => {
     expect(screen.getByRole('button', { name: /change password/i })).toBeInTheDocument();
   });
 
-  it('should not show password section when hasPassword is false', async () => {
-    vi.mocked(getUserAuthMethod).mockResolvedValue({ hasPassword: false });
+  it('should show password section regardless of hasPassword value', async () => {
+    vi.mocked(getAccountLinkingStatus).mockResolvedValue({
+      hasPassword: false,
+      hasGitHub: true
+    });
 
     render(<SettingsForm />);
 
@@ -117,7 +129,9 @@ describe('SettingsForm', () => {
       expect(screen.getByText('Settings')).toBeInTheDocument();
     });
 
-    expect(screen.queryByText('Password')).not.toBeInTheDocument();
+    // Password section should always be visible now (for Set Password or Change Password)
+    expect(screen.getByText('Password')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /set password/i })).toBeInTheDocument();
   });
 
   it('should show password change form when Change Password button is clicked', async () => {
