@@ -95,7 +95,6 @@ export function SearchModal() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 size="lg"
-                autoFocus
               />
 
               {/* Search button */}

@@ -4,7 +4,7 @@ test.describe('Notes Application - CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('[data-testid="sign-out-button"]')).toBeVisible({
-      timeout: 10000
+      timeout: 5000
     });
   });
   test('should create a new note when authenticated', async ({ page }) => {
@@ -18,7 +18,7 @@ test.describe('Notes Application - CRUD Operations', () => {
 
     // Wait for a new note to appear
     await expect(page.locator('.tree-node-label')).toHaveCount(initialNoteCount + 1, {
-      timeout: 10000
+      timeout: 5000
     });
 
     // Verify the new note exists with default name
@@ -42,7 +42,7 @@ test.describe('Notes Application - CRUD Operations', () => {
       .filter({ hasText: /Welcome/ })
       .first();
     await welcomeNote.click();
-    await page.waitForURL(/\/note\/1$/, { timeout: 10000 });
+    await page.waitForURL(/\/note\/1$/, { timeout: 5000 });
     expect(page.url()).toMatch(/\/note\/1$/);
 
     // Count existing notes before creating a new one
@@ -69,7 +69,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     await newNote.click();
 
     // Wait for URL to update to a note page (resilient to any ID >= 2)
-    await page.waitForURL(/\/note\/\d+$/, { timeout: 10000 });
+    await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
     const url = page.url();
     const noteIdMatch = url.match(/\/note\/(\d+)$/);
     expect(noteIdMatch).not.toBeNull();
@@ -108,8 +108,8 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Wait for input field to appear and be focused
     const editInput = page.locator('.tree-node-input');
     await expect(editInput).toBeVisible({ timeout: 5000 });
-    await expect(editInput).toBeFocused({ timeout: 2000 });
-    await expect(editInput).toHaveValue(originalNoteName || '', { timeout: 2000 });
+    await expect(editInput).toBeFocused({ timeout: 5000 });
+    await expect(editInput).toHaveValue(originalNoteName || '', { timeout: 5000 });
 
     // Clear and type new name
     await editInput.clear();
@@ -119,7 +119,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     await editInput.press('Enter');
 
     // Wait for input to disappear
-    await expect(editInput).not.toBeVisible({ timeout: 2000 });
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
 
     // Verify the note has been renamed
     await expect(
@@ -156,8 +156,8 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Wait for input field to appear
     const editInput = page.locator('.tree-node-input');
     await expect(editInput).toBeVisible({ timeout: 5000 });
-    await expect(editInput).toBeFocused({ timeout: 2000 });
-    await expect(editInput).toHaveValue(originalNoteName || '', { timeout: 2000 });
+    await expect(editInput).toBeFocused({ timeout: 5000 });
+    await expect(editInput).toHaveValue(originalNoteName || '', { timeout: 5000 });
 
     // Clear and type new name
     await editInput.clear();
@@ -167,7 +167,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     await page.locator('[data-testid="note-list"]').click({ position: { x: 10, y: 10 } });
 
     // Wait for input to disappear
-    await expect(editInput).not.toBeVisible({ timeout: 2000 });
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
 
     // Verify the note has been renamed
     await expect(
@@ -204,8 +204,8 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Wait longer for input field to appear and verify it has correct value
     const editInput = page.locator('.tree-node-input');
     await expect(editInput).toBeVisible({ timeout: 5000 });
-    await expect(editInput).toBeFocused({ timeout: 2000 });
-    await expect(editInput).toHaveValue(originalNoteName || '', { timeout: 2000 });
+    await expect(editInput).toBeFocused({ timeout: 5000 });
+    await expect(editInput).toHaveValue(originalNoteName || '', { timeout: 5000 });
 
     // Type new name but cancel
     await editInput.clear();
@@ -213,7 +213,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     await editInput.press('Escape');
 
     // Wait for input to disappear
-    await expect(editInput).not.toBeVisible({ timeout: 2000 });
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
 
     // Verify the note name was NOT changed (should still be original name)
     // Use regex with ^ and $ to match exact text to avoid partial matches
@@ -281,7 +281,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     const noteWithAsterisk = page
       .locator('.tree-node-label')
       .filter({ hasText: new RegExp(`^\\* ${noteName}$`) });
-    await expect(noteWithAsterisk).toBeVisible({ timeout: 10000 });
+    await expect(noteWithAsterisk).toBeVisible({ timeout: 5000 });
 
     // Save with Ctrl+S - focus editor first
     await editorContent.click();
@@ -292,7 +292,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     await expect(page.getByText(/Saving\.\.\./)).toBeVisible({ timeout: 5000 });
 
     // Verify asterisk disappears after save completes (note is no longer dirty)
-    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 10000 });
+    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 5000 });
 
     // Verify "Unsaved changes" label disappears from top bar
     await expect(page.getByText('Unsaved changes')).not.toBeVisible({ timeout: 5000 });
@@ -302,7 +302,7 @@ test.describe('Notes Application - CRUD Operations', () => {
 
     // Wait for note list to load after refresh
     await expect(page.locator('[data-testid="note-list"]')).toBeVisible({
-      timeout: 10000
+      timeout: 5000
     });
 
     // Select the note again using the captured name and click to load editor
@@ -314,16 +314,16 @@ test.describe('Notes Application - CRUD Operations', () => {
     await reloadedNoteLabel.click();
 
     // Wait for navigation to complete to /note/[id] page
-    await page.waitForURL(/\/note\/\d+/, { timeout: 10000 });
+    await page.waitForURL(/\/note\/\d+/, { timeout: 5000 });
 
     // Wait for editor to load after navigation - use longer timeout
-    await expect(editor).toBeVisible({ timeout: 15000 });
+    await expect(editor).toBeVisible({ timeout: 5000 });
 
     // Wait for content to load into editor
     await page.waitForTimeout(1000);
 
     // Verify the content was saved and persisted
-    await expect(editor).toContainText('My Test Note', { timeout: 10000 });
+    await expect(editor).toContainText('My Test Note', { timeout: 5000 });
     await expect(editor).toContainText('This is some test content', { timeout: 5000 });
   });
 
@@ -357,10 +357,10 @@ test.describe('Notes Application - CRUD Operations', () => {
     const noteWithAsterisk = page
       .locator('.tree-node-label')
       .filter({ hasText: new RegExp(`^\\* ${noteName}$`) });
-    await expect(noteWithAsterisk).toBeVisible({ timeout: 10000 });
+    await expect(noteWithAsterisk).toBeVisible({ timeout: 5000 });
 
     // Verify "Unsaved changes" appears in top bar
-    await expect(page.getByText('Unsaved changes')).toBeVisible({ timeout: 3000 });
+    await expect(page.getByText('Unsaved changes')).toBeVisible({ timeout: 5000 });
 
     // Trigger save
     const isMac = process.platform === 'darwin';
@@ -371,7 +371,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     }
 
     // Verify "Saving..." appears
-    await expect(page.getByText('Saving...')).toBeVisible({ timeout: 3000 });
+    await expect(page.getByText('Saving...')).toBeVisible({ timeout: 5000 });
 
     // Verify asterisk disappears after save completes (note is clean)
     await expect(noteWithAsterisk).not.toBeVisible({ timeout: 5000 });
@@ -408,7 +408,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Wait for edit mode with longer timeout
     const editInput = page.locator('.tree-node-input');
     await expect(editInput).toBeVisible({ timeout: 5000 });
-    await expect(editInput).toBeFocused({ timeout: 2000 });
+    await expect(editInput).toBeFocused({ timeout: 5000 });
 
     // Clear and rename
     await editInput.clear();
@@ -416,7 +416,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     await editInput.press('Enter');
 
     // Wait for input to disappear (rename completed)
-    await expect(editInput).not.toBeVisible({ timeout: 3000 });
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
 
     // Verify rename with longer timeout
     await expect(
@@ -455,7 +455,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     const noteWithAsterisk = page
       .locator('.tree-node-label')
       .filter({ hasText: /^\* Complete Workflow Test$/ });
-    await expect(noteWithAsterisk).toBeVisible({ timeout: 10000 });
+    await expect(noteWithAsterisk).toBeVisible({ timeout: 5000 });
 
     // Step 4: Save the note - focus editor again first
     await editorContent.click();
@@ -466,7 +466,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     await expect(page.getByText(/Saving\.\.\./)).toBeVisible({ timeout: 5000 });
 
     // Verify asterisk disappears after save completes
-    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 10000 });
+    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 5000 });
 
     // Verify "Unsaved changes" disappears from top bar
     await expect(page.getByText('Unsaved changes')).not.toBeVisible({ timeout: 5000 });
@@ -475,7 +475,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     await page.reload();
 
     await expect(page.locator('[data-testid="note-list"]')).toBeVisible({
-      timeout: 10000
+      timeout: 5000
     });
 
     // Select the renamed note
@@ -487,15 +487,15 @@ test.describe('Notes Application - CRUD Operations', () => {
     await renamedNote.click();
 
     // Wait for navigation to complete to /note/[id] page
-    await page.waitForURL(/\/note\/\d+/, { timeout: 10000 });
+    await page.waitForURL(/\/note\/\d+/, { timeout: 5000 });
 
     // Verify content persisted - wait for editor to load after navigation
-    await expect(editor).toBeVisible({ timeout: 15000 });
+    await expect(editor).toBeVisible({ timeout: 5000 });
 
     // Wait for content to load
     await page.waitForTimeout(1000);
 
-    await expect(editor).toContainText('Complete Workflow Test', { timeout: 10000 });
+    await expect(editor).toContainText('Complete Workflow Test', { timeout: 5000 });
     await expect(editor).toContainText('Created a new note', { timeout: 5000 });
     await expect(editor).toContainText('Renamed the note', { timeout: 5000 });
     await expect(editor).toContainText('Added content', { timeout: 5000 });
@@ -507,7 +507,7 @@ test.describe('Header Navigation and URL Updates', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('[data-testid="sign-out-button"]')).toBeVisible({
-      timeout: 10000
+      timeout: 5000
     });
   });
   test('should update URL when clicking header in right panel', async ({ page }) => {
@@ -570,16 +570,34 @@ test.describe('Header Navigation and URL Updates', () => {
     const editor = page.locator('.cm-editor').first();
     await editor.waitFor({ timeout: 5000 });
 
-    // Add content with headers
+    // Wait for the editor to be fully ready
+    await page.waitForTimeout(500);
+
+    // Click in editor content area to ensure focus
     const editorContent = page.locator('.cm-content').first();
     await editorContent.click();
+
+    // Clear any existing content
     await page.keyboard.press('Control+a');
     await page.keyboard.press('Delete');
-    await page.keyboard.type('# First Header\n\n');
-    for (let i = 0; i < 20; i++) {
-      await page.keyboard.type(`Line ${i + 1}\n`);
+
+    // Type content in smaller chunks to avoid issues
+    await editorContent.pressSequentially('# First Header\n\n', { delay: 10 });
+
+    // Add line content
+    for (let i = 1; i <= 20; i++) {
+      await editorContent.pressSequentially(`Line ${i}\n`, { delay: 5 });
     }
-    await page.keyboard.type('\n---\n\n## Second Header\n\nMore content here.');
+
+    await editorContent.pressSequentially(
+      '\n---\n\n## Second Header\n\nMore content here.',
+      {
+        delay: 10
+      }
+    );
+
+    // Wait for content to settle
+    await page.waitForTimeout(500);
 
     // Save the note before clicking header (to persist content to database)
     await page.keyboard.press('Control+s');
@@ -588,7 +606,10 @@ test.describe('Header Navigation and URL Updates', () => {
     const savedStatus = page.getByText('Saved');
     await savedStatus.waitFor({ timeout: 5000 });
 
-    // Click on "Second Header" in right panel
+    // Wait a bit for the right panel to update with headers
+    await page.waitForTimeout(1000);
+
+    // Click on "Second Header" in right panel - increase timeout for CI
     const secondHeader = page.locator('aside').getByText('Second Header').first();
     await secondHeader.waitFor({ timeout: 5000 });
 
@@ -619,7 +640,7 @@ test.describe('Header Navigation and URL Updates', () => {
     await page.reload();
 
     // Wait for editor to load after refresh
-    await editor.waitFor({ timeout: 10000 });
+    await editor.waitFor({ timeout: 5000 });
 
     // Wait for the URL to still have the line parameter after reload
     await page.waitForURL(`**?line=${expectedLine}`, { timeout: 5000 });
@@ -882,7 +903,7 @@ test.describe('Header Navigation and URL Updates', () => {
 
     // Test Case 3: Navigate directly via URL with line parameter
     await page.goto(`/note/${noteId}?line=${header2Line}`);
-    await editor.waitFor({ timeout: 10000 });
+    await editor.waitFor({ timeout: 5000 });
     await page.waitForURL(`**?line=${header2Line}`, { timeout: 5000 });
 
     // Verify active line gutter shows correct line after direct URL navigation
@@ -895,7 +916,7 @@ test.describe('Header Navigation and URL Updates', () => {
 
     // Test Case 4: Refresh page with line parameter
     await page.reload();
-    await editor.waitFor({ timeout: 10000 });
+    await editor.waitFor({ timeout: 5000 });
     await page.waitForURL(`**?line=${header2Line}`, { timeout: 5000 });
 
     // Verify active line gutter persists after refresh

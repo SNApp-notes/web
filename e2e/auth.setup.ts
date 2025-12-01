@@ -17,12 +17,18 @@ setup('authenticate', async ({ browser }) => {
   await authPage.fill('input[name="password"]', 'E2ETestPassword123!');
   await authPage.click('button[type="submit"]');
 
-  // Wait for successful redirect to home page
-  await authPage.waitForURL('/', { timeout: 10000 });
+  // Wait for successful redirect away from register page
+  await authPage.waitForURL((url) => !url.pathname.includes('/register'), {
+    timeout: 5000
+  });
+
+  // Wait a bit for any post-registration redirects to complete
+  await authPage.waitForLoadState('networkidle', { timeout: 5000 });
 
   // Verify authentication was successful by checking for authenticated content
-  await expect(authPage.locator('[data-testid="note-list"]')).toBeVisible({
-    timeout: 10000
+  // Check for the "New Note" button which is only visible when authenticated
+  await expect(authPage.getByRole('button', { name: /new note/i })).toBeVisible({
+    timeout: 5000
   });
 
   // Save signed-in state

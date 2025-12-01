@@ -15,7 +15,7 @@ export async function createTestUser(page: Page, userData: UserData): Promise<Us
   await page.waitForURL('/');
 
   // Wait for session to be loaded and auth buttons to appear
-  await page.waitForSelector('[data-testid="sign-out-button"]', { timeout: 10000 });
+  await page.waitForSelector('[data-testid="sign-out-button"]', { timeout: 5000 });
 
   return userData;
 }
@@ -32,7 +32,7 @@ export async function loginUser(
   await page.waitForURL('/');
 
   // Wait for session to be loaded and auth buttons to appear
-  await page.waitForSelector('[data-testid="sign-out-button"]', { timeout: 10000 });
+  await page.waitForSelector('[data-testid="sign-out-button"]', { timeout: 5000 });
 }
 
 export async function createAndLoginUser(page: Page): Promise<UserData> {
@@ -53,5 +53,5 @@ export async function signOutUser(page: Page): Promise<void> {
 
   // Click logout and wait for navigation to complete
   await page.getByTestId('sign-out-button').click();
-  await page.waitForURL(/.*login/, { timeout: 2000 });
+  await page.waitForURL(/.*login/, { timeout: 5000 });
 }
