@@ -148,7 +148,6 @@ const Editor = memo(
     ref
   ) {
     const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
-    const [contentLoaded, setContentLoaded] = useState(false);
     const [viewReady, setViewReady] = useState(false);
 
     const { colorMode } = useColorMode();
@@ -273,24 +272,18 @@ const Editor = memo(
       }
     }, [viewReady, onEditorReady, scrollToLine, ref]);
 
-    // Track when content is loaded (not just changed due to editing)
-    useEffect(() => {
-      if (value && !contentLoaded) {
-        setContentLoaded(true);
-      }
-    }, [value, contentLoaded]);
-
-    // Handle line scrolling when selectedLine changes or content is loaded
+    // Handle line scrolling when selectedLine changes
     useEffect(() => {
       const view = codeMirrorRef.current?.view;
-      // Ensure view is ready, content is loaded, and we have a line to scroll to
-      if (selectedLine && view && contentLoaded && viewReady) {
+      // Only scroll if selectedLine is explicitly provided (not undefined/null/0)
+      // This prevents unwanted scrolling when switching notes without a line parameter
+      if (selectedLine && selectedLine > 0 && view && viewReady) {
         // Use requestAnimationFrame to ensure DOM is fully rendered
         requestAnimationFrame(() => {
           scrollToLine(selectedLine);
         });
       }
-    }, [selectedLine, contentLoaded, viewReady, scrollToLine]);
+    }, [selectedLine, viewReady, scrollToLine]);
 
     return (
       <CodeMirror
