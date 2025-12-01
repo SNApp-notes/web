@@ -449,4 +449,64 @@ describe('SettingsForm', () => {
       );
     });
   });
+
+  it('should not show current password field when OAuth user sets password for first time', async () => {
+    vi.mocked(getAccountLinkingStatus).mockResolvedValue({
+      hasPassword: false,
+      hasGitHub: true
+    });
+
+    const { user } = render(<SettingsForm />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /set password/i })).toBeInTheDocument();
+    });
+
+    // Click to show password form
+    const setPasswordButton = screen.getByRole('button', { name: /set password/i });
+    await user.click(setPasswordButton);
+
+    await waitFor(() => {
+      // Should show Password field (not "New Password")
+      expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
+    });
+
+    // Should NOT show "Current Password" field
+    expect(screen.queryByLabelText(/current password/i)).not.toBeInTheDocument();
+
+    // Should show correct button text
+    expect(screen.getByRole('button', { name: /^set password$/i })).toBeInTheDocument();
+  });
+
+  it('should show current password field when user with password changes it', async () => {
+    vi.mocked(getAccountLinkingStatus).mockResolvedValue({
+      hasPassword: true,
+      hasGitHub: false
+    });
+
+    const { user } = render(<SettingsForm />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /change password/i })
+      ).toBeInTheDocument();
+    });
+
+    // Click to show password form
+    const changePasswordButton = screen.getByRole('button', { name: /change password/i });
+    await user.click(changePasswordButton);
+
+    await waitFor(() => {
+      // Should show all three fields
+      expect(screen.getByLabelText(/current password/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^new password$/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/confirm new password/i)).toBeInTheDocument();
+    });
+
+    // Should show correct button text
+    expect(
+      screen.getByRole('button', { name: /^change password$/i })
+    ).toBeInTheDocument();
+  });
 });
