@@ -141,6 +141,20 @@ export function useNodeSelection(
     );
   }, []);
 
+  const updateNoteTimestamp = useCallback((noteId: number, updatedAt: Date) => {
+    setNotes((prevNotes) =>
+      prevNotes.map((node) => {
+        if (node.id === noteId) {
+          return {
+            ...node,
+            data: { ...node.data!, updatedAt }
+          };
+        }
+        return node;
+      })
+    );
+  }, []);
+
   return {
     notes,
     selectedNoteId,
@@ -150,6 +164,7 @@ export function useNodeSelection(
     updateSelection,
     updateDirtyFlag,
     updateNoteContent,
-    updateNoteName
+    updateNoteName,
+    updateNoteTimestamp
   };
 }

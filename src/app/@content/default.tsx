@@ -22,6 +22,7 @@ export default function ContentSlotDefault() {
     selectedNoteId,
     updateNoteContent,
     markNoteDirty,
+    updateNoteTimestamp,
     saveStatus,
     setSaveStatus
   } = useNotesContext();
@@ -57,9 +58,11 @@ export default function ContentSlotDefault() {
 
     try {
       setSaveStatus('saving');
-      await updateNote(selectedNote.id, { content });
+      const updatedNote = await updateNote(selectedNote.id, { content });
       setSaveStatus('saved');
       markNoteDirty(selectedNote.id, false);
+      // Update the timestamp to trigger re-sorting
+      updateNoteTimestamp(selectedNote.id, updatedNote.updatedAt);
 
       // Reset status after 2 seconds
       setTimeout(() => setSaveStatus('idle'), 2000);
@@ -67,7 +70,7 @@ export default function ContentSlotDefault() {
       setSaveStatus('error');
       console.error('Failed to save note:', error);
     }
-  }, [selectedNote, content, setSaveStatus, markNoteDirty]);
+  }, [selectedNote, content, setSaveStatus, markNoteDirty, updateNoteTimestamp]);
 
   // Register Ctrl+S (Windows/Linux) and Cmd+S (MacOS) keyboard shortcut for save
   useKeyboardShortcut(['CTRL+S', 'META+S'], handleSave);

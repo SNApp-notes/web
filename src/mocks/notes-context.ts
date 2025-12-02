@@ -11,6 +11,7 @@ export interface MockNotesContextValue {
   setSaveStatus: ReturnType<typeof vi.fn>;
   updateNoteContent: ReturnType<typeof vi.fn>;
   updateNoteName: ReturnType<typeof vi.fn>;
+  updateNoteTimestamp: ReturnType<typeof vi.fn>;
   markNoteDirty: ReturnType<typeof vi.fn>;
   getSelectedNote: ReturnType<typeof vi.fn>;
   getNote: ReturnType<typeof vi.fn>;
@@ -44,6 +45,7 @@ export const createMockNotesContext = (
   setSaveStatus: vi.fn(),
   updateNoteContent: vi.fn(),
   updateNoteName: vi.fn(),
+  updateNoteTimestamp: vi.fn(),
   markNoteDirty: vi.fn(),
   getSelectedNote: vi.fn(() => null),
   getNote: vi.fn(() => null),
