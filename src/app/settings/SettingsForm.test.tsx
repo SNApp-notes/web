@@ -31,7 +31,8 @@ vi.mock('@/app/actions/auth', () => ({
 
 // Mock auth client
 vi.mock('@/lib/auth-client', () => ({
-  linkSocial: vi.fn()
+  linkSocial: vi.fn(),
+  unlinkAccount: vi.fn()
 }));
 
 // Mock toaster
@@ -508,5 +509,119 @@ describe('SettingsForm', () => {
     expect(
       screen.getByRole('button', { name: /^change password$/i })
     ).toBeInTheDocument();
+  });
+
+  it('should show disconnect button when GitHub is connected', async () => {
+    const mockGetAccountLinkingStatus = vi.mocked(getAccountLinkingStatus);
+    mockGetAccountLinkingStatus.mockResolvedValueOnce({
+      hasPassword: true,
+      hasGitHub: true
+    });
+
+    render(<SettingsForm />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/your github account is connected/i)).toBeInTheDocument();
+    });
+
+    // Should show disconnect button
+    expect(screen.getByRole('button', { name: /disconnect/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /connect github/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it('should show connect button when GitHub is not connected', async () => {
+    const mockGetAccountLinkingStatus = vi.mocked(getAccountLinkingStatus);
+    mockGetAccountLinkingStatus.mockResolvedValueOnce({
+      hasPassword: true,
+      hasGitHub: false
+    });
+
+    render(<SettingsForm />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/connect your github account for oauth sign-in/i)
+      ).toBeInTheDocument();
+    });
+
+    // Should show connect button
+    expect(screen.getByRole('button', { name: /connect github/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /disconnect/i })).not.toBeInTheDocument();
+  });
+
+  it('should handle GitHub disconnect successfully', async () => {
+    const { unlinkAccount } = await import('@/lib/auth-client');
+    const mockUnlinkAccount = vi.mocked(unlinkAccount);
+    const mockGetAccountLinkingStatus = vi.mocked(getAccountLinkingStatus);
+    const mockToasterCreate = vi.mocked(toaster.create);
+
+    // Initial state: GitHub connected
+    mockGetAccountLinkingStatus.mockResolvedValueOnce({
+      hasPassword: true,
+      hasGitHub: true
+    });
+
+    const { user } = render(<SettingsForm />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /disconnect/i })).toBeInTheDocument();
+    });
+
+    // After disconnect: GitHub not connected
+    mockGetAccountLinkingStatus.mockResolvedValueOnce({
+      hasPassword: true,
+      hasGitHub: false
+    });
+
+    mockUnlinkAccount.mockResolvedValueOnce(
+      {} as unknown as Awaited<ReturnType<typeof unlinkAccount>>
+    );
+
+    const disconnectButton = screen.getByRole('button', { name: /disconnect/i });
+    await user.click(disconnectButton);
+
+    await waitFor(() => {
+      expect(mockUnlinkAccount).toHaveBeenCalledWith({
+        providerId: 'github'
+      });
+      expect(mockToasterCreate).toHaveBeenCalledWith({
+        title: 'Success',
+        description: 'GitHub account disconnected successfully.',
+        type: 'success'
+      });
+    });
+  });
+
+  it('should handle GitHub disconnect error', async () => {
+    const { unlinkAccount } = await import('@/lib/auth-client');
+    const mockUnlinkAccount = vi.mocked(unlinkAccount);
+    const mockGetAccountLinkingStatus = vi.mocked(getAccountLinkingStatus);
+    const mockToasterCreate = vi.mocked(toaster.create);
+
+    mockGetAccountLinkingStatus.mockResolvedValue({
+      hasPassword: true,
+      hasGitHub: true
+    });
+
+    const { user } = render(<SettingsForm />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /disconnect/i })).toBeInTheDocument();
+    });
+
+    mockUnlinkAccount.mockRejectedValueOnce(new Error('Failed to disconnect'));
+
+    const disconnectButton = screen.getByRole('button', { name: /disconnect/i });
+    await user.click(disconnectButton);
+
+    await waitFor(() => {
+      expect(mockToasterCreate).toHaveBeenCalledWith({
+        title: 'Error',
+        description: 'Failed to disconnect GitHub account. Please try again.',
+        type: 'error'
+      });
+    });
   });
 });

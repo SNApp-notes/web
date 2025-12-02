@@ -23,7 +23,7 @@ import {
 } from '@/app/actions/auth';
 import { Toaster, toaster } from '@/components/ui/toaster';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import { linkSocial } from '@/lib/auth-client';
+import { linkSocial, unlinkAccount } from '@/lib/auth-client';
 
 export default function SettingsForm() {
   const router = useRouter();
@@ -31,6 +31,7 @@ export default function SettingsForm() {
   const [showPasswordForm, setShowPasswordForm] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState<boolean>(false);
+  const [isStatusLoading, setIsStatusLoading] = useState<boolean>(true);
   const [hasPassword, setHasPassword] = useState<boolean>(false);
   const [hasGitHub, setHasGitHub] = useState<boolean>(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
@@ -42,9 +43,11 @@ export default function SettingsForm() {
 
   useEffect(() => {
     async function checkAuthStatus() {
+      setIsStatusLoading(true);
       const result = await getAccountLinkingStatus();
       setHasPassword(result.hasPassword);
       setHasGitHub(result.hasGitHub);
+      setIsStatusLoading(false);
     }
     checkAuthStatus();
   }, []);
@@ -187,6 +190,29 @@ export default function SettingsForm() {
     }
   };
 
+  const handleUnlinkGitHub = async () => {
+    try {
+      await unlinkAccount({
+        providerId: 'github'
+      });
+      // Refresh the account status
+      const result = await getAccountLinkingStatus();
+      setHasPassword(result.hasPassword);
+      setHasGitHub(result.hasGitHub);
+      toaster.create({
+        title: 'Success',
+        description: 'GitHub account disconnected successfully.',
+        type: 'success'
+      });
+    } catch (error) {
+      toaster.create({
+        title: 'Error',
+        description: 'Failed to disconnect GitHub account. Please try again.',
+        type: 'error'
+      });
+    }
+  };
+
   return (
     <Box minH="100vh" bg="bg" p={6}>
       <Box maxW="2xl" mx="auto">
@@ -226,13 +252,19 @@ export default function SettingsForm() {
             <Card.Header>
               <Card.Title>Password</Card.Title>
               <Card.Description>
-                {hasPassword
-                  ? 'Change your account password'
-                  : 'Set a password for email/password authentication'}
+                {isStatusLoading
+                  ? 'Loading...'
+                  : hasPassword
+                    ? 'Change your account password'
+                    : 'Set a password for email/password authentication'}
               </Card.Description>
             </Card.Header>
             <Card.Body>
-              {!showPasswordForm ? (
+              {isStatusLoading ? (
+                <Text fontSize="sm" color="fg.muted">
+                  Loading account status...
+                </Text>
+              ) : !showPasswordForm ? (
                 <Flex justify="space-between" align="center">
                   <Box>
                     <Text fontWeight="medium" mb={1}>
@@ -367,40 +399,58 @@ export default function SettingsForm() {
               </Card.Description>
             </Card.Header>
             <Card.Body>
-              <Flex justify="space-between" align="center">
-                <Box>
-                  <Flex align="center" gap={2} mb={1}>
-                    <Text fontWeight="medium">GitHub</Text>
-                    {hasGitHub && (
-                      <Text
-                        fontSize="xs"
-                        fontWeight="bold"
-                        color="green.600"
-                        bg="green.50"
-                        px={2}
-                        py={0.5}
-                        borderRadius="md"
-                      >
-                        ✓ Connected
-                      </Text>
-                    )}
-                  </Flex>
-                  <Text fontSize="sm" color="fg.muted">
-                    {hasGitHub
-                      ? 'Your GitHub account is connected'
-                      : 'Connect your GitHub account for OAuth sign-in'}
-                  </Text>
-                </Box>
-                <Button
-                  p={3}
-                  colorPalette="green"
-                  size="sm"
-                  onClick={handleLinkGitHub}
-                  disabled={hasGitHub}
-                >
-                  {hasGitHub ? 'Connected' : 'Connect GitHub'}
-                </Button>
-              </Flex>
+              {isStatusLoading ? (
+                <Text fontSize="sm" color="fg.muted">
+                  Loading account status...
+                </Text>
+              ) : (
+                <Flex justify="space-between" align="center">
+                  <Box>
+                    <Flex align="center" gap={2} mb={1}>
+                      <Text fontWeight="medium">GitHub</Text>
+                      {hasGitHub && (
+                        <Text
+                          fontSize="xs"
+                          fontWeight="bold"
+                          color="green.600"
+                          bg="green.50"
+                          px={2}
+                          py={0.5}
+                          borderRadius="md"
+                        >
+                          ✓ Connected
+                        </Text>
+                      )}
+                    </Flex>
+                    <Text fontSize="sm" color="fg.muted">
+                      {hasGitHub
+                        ? 'Your GitHub account is connected'
+                        : 'Connect your GitHub account for OAuth sign-in'}
+                    </Text>
+                  </Box>
+                  {hasGitHub ? (
+                    <Button
+                      p={3}
+                      variant="outline"
+                      colorPalette="red"
+                      size="sm"
+                      onClick={handleUnlinkGitHub}
+                    >
+                      Disconnect
+                    </Button>
+                  ) : (
+                    <Button
+                      p={3}
+                      variant="outline"
+                      colorPalette="green"
+                      size="sm"
+                      onClick={handleLinkGitHub}
+                    >
+                      Connect GitHub
+                    </Button>
+                  )}
+                </Flex>
+              )}
             </Card.Body>
           </Card.Root>
 

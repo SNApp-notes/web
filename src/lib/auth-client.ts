@@ -76,4 +76,5 @@ export const authClient = createAuthClient({
  *   callbackURL: '/'
  * });
  */
-export const { signIn, signOut, signUp, useSession, linkSocial } = authClient;
+export const { signIn, signOut, signUp, useSession, linkSocial, unlinkAccount } =
+  authClient;
