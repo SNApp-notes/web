@@ -148,6 +148,7 @@ const Editor = memo(
     ref
   ) {
     const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
+    const mount = useRef<boolean>(true);
     const [viewReady, setViewReady] = useState(false);
 
     const { colorMode } = useColorMode();
@@ -277,13 +278,14 @@ const Editor = memo(
       const view = codeMirrorRef.current?.view;
       // Only scroll if selectedLine is explicitly provided (not undefined/null/0)
       // This prevents unwanted scrolling when switching notes without a line parameter
-      if (selectedLine && selectedLine > 0 && view && viewReady) {
+      if (selectedLine && selectedLine > 0 && view && viewReady && mount.current) {
         // Use requestAnimationFrame to ensure DOM is fully rendered
+        mount.current = false;
         requestAnimationFrame(() => {
           scrollToLine(selectedLine);
         });
       }
-    }, [selectedLine, viewReady, scrollToLine]);
+    }, [selectedLine, viewReady, scrollToLine, mount.current]);
 
     return (
       <CodeMirror
