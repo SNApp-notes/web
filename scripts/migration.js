@@ -34,7 +34,7 @@ try {
 }
 
 // Import Prisma client
-const { PrismaClient } = require('./prisma-main/types');
+const { PrismaClient } = require('../prisma-main/types');
 
 /**
  * Convert legacy text-based headers to Markdown format
