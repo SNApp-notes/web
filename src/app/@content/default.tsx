@@ -64,8 +64,8 @@ export default function ContentSlotDefault() {
       // Update the timestamp to trigger re-sorting
       updateNoteTimestamp(selectedNote.id, updatedNote.updatedAt);
 
-      // Reset status after 2 seconds
-      setTimeout(() => setSaveStatus('idle'), 2000);
+      // Reset status after 1 second
+      setTimeout(() => setSaveStatus('idle'), 1000);
     } catch (error) {
       setSaveStatus('error');
       console.error('Failed to save note:', error);

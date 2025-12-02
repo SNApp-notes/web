@@ -290,9 +290,12 @@ describe('ContentSlotDefault', () => {
       expect(mockContext.setSaveStatus).not.toHaveBeenCalled();
     });
 
-    it('resets save status to idle after 2 seconds', async () => {
+    it('resets save status to idle after 1 second', async () => {
       const user = userEvent.setup();
-      mockUpdateNote.mockResolvedValue({} as unknown as Note);
+      mockUpdateNote.mockResolvedValue({
+        id: 1,
+        updatedAt: new Date()
+      } as unknown as Note);
 
       const mockNote = createMockNote(1, 'Test Note', 'Content');
       mockContext = setupMockNotesContext(mockUseNotesContext, {
@@ -305,16 +308,17 @@ describe('ContentSlotDefault', () => {
       // Simulate Ctrl+S keyboard shortcut
       await user.keyboard('{Control>}s{/Control}');
 
+      // Wait for 'saved' status
       await waitFor(() => {
         expect(mockContext.setSaveStatus).toHaveBeenCalledWith('saved');
       });
 
-      // Wait for the idle status reset (2 seconds + buffer)
+      // Wait for the idle status reset (1 second + buffer)
       await waitFor(
         () => {
           expect(mockContext.setSaveStatus).toHaveBeenCalledWith('idle');
         },
-        { timeout: 3000 }
+        { timeout: 2000 }
       );
     });
   });
