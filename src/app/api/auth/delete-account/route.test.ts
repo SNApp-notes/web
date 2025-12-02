@@ -280,7 +280,9 @@ describe('DELETE /api/auth/delete-account', () => {
       expect(prisma.verification.delete).toHaveBeenCalled();
 
       // SignOut error should be caught and logged
-      expect(consoleLogSpy).toHaveBeenCalledWith('User already signed out or deleted');
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        'User already signed out or no active session'
+      );
 
       // Should still redirect to success page
       const location = response.headers.get('location');
@@ -312,12 +314,14 @@ describe('DELETE /api/auth/delete-account', () => {
 
       await GET(request);
 
-      // Verify the order and calls
+      // Verify the order of operations
+      const signOutCall = vi.mocked(auth.api.signOut).mock.invocationCallOrder[0];
       const userDeleteCall = vi.mocked(prisma.user.delete).mock.invocationCallOrder[0];
       const verificationDeleteCall = vi.mocked(prisma.verification.delete).mock
         .invocationCallOrder[0];
 
-      // User should be deleted before verification cleanup
+      // Sign out should happen first, then user deletion, then verification cleanup
+      expect(signOutCall).toBeLessThan(userDeleteCall);
       expect(userDeleteCall).toBeLessThan(verificationDeleteCall);
     });
   });

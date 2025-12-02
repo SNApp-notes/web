@@ -40,6 +40,16 @@ export async function GET(request: NextRequest) {
 
     const userId = verification.identifier;
 
+    // Sign out the user first (before deleting sessions via cascade)
+    try {
+      await auth.api.signOut({
+        headers: request.headers
+      });
+    } catch (error) {
+      // Ignore signout errors - user might not have an active session
+      console.log('User already signed out or no active session');
+    }
+
     // Delete the user and all related data (cascade delete will handle notes, sessions, accounts)
     await prisma.user.delete({
       where: {
@@ -53,16 +63,6 @@ export async function GET(request: NextRequest) {
         id: `delete_${token}`
       }
     });
-
-    // Sign out the user if they have any active sessions
-    try {
-      await auth.api.signOut({
-        headers: request.headers
-      });
-    } catch (error) {
-      // Ignore signout errors since user is already deleted
-      console.log('User already signed out or deleted');
-    }
 
     // Redirect to a success page
     return NextResponse.redirect(new URL('/login?message=account-deleted', request.url));
