@@ -285,7 +285,7 @@ const Editor = memo(
           scrollToLine(selectedLine);
         });
       }
-    }, [selectedLine, viewReady, scrollToLine, mount.current]);
+    }, [selectedLine, viewReady, scrollToLine]);
 
     return (
       <CodeMirror

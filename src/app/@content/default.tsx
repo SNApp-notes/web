@@ -35,7 +35,7 @@ export default function ContentSlotDefault() {
     if (currentLine && editorRef.current) {
       editorRef.current.scrollToLine(currentLine);
     }
-  }, [currentLine, editorRef.current]);
+  }, [currentLine]);
 
   const selectedNote = selectedNoteId ? getNote(selectedNoteId) : null;
   // Content is now populated server-side, no null values expected
