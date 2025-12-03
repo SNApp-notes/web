@@ -44,7 +44,7 @@
 import { z } from 'zod';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
-import { sendEmail } from '@/lib/email';
+import { sendDeleteAccountEmail } from '@/lib/email';
 import prisma from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 
@@ -399,63 +399,10 @@ export async function requestAccountDeletionAction() {
       };
     }
 
-    await sendEmail({
+    await sendDeleteAccountEmail({
       to: session.user.email,
-      subject: 'Confirm Account Deletion - SNApp',
-      text: `
-Hi ${session.user.name || 'there'},
-
-We received a request to delete your SNApp account. This action cannot be undone and will permanently delete:
-
-- Your account and profile information
-- All your notes and content
-- Your login sessions
-
-If you're sure you want to delete your account, click the link below:
-
-${confirmationUrl}
-
-This link will expire in 24 hours for security reasons.
-
-If you didn't request account deletion, you can safely ignore this email. Your account will remain active.
-      `.trim(),
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #E53E3E; text-align: center;">Account Deletion Request</h1>
-          <p style="color: #4A5568; font-size: 16px;">
-            Hi ${session.user.name || 'there'},
-          </p>
-          <p style="color: #4A5568; font-size: 16px;">
-            We received a request to delete your SNApp account. This action cannot be undone and will permanently delete:
-          </p>
-          <ul style="color: #4A5568; font-size: 16px; margin: 16px 0;">
-            <li>Your account and profile information</li>
-            <li>All your notes and content</li>
-            <li>Your login sessions</li>
-          </ul>
-          <p style="color: #4A5568; font-size: 16px;">
-            <strong>If you're sure you want to delete your account, click the button below:</strong>
-          </p>
-          <div style="text-align: center; margin: 32px 0;">
-            <a href="${confirmationUrl}" style="background-color: #E53E3E; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-              Permanently Delete My Account
-            </a>
-          </div>
-          <p style="color: #718096; font-size: 14px;">
-            If the button doesn't work, copy and paste this link into your browser:
-          </p>
-          <p style="color: #718096; font-size: 14px; word-break: break-all;">
-            ${confirmationUrl}
-          </p>
-          <p style="color: #718096; font-size: 14px;">
-            This link will expire in 24 hours for security reasons.
-          </p>
-          <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 32px 0;">
-          <p style="color: #A0AEC0; font-size: 12px; text-align: center;">
-            If you didn't request account deletion, you can safely ignore this email. Your account will remain active.
-          </p>
-        </div>
-      `
+      name: session.user.name || 'there',
+      url: confirmationUrl
     });
 
     return {

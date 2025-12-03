@@ -39,13 +39,15 @@ vi.mock('next/headers', () => ({
 
 // Mock email
 vi.mock('@/lib/email', () => ({
-  sendEmail: vi.fn()
+  sendVerifyEmail: vi.fn(),
+  sendResetPasswordEmail: vi.fn(),
+  sendDeleteAccountEmail: vi.fn()
 }));
 
 // Import mocks after defining them
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { sendEmail } from '@/lib/email';
+import { sendDeleteAccountEmail } from '@/lib/email';
 
 describe('auth actions', () => {
   const mockUserId = 'test-user-id';
@@ -233,7 +235,7 @@ describe('auth actions', () => {
         session: { id: 'session-id', userId: mockUserId }
       } as unknown as Awaited<ReturnType<typeof auth.api.getSession>>);
 
-      vi.mocked(sendEmail).mockResolvedValue(undefined);
+      vi.mocked(sendDeleteAccountEmail).mockResolvedValue(undefined);
 
       const result = await requestAccountDeletionAction();
 
