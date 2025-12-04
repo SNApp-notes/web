@@ -52,6 +52,15 @@ export async function signOutUser(page: Page): Promise<void> {
   });
 
   // Click logout and wait for navigation to complete
-  await page.getByTestId('sign-out-button').click();
-  await page.waitForURL(/.*login/, { timeout: 5000 });
+  // Use longer timeout and wait for load state to ensure sign-out completes
+  await Promise.all([
+    page.waitForURL(/.*login/, { timeout: 10000 }),
+    page.getByTestId('sign-out-button').click()
+  ]);
+
+  // Wait for the login page to be fully loaded
+  await page.waitForLoadState('networkidle', { timeout: 5000 });
+
+  // Verify we're actually on the login page by checking for sign-in button
+  await page.waitForSelector('button[type="submit"]', { timeout: 5000 });
 }
