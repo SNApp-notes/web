@@ -4,6 +4,7 @@ import type { Note } from '@/lib/prisma';
 import type { NoteTreeNode } from '@/types/tree';
 import { getNotes } from '@/app/actions/notes';
 import { NotesProvider } from '@/components/notes/NotesContext';
+import { hashContent } from '@/lib/hash';
 
 interface NotesLayoutWrapperProps {
   children: React.ReactNode;
@@ -11,6 +12,9 @@ interface NotesLayoutWrapperProps {
 
 // Convert Prisma Note to NoteTreeNode
 function convertNoteToTreeNode(note: Note): NoteTreeNode {
+  // Store hash of initial content for undo detection
+  const contentHash = hashContent(note.content);
+
   return {
     id: note.noteId,
     name: note.name,
@@ -19,7 +23,8 @@ function convertNoteToTreeNode(note: Note): NoteTreeNode {
       content: note.content, // Preserve null for example notes
       dirty: false,
       createdAt: note.createdAt,
-      updatedAt: note.updatedAt
+      updatedAt: note.updatedAt,
+      contentHash
     }
   };
 }

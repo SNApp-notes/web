@@ -24,17 +24,19 @@ vi.mock('@chakra-ui/react', async () => {
 });
 
 // Fix for jsdom missing Range API (https://github.com/jsdom/jsdom/issues/3729)
-document.createRange = () => {
-  const range = new Range();
-  range.getClientRects = () => ({
-    item: () => null,
-    length: 0,
-    [Symbol.iterator]: function* () {
-      yield* [];
-    }
-  });
-  return range;
-};
+if (typeof document !== 'undefined') {
+  document.createRange = () => {
+    const range = new Range();
+    range.getClientRects = () => ({
+      item: () => null,
+      length: 0,
+      [Symbol.iterator]: function* () {
+        yield* [];
+      }
+    });
+    return range;
+  };
+}
 
 // Mock ResizeObserver for Chakra UI components that use Zag.js
 global.ResizeObserver = class ResizeObserver {

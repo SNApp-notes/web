@@ -18,13 +18,14 @@ export default function ContentSlotDefault() {
   const [lineParam, setLineParam] = useQueryState('line', parseAsInteger.withDefault(0));
 
   const {
-    getNote,
     selectedNoteId,
+    saveStatus,
+    setSaveStatus,
     updateNoteContent,
     markNoteDirty,
     updateNoteTimestamp,
-    saveStatus,
-    setSaveStatus
+    setContentHash,
+    getNote
   } = useNotesContext();
 
   // Derive current line from query parameter (only on note routes)
@@ -63,6 +64,8 @@ export default function ContentSlotDefault() {
       markNoteDirty(selectedNote.id, false);
       // Update the timestamp to trigger re-sorting
       updateNoteTimestamp(selectedNote.id, updatedNote.updatedAt);
+      // Store hash of saved content for undo detection
+      setContentHash(selectedNote.id, content);
 
       // Reset status after 1 second
       setTimeout(() => setSaveStatus('idle'), 1000);
@@ -70,7 +73,14 @@ export default function ContentSlotDefault() {
       setSaveStatus('error');
       console.error('Failed to save note:', error);
     }
-  }, [selectedNote, content, setSaveStatus, markNoteDirty, updateNoteTimestamp]);
+  }, [
+    selectedNote,
+    content,
+    setSaveStatus,
+    markNoteDirty,
+    updateNoteTimestamp,
+    setContentHash
+  ]);
 
   // Register Ctrl+S (Windows/Linux) and Cmd+S (MacOS) keyboard shortcut for save
   useKeyboardShortcut(['CTRL+S', 'META+S'], handleSave);

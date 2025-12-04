@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
+import { hashContent } from '@/lib/hash';
 
 // Define the context value type inline since it's not exported from NotesContext
 export interface MockNotesContextValue {
@@ -12,6 +13,7 @@ export interface MockNotesContextValue {
   updateNoteContent: ReturnType<typeof vi.fn>;
   updateNoteName: ReturnType<typeof vi.fn>;
   updateNoteTimestamp: ReturnType<typeof vi.fn>;
+  setContentHash: ReturnType<typeof vi.fn>;
   markNoteDirty: ReturnType<typeof vi.fn>;
   getSelectedNote: ReturnType<typeof vi.fn>;
   getNote: ReturnType<typeof vi.fn>;
@@ -31,7 +33,8 @@ export const createMockNote = (
     content,
     dirty,
     createdAt: new Date('2025-01-01T00:00:00Z'),
-    updatedAt: new Date('2025-01-01T00:00:00Z')
+    updatedAt: new Date('2025-01-01T00:00:00Z'),
+    contentHash: hashContent(content)
   }
 });
 
@@ -45,19 +48,23 @@ export const createMockNotesContext = (
   setSaveStatus: vi.fn(),
   updateNoteContent: vi.fn(),
   updateNoteName: vi.fn(),
-  updateNoteTimestamp: vi.fn(),
   markNoteDirty: vi.fn(),
-  getSelectedNote: vi.fn(() => null),
-  getNote: vi.fn(() => null),
+  updateNoteTimestamp: vi.fn(),
+  setContentHash: vi.fn(),
+  getSelectedNote: vi.fn(),
+  getNote: vi.fn(),
   selectNote: vi.fn(),
   ...overrides
 });
 
-export const setupMockNotesContext = (
+/**
+ * Helper to setup mock notes context and configure useNotesContext mock
+ */
+export function setupMockNotesContext(
   mockUseNotesContext: ReturnType<typeof vi.fn>,
-  context: Partial<MockNotesContextValue> = {}
-) => {
-  const mockContext = createMockNotesContext(context);
+  options?: Partial<MockNotesContextValue>
+): MockNotesContextValue {
+  const mockContext = createMockNotesContext(options);
   mockUseNotesContext.mockReturnValue(mockContext);
   return mockContext;
-};
+}

@@ -7,6 +7,7 @@ export interface NoteData {
   dirty: boolean;
   createdAt: Date;
   updatedAt: Date;
+  contentHash?: string; // Hash of last saved content for undo detection
 }
 
 export interface Header {

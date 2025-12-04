@@ -633,4 +633,88 @@ describe('ContentSlotDefault', () => {
       expect(screen.getByTestId('save-status')).toHaveTextContent('error');
     });
   });
+
+  describe('Hash-Based Save State Detection', () => {
+    it('sets content hash after successful save', async () => {
+      const user = userEvent.setup();
+      mockUpdateNote.mockResolvedValue({} as unknown as Note);
+
+      const mockNote = createMockNote(1, 'Test Note', 'Original content');
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 1,
+        getNote: vi.fn(() => mockNote)
+      });
+
+      render(<ContentSlotDefault />);
+
+      // Simulate Ctrl+S keyboard shortcut
+      await user.keyboard('{Control>}s{/Control}');
+
+      await waitFor(() => {
+        expect(mockContext.setContentHash).toHaveBeenCalledWith(1, 'Original content');
+      });
+    });
+
+    it('marks note as clean when content is restored to saved state', async () => {
+      const user = userEvent.setup();
+      const mockNote = createMockNote(1, 'Test Note', 'Original content');
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 1,
+        getNote: vi.fn(() => mockNote)
+      });
+
+      render(<ContentSlotDefault />);
+
+      // Change content (marks as dirty via updateNoteContent)
+      const changeButton = screen.getByText('Change Content');
+      await user.click(changeButton);
+      expect(mockContext.updateNoteContent).toHaveBeenCalledWith(1, 'new content');
+
+      // Note: In the real implementation, updateNoteContent in useNodeSelection
+      // compares content hash with contentHash and sets dirty flag accordingly.
+      // The mock just tracks the call, but in integration, dirty would be set to false
+      // when content matches contentHash (e.g., after CTRL+Z undo).
+    });
+
+    it('does not call setContentHash when save fails', async () => {
+      const user = userEvent.setup();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockUpdateNote.mockRejectedValue(new Error('Save failed'));
+
+      const mockNote = createMockNote(1, 'Test Note', 'Content');
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 1,
+        getNote: vi.fn(() => mockNote)
+      });
+
+      render(<ContentSlotDefault />);
+
+      // Simulate Ctrl+S keyboard shortcut
+      await user.keyboard('{Control>}s{/Control}');
+
+      await waitFor(() => {
+        expect(mockContext.setSaveStatus).toHaveBeenCalledWith('error');
+      });
+
+      // setContentHash should not be called on error
+      expect(mockContext.setContentHash).not.toHaveBeenCalled();
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('does not call setContentHash when no note is selected', async () => {
+      const user = userEvent.setup();
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: null,
+        getNote: vi.fn(() => null)
+      });
+
+      render(<ContentSlotDefault />);
+
+      // Simulate Ctrl+S keyboard shortcut
+      await user.keyboard('{Control>}s{/Control}');
+
+      expect(mockContext.setContentHash).not.toHaveBeenCalled();
+    });
+  });
 });

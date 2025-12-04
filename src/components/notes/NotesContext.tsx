@@ -98,6 +98,7 @@ import { selectNode } from '@/lib/utils';
  * @property {(noteId: number, name: string) => void} updateNoteName - Update note name (marks as dirty)
  * @property {(noteId: number, dirty: boolean) => void} markNoteDirty - Set note's dirty flag
  * @property {(noteId: number, updatedAt: Date) => void} updateNoteTimestamp - Update note's updatedAt timestamp
+ * @property {(noteId: number, content: string) => void} setSavedContentHash - Set saved content hash for undo detection
  * @property {() => NoteTreeNode | null} getSelectedNote - Get currently selected note object
  * @property {(noteId: number) => NoteTreeNode | null} getNote - Get note by ID
  * @property {(noteId: number | null) => void} selectNote - Select note and navigate to URL
@@ -112,6 +113,7 @@ interface NotesContextValue {
   updateNoteName: (noteId: number, name: string) => void;
   markNoteDirty: (noteId: number, dirty: boolean) => void;
   updateNoteTimestamp: (noteId: number, updatedAt: Date) => void;
+  setContentHash: (noteId: number, content: string) => void;
   getSelectedNote: () => NoteTreeNode | null;
   getNote: (noteId: number) => NoteTreeNode | null;
   selectNote: (noteId: number | null) => void;
@@ -245,7 +247,8 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     updateDirtyFlag,
     updateNoteContent,
     updateNoteName,
-    updateNoteTimestamp
+    updateNoteTimestamp,
+    setContentHash
   } = useNodeSelection(updatedNotes, initSelectedNodeId);
 
   // Sync notes state when initialNotes prop changes (e.g., after redirect)
@@ -312,6 +315,7 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     updateNoteName,
     markNoteDirty,
     updateNoteTimestamp,
+    setContentHash,
     getSelectedNote,
     getNote,
     selectNote

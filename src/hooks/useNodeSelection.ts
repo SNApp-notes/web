@@ -43,6 +43,7 @@ import { useState, useCallback } from 'react';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import { selectNode } from '@/lib/utils';
+import { hashContent } from '@/lib/hash';
 
 /**
  * Custom hook for managing note selection and state in the note tree.
@@ -120,9 +121,14 @@ export function useNodeSelection(
     setNotes((prevNotes) =>
       prevNotes.map((node) => {
         if (node.id === noteId) {
+          // Compute hash of new content
+          const currentHash = hashContent(content);
+          // Compare with saved hash - if they match, content is back to saved state
+          const isDirty = currentHash !== node.data?.contentHash;
+
           return {
             ...node,
-            data: { ...node.data!, content, dirty: true }
+            data: { ...node.data!, content, dirty: isDirty }
           };
         }
         return node;
@@ -155,6 +161,21 @@ export function useNodeSelection(
     );
   }, []);
 
+  const setContentHash = useCallback((noteId: number, content: string) => {
+    const contentHash = hashContent(content);
+    setNotes((prevNotes) =>
+      prevNotes.map((node) => {
+        if (node.id === noteId) {
+          return {
+            ...node,
+            data: { ...node.data!, contentHash: contentHash }
+          };
+        }
+        return node;
+      })
+    );
+  }, []);
+
   return {
     notes,
     selectedNoteId,
@@ -165,6 +186,7 @@ export function useNodeSelection(
     updateDirtyFlag,
     updateNoteContent,
     updateNoteName,
-    updateNoteTimestamp
+    updateNoteTimestamp,
+    setContentHash
   };
 }
