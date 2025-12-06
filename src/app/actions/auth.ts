@@ -928,7 +928,7 @@ export async function forgotPasswordAction(
     const headersList = await headers();
     const baseUrl = process.env.BETTER_AUTH_URL || 'http://localhost:3000';
 
-    await auth.api.forgetPassword({
+    await auth.api.requestPasswordReset({
       body: {
         email,
         redirectTo: `${baseUrl}/reset-password`
