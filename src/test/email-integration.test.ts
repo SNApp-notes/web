@@ -52,14 +52,14 @@ vi.mock('@/lib/prisma', () => ({
 // Mock Better Auth
 vi.mock('@/lib/auth', () => {
   const mockGetSession = vi.fn();
-  const mockForgetPassword = vi.fn();
+  const mockRequestPasswordReset = vi.fn();
   const mockVerifyEmail = vi.fn();
 
   return {
     auth: {
       api: {
         getSession: mockGetSession,
-        forgetPassword: mockForgetPassword,
+        requestPasswordReset: mockRequestPasswordReset,
         verifyEmail: mockVerifyEmail
       },
       emailAndPassword: {
@@ -71,7 +71,7 @@ vi.mock('@/lib/auth', () => {
     },
     __mockInstances: {
       getSession: mockGetSession,
-      forgetPassword: mockForgetPassword,
+      requestPasswordReset: mockRequestPasswordReset,
       verifyEmail: mockVerifyEmail
     }
   };
@@ -110,7 +110,7 @@ vi.mocked(nodemailer.createTransport).mockImplementation(() => {
 
 // Get references to the auth mocks
 const mockGetSession = vi.mocked(auth.api.getSession);
-const mockForgetPassword = vi.mocked(auth.api.forgetPassword);
+const mockRequestPasswordReset = vi.mocked(auth.api.requestPasswordReset);
 const mockVerifyEmail = vi.mocked(auth.api.verifyEmail);
 const mockCreateTransport = vi.mocked(nodemailer.createTransport);
 
@@ -133,7 +133,7 @@ describe('Email Integration Tests', () => {
     mockSendMail.mockClear();
     mockCreateTransport.mockClear();
     mockGetSession.mockClear();
-    mockForgetPassword.mockClear();
+    mockRequestPasswordReset.mockClear();
     mockVerifyEmail.mockClear();
     vi.spyOn(console, 'error').mockImplementation(() => {});
     // Set NODE_ENV for email sending tests
@@ -336,11 +336,11 @@ describe('Email Integration Tests', () => {
       const formData = new FormData();
       formData.append('email', 'test@example.com');
 
-      mockForgetPassword.mockResolvedValue({ status: true });
+      mockRequestPasswordReset.mockResolvedValue({ status: true, message: '' });
 
       await forgotPasswordAction({}, formData);
 
-      expect(mockForgetPassword).toHaveBeenCalledWith(
+      expect(mockRequestPasswordReset).toHaveBeenCalledWith(
         expect.objectContaining({
           body: {
             email: 'test@example.com',
@@ -356,11 +356,11 @@ describe('Email Integration Tests', () => {
       const formData = new FormData();
       formData.append('email', 'test@example.com');
 
-      mockForgetPassword.mockResolvedValue({ status: true });
+      mockRequestPasswordReset.mockResolvedValue({ status: true, message: '' });
 
       await forgotPasswordAction({}, formData);
 
-      expect(mockForgetPassword).toHaveBeenCalledWith(
+      expect(mockRequestPasswordReset).toHaveBeenCalledWith(
         expect.objectContaining({
           body: {
             email: 'test@example.com',
@@ -376,11 +376,11 @@ describe('Email Integration Tests', () => {
       const formData = new FormData();
       formData.append('email', 'test@example.com');
 
-      mockForgetPassword.mockResolvedValue({ status: true });
+      mockRequestPasswordReset.mockResolvedValue({ status: true, message: '' });
 
       await forgotPasswordAction({}, formData);
 
-      expect(mockForgetPassword).toHaveBeenCalledWith(
+      expect(mockRequestPasswordReset).toHaveBeenCalledWith(
         expect.objectContaining({
           body: {
             email: 'test@example.com',
@@ -397,7 +397,7 @@ describe('Email Integration Tests', () => {
       const result = await forgotPasswordAction({}, formData);
 
       expect(result.errors?.email).toBeDefined();
-      expect(mockForgetPassword).not.toHaveBeenCalled();
+      expect(mockRequestPasswordReset).not.toHaveBeenCalled();
     });
   });
 
@@ -613,15 +613,15 @@ describe('Email Integration Tests', () => {
 
       vi.clearAllMocks();
       mockSendMail.mockClear();
-      mockForgetPassword.mockClear();
+      mockRequestPasswordReset.mockClear();
 
       // Test password reset
       const formData = new FormData();
       formData.append('email', 'test@example.com');
-      mockForgetPassword.mockResolvedValue({ status: true });
+      mockRequestPasswordReset.mockResolvedValue({ status: true, message: '' });
 
       await forgotPasswordAction({}, formData);
-      expect(mockForgetPassword).toHaveBeenCalledWith(
+      expect(mockRequestPasswordReset).toHaveBeenCalledWith(
         expect.objectContaining({
           body: expect.objectContaining({
             redirectTo: `${testDomain}/reset-password`

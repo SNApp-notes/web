@@ -904,7 +904,7 @@ const forgotPasswordSchema = z.object({
  * - Always returns success to prevent email enumeration attacks
  * - Sends email with password reset link to /reset-password page
  * - Reset link includes token for authentication
- * - Email is sent via Better Auth's forgetPassword API
+ * - Email is sent via Better Auth's requestPasswordReset API
  * - Base URL determined from BETTER_AUTH_URL environment variable
  */
 export async function forgotPasswordAction(
