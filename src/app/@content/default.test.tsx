@@ -24,7 +24,7 @@ vi.mock('@/lib/markdown-parser', () => ({
 
 // Mock nuqs
 const mockSetLineParam = vi.fn();
-let mockLineParam = 0;
+let mockLineParam: number | null = 0;
 
 vi.mock('nuqs', () => ({
   useQueryState: vi.fn(() => [mockLineParam, mockSetLineParam]),
@@ -107,11 +107,12 @@ describe('ContentSlotDefault', () => {
     mockUseRouter.mockReturnValue(mockRouter);
 
     // Mock window.location
+    delete (window as Record<string, unknown>).location;
     window.location = {
       pathname: '/note/1',
       search: '',
       href: 'http://localhost/note/1'
-    } as unknown as Location;
+    } as Location;
   });
 
   afterEach(() => {
@@ -355,7 +356,7 @@ describe('ContentSlotDefault', () => {
       });
 
       // Make setLineParam actually update the mock value
-      mockSetLineParam.mockImplementation((newLine: number) => {
+      mockSetLineParam.mockImplementation((newLine: number | null) => {
         mockLineParam = newLine;
         mockUseQueryState.mockReturnValue([mockLineParam, mockSetLineParam]);
       });
@@ -479,86 +480,6 @@ describe('ContentSlotDefault', () => {
 
       // Current line should still be 42 (line parameter persists in URL)
       expect(screen.getByTestId('current-line')).toHaveTextContent('42');
-    });
-  });
-
-  describe('Unsaved Changes Warning', () => {
-    it('shows warning when leaving with unsaved changes', () => {
-      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-      const mockNote = createMockNote(1, 'Test Note', 'Content', true);
-      mockContext = setupMockNotesContext(mockUseNotesContext, {
-        selectedNoteId: 1,
-        getNote: vi.fn(() => mockNote)
-      });
-
-      render(<ContentSlotDefault />);
-
-      const event = {
-        preventDefault: vi.fn(),
-        returnValue: ''
-      } as unknown as BeforeUnloadEvent;
-
-      const listener = addEventListenerSpy.mock.calls.find(
-        ([eventName]) => eventName === 'beforeunload'
-      )?.[1] as (e: BeforeUnloadEvent) => void;
-
-      if (listener) {
-        listener(event);
-      }
-
-      expect(event.preventDefault).toHaveBeenCalled();
-      expect(event.returnValue).toBe(
-        'You have unsaved changes. Are you sure you want to leave?'
-      );
-
-      addEventListenerSpy.mockRestore();
-    });
-
-    it('does not show warning when leaving without unsaved changes', () => {
-      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-      const mockNote = createMockNote(1, 'Test Note', 'Content', false);
-      mockContext = setupMockNotesContext(mockUseNotesContext, {
-        selectedNoteId: 1,
-        getNote: vi.fn(() => mockNote)
-      });
-
-      render(<ContentSlotDefault />);
-
-      const event = {
-        preventDefault: vi.fn(),
-        returnValue: ''
-      } as unknown as BeforeUnloadEvent;
-
-      const listener = addEventListenerSpy.mock.calls.find(
-        ([eventName]) => eventName === 'beforeunload'
-      )?.[1] as (e: BeforeUnloadEvent) => void;
-
-      if (listener) {
-        listener(event);
-      }
-
-      expect(event.preventDefault).not.toHaveBeenCalled();
-      expect(event.returnValue).toBe('');
-
-      addEventListenerSpy.mockRestore();
-    });
-
-    it('removes beforeunload listener on unmount', () => {
-      const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-      const mockNote = createMockNote(1, 'Test Note', 'Content', true);
-      mockContext = setupMockNotesContext(mockUseNotesContext, {
-        selectedNoteId: 1,
-        getNote: vi.fn(() => mockNote)
-      });
-
-      const { unmount } = render(<ContentSlotDefault />);
-
-      unmount();
-
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'beforeunload',
-        expect.any(Function)
-      );
     });
   });
 

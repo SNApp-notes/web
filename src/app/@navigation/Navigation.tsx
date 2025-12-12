@@ -5,6 +5,7 @@ import { useCallback, useLayoutEffect } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { signOutAction } from '@/app/actions/auth';
 import { useNotesContext } from '@/components/notes/NotesContext';
+import { clearAllSnappData } from '@/lib/localStorage';
 import TopNavigationBar from '@/components/notes/TopNavigationBar';
 
 export default function Navigation() {
@@ -28,6 +29,10 @@ export default function Navigation() {
     }
 
     try {
+      // Clear all localStorage data (unsaved notes, editor state, etc.)
+      clearAllSnappData();
+
+      // Sign out from auth
       await signOutAction();
       router.push('/login');
     } catch (error) {

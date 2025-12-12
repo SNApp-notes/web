@@ -79,7 +79,7 @@ import { languages } from '@codemirror/language-data';
 import { basicLight, basicDark } from '@uiw/codemirror-theme-basic';
 import { useColorMode } from '@/components/ui/color-mode';
 import { EditorView } from '@codemirror/view';
-import type { EditorProps, EditorRef } from '@/types/editor';
+import type { EditorProps, EditorRef, ScrollState } from '@/types/editor';
 
 /**
  * CodeMirror 6-based markdown editor with syntax highlighting and line scrolling.
@@ -143,7 +143,9 @@ const Editor = memo(
       readOnly = false,
       selectedLine,
       className,
-      onEditorReady
+      onEditorReady,
+      onCursorChange,
+      onScrollChange
     },
     ref
   ) {
@@ -256,7 +258,68 @@ const Editor = memo(
             });
           }
         },
-        scrollToLine
+        scrollToLine,
+        getScrollState: (): ScrollState => {
+          const view = codeMirrorRef.current?.view;
+          if (!view) {
+            return {
+              cursor: { line: 0, column: 0 },
+              scrollAnchor: { from: 0, topOffset: 0, scrollLeft: 0 }
+            };
+          }
+          // Get cursor position
+          const pos = view.state.selection.main.head;
+          const line = view.state.doc.lineAt(pos);
+          const cursor = {
+            line: line.number,
+            column: pos - line.from
+          };
+
+          // Get scroll anchor data similar to CodeMirror's scrollSnapshot()
+          const { scrollTop, scrollLeft } = view.scrollDOM;
+          // Access internal viewState to get scroll anchor (like scrollSnapshot does internally)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const ref = (view as any).viewState.scrollAnchorAt(scrollTop);
+          const scrollAnchor = {
+            from: ref.from, // Character position at the reference line
+            topOffset: ref.top - scrollTop, // Distance from line top to viewport top
+            scrollLeft // Horizontal scroll position
+          };
+
+          return { cursor, scrollAnchor };
+        },
+        setScrollState: (state: ScrollState) => {
+          const view = codeMirrorRef.current?.view;
+          if (!view || !state) {
+            return;
+          }
+          // Restore scroll and cursor in a single dispatch
+          // Selection sets the cursor position (anchor === head for cursor)
+          // Effect scrolls to the anchor position with proper offset
+          try {
+            const doc = view.state.doc;
+            // Calculate cursor position from line/column
+            if (state.cursor.line > doc.lines || state.cursor.line < 1) {
+              return;
+            }
+            const lineObj = doc.line(state.cursor.line);
+            const cursorPos = Math.min(lineObj.from + state.cursor.column, lineObj.to);
+
+            view.dispatch({
+              selection: { anchor: cursorPos, head: cursorPos }, // Set cursor position
+              effects: [
+                EditorView.scrollIntoView(state.scrollAnchor.from, {
+                  y: 'start',
+                  x: 'start',
+                  yMargin: state.scrollAnchor.topOffset, // Offset from line top
+                  xMargin: state.scrollAnchor.scrollLeft // Horizontal scroll
+                })
+              ]
+            });
+          } catch (error) {
+            console.warn('Failed to restore scroll state:', error);
+          }
+        }
       };
 
       // Forward ref to parent
@@ -286,6 +349,54 @@ const Editor = memo(
         });
       }
     }, [selectedLine, viewReady, scrollToLine]);
+
+    // Listen for cursor position changes
+    useEffect(() => {
+      if (!viewReady || !onCursorChange) return;
+
+      const view = codeMirrorRef.current?.view;
+      if (!view) return;
+
+      // Use DOM event listener on the editor
+      const handleUpdate = () => {
+        // Call without arguments - parent will fetch fresh data from API
+        onCursorChange();
+      };
+
+      // Listen to clicks, keyboard events that change cursor
+      const dom = view.dom;
+      dom.addEventListener('click', handleUpdate);
+      dom.addEventListener('keyup', handleUpdate);
+      dom.addEventListener('mouseup', handleUpdate);
+
+      return () => {
+        dom.removeEventListener('click', handleUpdate);
+        dom.removeEventListener('keyup', handleUpdate);
+        dom.removeEventListener('mouseup', handleUpdate);
+      };
+    }, [viewReady, onCursorChange]);
+
+    // Listen for scroll position changes
+    useEffect(() => {
+      if (!viewReady || !onScrollChange) return;
+
+      const view = codeMirrorRef.current?.view;
+      if (!view) return;
+
+      const scroller = view.scrollDOM;
+      if (!scroller) return;
+
+      const handleScroll = () => {
+        // Call without arguments - parent will fetch fresh data from API
+        onScrollChange();
+      };
+
+      scroller.addEventListener('scroll', handleScroll, { passive: true });
+
+      return () => {
+        scroller.removeEventListener('scroll', handleScroll);
+      };
+    }, [viewReady, onScrollChange]);
 
     return (
       <CodeMirror

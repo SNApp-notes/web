@@ -26,6 +26,13 @@ export interface EditorProps {
   };
   className?: string;
   onEditorReady?: (editorRef: EditorRef) => void;
+  onCursorChange?: () => void;
+  onScrollChange?: () => void;
+}
+
+export interface ScrollState {
+  cursor: { line: number; column: number };
+  scrollAnchor: { from: number; topOffset: number; scrollLeft: number };
 }
 
 export interface EditorRef {
@@ -34,4 +41,6 @@ export interface EditorRef {
   getValue: () => string;
   setValue: (value: string) => void;
   scrollToLine: (line: number) => void;
+  getScrollState: () => ScrollState;
+  setScrollState: (state: ScrollState) => void;
 }

@@ -63,6 +63,10 @@ interface MiddlePanelProps {
   onContentChange: (content: string) => void;
   /** Optional callback invoked when editor is ready */
   onEditorReady?: (editorRef: EditorRef) => void;
+  /** Optional callback invoked when cursor position changes */
+  onCursorChange?: () => void;
+  /** Optional callback invoked when scroll position changes */
+  onScrollChange?: () => void;
 }
 
 /**
@@ -89,7 +93,9 @@ const MiddlePanel = memo(function MiddlePanel({
   saveStatus,
   selectedLine,
   onContentChange,
-  onEditorReady
+  onEditorReady,
+  onCursorChange,
+  onScrollChange
 }: MiddlePanelProps) {
   const saveStatusText = useMemo(() => {
     switch (saveStatus) {
@@ -152,6 +158,8 @@ const MiddlePanel = memo(function MiddlePanel({
             onChange={handleContentChange}
             selectedLine={selectedLine}
             onEditorReady={onEditorReady}
+            onCursorChange={onCursorChange}
+            onScrollChange={onScrollChange}
             placeholder="Start writing your note..."
           />
         ) : (
