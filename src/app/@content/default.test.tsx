@@ -1,4 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+// Set up console.warn spy before any imports to catch warnings from hooks
+const originalWarn = console.warn;
+vi.spyOn(console, 'warn').mockImplementation((...args) => {
+  // Suppress expected "Base content mismatch" warnings from diff conflict detection
+  // These occur because tests mock note content differently between renders
+  if (typeof args[0] === 'string' && args[0].includes('Base content mismatch')) {
+    return;
+  }
+  originalWarn(...args);
+});
+
 import { render, screen, waitFor, act } from '@/test/utils';
 import { userEvent } from '@testing-library/user-event';
 import ContentSlotDefault from './default';
@@ -91,12 +103,20 @@ describe('ContentSlotDefault', () => {
   let mockContext: MockNotesContextValue;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Clear all mocks except console.warn spy
+    mockExtractHeaders.mockClear();
+    mockSetLineParam.mockClear();
+    mockUpdateNote.mockClear();
+    mockUseNotesContext.mockClear();
+    mockUseRouter.mockClear();
+    mockUsePathname.mockClear();
+    mockUseParams.mockClear();
+    mockUseQueryState.mockClear();
+
     mockExtractHeaders.mockReturnValue([]);
 
     // Reset nuqs mock
     mockLineParam = 0;
-    mockSetLineParam.mockClear();
     mockUseQueryState.mockReturnValue([mockLineParam, mockSetLineParam]);
 
     // Reset next/navigation mocks
@@ -116,7 +136,7 @@ describe('ContentSlotDefault', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    // Don't restore console.warn spy - keep it active for entire test file
   });
 
   describe('Component Rendering', () => {

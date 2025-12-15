@@ -87,7 +87,21 @@ export interface UnsavedNoteDiff {
  * ```
  */
 export async function createContentHash(content: string): Promise<string> {
-  // Use Web Crypto API for hashing
+  // Check if crypto.subtle is available (requires secure context)
+  if (typeof crypto === 'undefined' || !crypto.subtle) {
+    console.warn('[diff-utils] crypto.subtle not available, using fallback hash');
+    // Fallback to simple string hash for non-secure contexts (e.g., Docker E2E tests)
+    // This is NOT cryptographically secure but sufficient for conflict detection
+    let hash = 0;
+    for (let i = 0; i < content.length; i++) {
+      const char = content.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(16).padStart(8, '0');
+  }
+
+  // Use Web Crypto API for hashing (secure contexts)
   const encoder = new TextEncoder();
   const data = encoder.encode(content);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -199,7 +213,7 @@ export function calculateDiffSize(
   const diff = createDiff(original, edited);
 
   // UTF-16 encoding: 2 bytes per character
-  const originalSize = edited.length * 2;
+  const originalSize = original.length * 2;
   const diffSize = diff.length * 2;
 
   const savings = originalSize > 0 ? 1 - diffSize / originalSize : 0;

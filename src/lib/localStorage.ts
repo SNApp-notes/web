@@ -283,16 +283,21 @@ export async function getStorageInfo(): Promise<{
 
     // Get total storage quota if available
     if (navigator.storage && navigator.storage.estimate) {
-      const estimate = await navigator.storage.estimate();
-      const total = estimate.quota || 0;
-      const used = estimate.usage || 0;
-      const available = total - used;
+      try {
+        const estimate = await navigator.storage.estimate();
+        const total = estimate.quota || 0;
+        const used = estimate.usage || 0;
+        const available = total - used;
 
-      return {
-        used: snappUsage,
-        available,
-        total
-      };
+        return {
+          used: snappUsage,
+          available,
+          total
+        };
+      } catch (error) {
+        // If estimate fails, fall through to return only SNApp usage
+        console.warn('Failed to get storage estimate', error);
+      }
     }
 
     // Fallback: return only SNApp usage

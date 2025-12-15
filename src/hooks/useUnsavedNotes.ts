@@ -175,7 +175,14 @@ export function useUnsavedNotes(): UseUnsavedNotesReturn {
 
           debounceTimers.current.delete(noteId);
         } catch (error) {
-          console.error(`Failed to save unsaved note ${noteId}:`, error);
+          console.error(
+            `[useUnsavedNotes] Failed to save unsaved note ${noteId}:`,
+            error
+          );
+          console.error(
+            `[useUnsavedNotes] Error stack:`,
+            error instanceof Error ? error.stack : 'No stack'
+          );
         }
       }, SAVE_DEBOUNCE_DELAY);
 
@@ -204,6 +211,12 @@ export function useUnsavedNotes(): UseUnsavedNotesReturn {
       try {
         const map = getUnsavedNotesMap();
         const stored = map.get(noteId);
+        console.log(
+          '[useUnsavedNotes] getUnsavedNote for',
+          noteId,
+          '- stored:',
+          !!stored
+        );
 
         if (!stored) {
           return null;
@@ -211,6 +224,13 @@ export function useUnsavedNotes(): UseUnsavedNotesReturn {
 
         // Check if server content has changed (conflict detection)
         const currentHash = await createContentHash(currentServerContent);
+        console.log(
+          '[useUnsavedNotes] Hash comparison - stored:',
+          stored.baseHash,
+          'current:',
+          currentHash
+        );
+
         if (currentHash !== stored.baseHash) {
           console.warn(
             `Base content mismatch for note ${noteId} - server content may have changed`

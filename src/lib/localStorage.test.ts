@@ -15,11 +15,15 @@ describe('localStorage utilities', () => {
   beforeEach(() => {
     // Clear localStorage before each test
     localStorage.clear();
+    // Restore all mocks to ensure test isolation
+    vi.restoreAllMocks();
   });
 
   afterEach(() => {
     // Clean up after each test
     localStorage.clear();
+    // Restore all mocks to prevent pollution
+    vi.restoreAllMocks();
   });
 
   describe('isLocalStorageAvailable', () => {
@@ -115,13 +119,19 @@ describe('localStorage utilities', () => {
     });
 
     it('should handle quota exceeded error gracefully', () => {
-      const originalSetItem = Storage.prototype.setItem;
       const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      Storage.prototype.setItem = vi.fn(() => {
-        const error = new DOMException('Quota exceeded', 'QuotaExceededError');
-        throw error;
-      });
+      const originalSetItem = Storage.prototype.setItem;
+      const setItemSpy = vi
+        .spyOn(Storage.prototype, 'setItem')
+        .mockImplementation((key: string, value: string) => {
+          // Allow availability check to succeed
+          if (key === 'snapp:test') {
+            originalSetItem.call(localStorage, key, value);
+            return;
+          }
+          // Throw for actual test key
+          throw new DOMException('Quota exceeded', 'QuotaExceededError');
+        });
 
       const success = setItem('testKey', 'value');
       expect(success).toBe(false);
@@ -131,13 +141,13 @@ describe('localStorage utilities', () => {
       );
 
       consoleWarn.mockRestore();
-      Storage.prototype.setItem = originalSetItem;
+      setItemSpy.mockRestore();
     });
 
     it('should handle JSON parse errors gracefully', () => {
       const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      // Manually set invalid JSON
+      // Directly set invalid JSON to localStorage bypassing our setItem function
       localStorage.setItem('snapp:invalidJson', '{invalid json}');
 
       const retrieved = getItem<object>('invalidJson');
@@ -153,7 +163,8 @@ describe('localStorage utilities', () => {
       const key = 'testKey';
       const value = 'test value';
 
-      setItem(key, value);
+      const success = setItem(key, value);
+      expect(success).toBe(true);
       expect(getItem<string>(key)).toBe(value);
 
       removeItem(key);
@@ -165,28 +176,46 @@ describe('localStorage utilities', () => {
     });
 
     it('should handle errors gracefully', () => {
-      const originalRemoveItem = Storage.prototype.removeItem;
       const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      Storage.prototype.removeItem = vi.fn(() => {
-        throw new Error('removeItem failed');
-      });
+      // First set an item so there's something to remove
+      setItem('testKey', 'value');
+
+      // Create mock that throws ONLY when called with the specific key
+      const originalRemoveItem = Storage.prototype.removeItem;
+      const removeItemSpy = vi
+        .spyOn(Storage.prototype, 'removeItem')
+        .mockImplementation((key: string) => {
+          if (key === 'snapp:testKey') {
+            throw new Error('removeItem failed');
+          }
+          // For other keys (like isLocalStorageAvailable test), use original
+          originalRemoveItem.call(localStorage, key);
+        });
 
       expect(() => removeItem('testKey')).not.toThrow();
-      expect(consoleWarn).toHaveBeenCalled();
+      expect(consoleWarn).toHaveBeenCalledWith(
+        'Failed to remove item from localStorage: testKey',
+        expect.any(Error)
+      );
 
+      removeItemSpy.mockRestore();
       consoleWarn.mockRestore();
-      Storage.prototype.removeItem = originalRemoveItem;
     });
   });
 
   describe('clearAllSnappData', () => {
     it('should clear only SNApp-namespaced data', () => {
-      // Set some SNApp data
-      setItem('editorState', { cursor: { line: 1, column: 0 } });
-      setItem('unsavedNotes', { 1: 'content' });
+      // Ensure localStorage is working properly
+      localStorage.clear();
 
-      // Set some non-SNApp data
+      // Set some SNApp data
+      const success1 = setItem('editorState', { cursor: { line: 1, column: 0 } });
+      const success2 = setItem('unsavedNotes', { 1: 'content' });
+      expect(success1).toBe(true);
+      expect(success2).toBe(true);
+
+      // Set some non-SNApp data directly
       localStorage.setItem('otherApp:data', 'should remain');
 
       clearAllSnappData();
@@ -204,27 +233,41 @@ describe('localStorage utilities', () => {
     });
 
     it('should handle errors gracefully', () => {
-      const originalRemoveItem = Storage.prototype.removeItem;
       const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
+      // Set an item first
       setItem('testKey', 'value');
 
-      Storage.prototype.removeItem = vi.fn(() => {
-        throw new Error('removeItem failed');
-      });
+      // Create mock that throws ONLY when called with SNApp keys
+      const originalRemoveItem = Storage.prototype.removeItem;
+      const removeItemSpy = vi
+        .spyOn(Storage.prototype, 'removeItem')
+        .mockImplementation((key: string) => {
+          if (key.startsWith('snapp:') && key !== 'snapp:test') {
+            throw new Error('removeItem failed');
+          }
+          // For test keys (like isLocalStorageAvailable), use original
+          originalRemoveItem.call(localStorage, key);
+        });
 
       expect(() => clearAllSnappData()).not.toThrow();
-      expect(consoleWarn).toHaveBeenCalled();
+      expect(consoleWarn).toHaveBeenCalledWith(
+        'Failed to clear SNApp data from localStorage',
+        expect.any(Error)
+      );
 
+      removeItemSpy.mockRestore();
       consoleWarn.mockRestore();
-      Storage.prototype.removeItem = originalRemoveItem;
     });
   });
 
   describe('getStorageInfo', () => {
     it('should return storage usage for SNApp data', async () => {
-      setItem('editorState', { cursor: { line: 10, column: 5 } });
-      setItem('unsavedNotes', { 1: 'content' });
+      localStorage.clear();
+      const success1 = setItem('editorState', { cursor: { line: 10, column: 5 } });
+      const success2 = setItem('unsavedNotes', { 1: 'content' });
+      expect(success1).toBe(true);
+      expect(success2).toBe(true);
 
       const info = await getStorageInfo();
       expect(info).not.toBeNull();
@@ -232,20 +275,25 @@ describe('localStorage utilities', () => {
     });
 
     it('should return null when localStorage is unavailable', async () => {
-      const originalSetItem = Storage.prototype.setItem;
-      Storage.prototype.setItem = vi.fn(() => {
+      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new Error('localStorage is disabled');
+      });
+      const getItemSpy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
         throw new Error('localStorage is disabled');
       });
 
       const info = await getStorageInfo();
       expect(info).toBeNull();
 
-      Storage.prototype.setItem = originalSetItem;
+      setItemSpy.mockRestore();
+      getItemSpy.mockRestore();
     });
 
     it('should calculate approximate storage size correctly', async () => {
+      localStorage.clear();
       const testData = { key: 'value', nested: { data: 'test' } };
-      setItem('testData', testData);
+      const success = setItem('testData', testData);
+      expect(success).toBe(true);
 
       const info = await getStorageInfo();
       expect(info).not.toBeNull();
@@ -259,6 +307,7 @@ describe('localStorage utilities', () => {
     });
 
     it('should handle errors gracefully', async () => {
+      localStorage.clear();
       const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       // Mock navigator.storage to throw error
@@ -269,7 +318,9 @@ describe('localStorage utilities', () => {
           .mockRejectedValue(new Error('estimate failed'));
       }
 
-      setItem('testData', 'value');
+      const success = setItem('testData', 'value');
+      expect(success).toBe(true);
+
       const info = await getStorageInfo();
 
       // Should still return usage even if estimate fails

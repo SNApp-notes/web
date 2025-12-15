@@ -107,7 +107,8 @@ export default function ContentSlotDefault() {
     };
 
     restoreUnsavedContent();
-  }, [selectedNote, getUnsavedNote, hasUnsavedChanges, updateNoteContent, content]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNote, getUnsavedNote, hasUnsavedChanges, updateNoteContent]);
 
   // Extract headers from current content
   const headers = useMemo(() => extractHeaders(content), [content]);

@@ -111,8 +111,12 @@ describe('useUnsavedNotes', () => {
       });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to save unsaved note 1:',
+        '[useUnsavedNotes] Failed to save unsaved note 1:',
         expect.any(Error)
+      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[useUnsavedNotes] Error stack:',
+        expect.any(String)
       );
 
       consoleErrorSpy.mockRestore();
