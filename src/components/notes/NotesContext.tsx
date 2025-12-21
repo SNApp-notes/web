@@ -77,6 +77,7 @@ import {
   useEffect,
   useCallback,
   useMemo,
+  useRef,
   type ReactNode
 } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
@@ -84,6 +85,7 @@ import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import { useNodeSelection } from '@/hooks/useNodeSelection';
 import { selectNode } from '@/lib/utils';
+import { cleanupEditorStates } from '@/lib/localStorage';
 
 /**
  * NotesContext value interface exposing all notes state and operations.
@@ -250,6 +252,20 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     updateNoteTimestamp,
     setContentHash
   } = useNodeSelection(updatedNotes, initSelectedNodeId);
+
+  // Track if cleanup has been performed
+  const cleanupPerformedRef = useRef(false);
+
+  // Clean up editor states on mount (remove cursor/scroll for non-selected notes)
+  useEffect(() => {
+    // Only run cleanup once on mount
+    if (cleanupPerformedRef.current) {
+      return;
+    }
+
+    cleanupPerformedRef.current = true;
+    cleanupEditorStates(selectedNoteId);
+  }, [selectedNoteId]);
 
   // Sync notes state when initialNotes prop changes (e.g., after redirect)
   useEffect(() => {

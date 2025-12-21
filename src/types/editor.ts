@@ -6,6 +6,8 @@ export interface EditorProps {
   width?: string;
   readOnly?: boolean;
   selectedLine?: number;
+  /** Initial cursor position as character offset from start of document */
+  cursorPosition?: number;
 
   basicSetup?: {
     lineNumbers?: boolean;

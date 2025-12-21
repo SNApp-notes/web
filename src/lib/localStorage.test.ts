@@ -8,7 +8,10 @@ import {
   removeItem,
   clearAllSnappData,
   isLocalStorageAvailable,
-  getStorageInfo
+  getStorageInfo,
+  saveEditorState,
+  getEditorState,
+  cleanupEditorStates
 } from './localStorage';
 
 describe('localStorage utilities', () => {
@@ -330,6 +333,147 @@ describe('localStorage utilities', () => {
       if (navigator.storage && originalEstimate) {
         navigator.storage.estimate = originalEstimate;
       }
+      consoleWarn.mockRestore();
+    });
+  });
+
+  describe('cleanupEditorStates', () => {
+    it('should remove editor states for all notes except the selected one', () => {
+      // Set up editor states for multiple notes
+      saveEditorState(1, {
+        cursor: { line: 1, column: 0 },
+        scrollAnchor: { from: 0, topOffset: 0, scrollLeft: 0 }
+      });
+      saveEditorState(2, {
+        cursor: { line: 2, column: 0 },
+        scrollAnchor: { from: 10, topOffset: 5, scrollLeft: 0 }
+      });
+      saveEditorState(3, {
+        cursor: { line: 3, column: 0 },
+        scrollAnchor: { from: 20, topOffset: 10, scrollLeft: 0 }
+      });
+
+      // Verify all states exist
+      expect(getEditorState(1)).toBeTruthy();
+      expect(getEditorState(2)).toBeTruthy();
+      expect(getEditorState(3)).toBeTruthy();
+
+      // Clean up, keeping note 2
+      cleanupEditorStates(2);
+
+      // Check that only note 2's state remains
+      expect(getEditorState(1)).toBeNull();
+      expect(getEditorState(2)).toBeTruthy();
+      expect(getEditorState(3)).toBeNull();
+    });
+
+    it('should remove all editor states when selectedNoteId is null', () => {
+      // Set up editor states
+      saveEditorState(1, {
+        cursor: { line: 1, column: 0 },
+        scrollAnchor: { from: 0, topOffset: 0, scrollLeft: 0 }
+      });
+      saveEditorState(2, {
+        cursor: { line: 2, column: 0 },
+        scrollAnchor: { from: 10, topOffset: 5, scrollLeft: 0 }
+      });
+
+      // Verify states exist
+      expect(getEditorState(1)).toBeTruthy();
+      expect(getEditorState(2)).toBeTruthy();
+
+      // Clean up all states
+      cleanupEditorStates(null);
+
+      // Check that all states are removed
+      expect(getEditorState(1)).toBeNull();
+      expect(getEditorState(2)).toBeNull();
+    });
+
+    it('should not affect other localStorage keys', () => {
+      // Set up editor states
+      saveEditorState(1, {
+        cursor: { line: 1, column: 0 },
+        scrollAnchor: { from: 0, topOffset: 0, scrollLeft: 0 }
+      });
+
+      // Add other data to localStorage
+      localStorage.setItem(
+        'snapp:unsavedNotes',
+        JSON.stringify({ '1': { diff: 'test' } })
+      );
+      localStorage.setItem('snapp:otherData', 'test');
+
+      // Clean up editor states
+      cleanupEditorStates(null);
+
+      // Check that other data is preserved
+      expect(localStorage.getItem('snapp:unsavedNotes')).toBeTruthy();
+      expect(localStorage.getItem('snapp:otherData')).toBeTruthy();
+      expect(getEditorState(1)).toBeNull();
+    });
+
+    it('should preserve unsaved notes data', () => {
+      // Set up editor states
+      saveEditorState(1, {
+        cursor: { line: 1, column: 0 },
+        scrollAnchor: { from: 0, topOffset: 0, scrollLeft: 0 }
+      });
+      saveEditorState(2, {
+        cursor: { line: 2, column: 0 },
+        scrollAnchor: { from: 10, topOffset: 5, scrollLeft: 0 }
+      });
+
+      // Add unsaved notes data
+      const unsavedData = {
+        '1': { noteId: 1, baseHash: 'hash1', diff: 'diff1', timestamp: Date.now() },
+        '2': { noteId: 2, baseHash: 'hash2', diff: 'diff2', timestamp: Date.now() },
+        '3': { noteId: 3, baseHash: 'hash3', diff: 'diff3', timestamp: Date.now() }
+      };
+      localStorage.setItem('snapp:unsavedNotes', JSON.stringify(unsavedData));
+
+      // Clean up editor states for note 1
+      cleanupEditorStates(1);
+
+      // Check that unsaved notes are preserved for all notes
+      const preserved = JSON.parse(localStorage.getItem('snapp:unsavedNotes') || '{}');
+      expect(preserved['1']).toBeTruthy();
+      expect(preserved['2']).toBeTruthy();
+      expect(preserved['3']).toBeTruthy();
+
+      // Check that editor states are cleaned up
+      expect(getEditorState(1)).toBeTruthy(); // Selected note
+      expect(getEditorState(2)).toBeNull(); // Non-selected notes
+    });
+
+    it('should handle errors gracefully', () => {
+      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Set up editor states
+      saveEditorState(1, {
+        cursor: { line: 1, column: 0 },
+        scrollAnchor: { from: 0, topOffset: 0, scrollLeft: 0 }
+      });
+
+      // Mock localStorage.removeItem to throw an error
+      const originalRemoveItem = Storage.prototype.removeItem;
+      const removeItemSpy = vi
+        .spyOn(Storage.prototype, 'removeItem')
+        .mockImplementation((key: string) => {
+          if (key.startsWith('snapp:editorState:')) {
+            throw new Error('removeItem failed');
+          }
+          originalRemoveItem.call(localStorage, key);
+        });
+
+      // Should not throw
+      expect(() => cleanupEditorStates(null)).not.toThrow();
+      expect(consoleWarn).toHaveBeenCalledWith(
+        'Failed to cleanup editor states from localStorage',
+        expect.any(Error)
+      );
+
+      removeItemSpy.mockRestore();
       consoleWarn.mockRestore();
     });
   });

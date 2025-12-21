@@ -59,6 +59,8 @@ interface MiddlePanelProps {
   saveStatus: SaveStatus;
   /** Optional line number to highlight in editor */
   selectedLine?: number;
+  /** Optional initial cursor position as character offset from start */
+  cursorPosition?: number;
   /** Callback invoked when content changes */
   onContentChange: (content: string) => void;
   /** Optional callback invoked when editor is ready */
@@ -92,6 +94,7 @@ const MiddlePanel = memo(function MiddlePanel({
   content,
   saveStatus,
   selectedLine,
+  cursorPosition,
   onContentChange,
   onEditorReady,
   onCursorChange,
@@ -154,7 +157,9 @@ const MiddlePanel = memo(function MiddlePanel({
       <Box flex={1} overflow="hidden" position="relative" minH={0}>
         {note ? (
           <Editor
+            key={note.id}
             value={content}
+            cursorPosition={cursorPosition}
             onChange={handleContentChange}
             selectedLine={selectedLine}
             onEditorReady={onEditorReady}

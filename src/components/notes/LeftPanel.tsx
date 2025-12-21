@@ -254,6 +254,11 @@ const LeftPanel = memo(function LeftPanel({
         </>
       );
 
+      const onClick = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        onNoteSelect(typedNode.id);
+      }, [typedNode.id]);
+
       const wrappedContent =
         !hasChildren && !editing ? (
           <Link
@@ -263,7 +268,7 @@ const LeftPanel = memo(function LeftPanel({
               textDecoration: 'none',
               color: 'inherit'
             }}
-            onClick={() => onNoteSelect(typedNode.id)}
+            onClick={onClick}
           >
             {nodeContent}
           </Link>

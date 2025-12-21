@@ -211,12 +211,6 @@ export function useUnsavedNotes(): UseUnsavedNotesReturn {
       try {
         const map = getUnsavedNotesMap();
         const stored = map.get(noteId);
-        console.log(
-          '[useUnsavedNotes] getUnsavedNote for',
-          noteId,
-          '- stored:',
-          !!stored
-        );
 
         if (!stored) {
           return null;
@@ -224,12 +218,6 @@ export function useUnsavedNotes(): UseUnsavedNotesReturn {
 
         // Check if server content has changed (conflict detection)
         const currentHash = await createContentHash(currentServerContent);
-        console.log(
-          '[useUnsavedNotes] Hash comparison - stored:',
-          stored.baseHash,
-          'current:',
-          currentHash
-        );
 
         if (currentHash !== stored.baseHash) {
           console.warn(

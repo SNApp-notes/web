@@ -378,3 +378,61 @@ export function getEditorState(noteId: number): EditorState | null {
 export function removeEditorState(noteId: number): void {
   removeItem(`editorState:${noteId}`);
 }
+
+/**
+ * Clean up editor states for all notes except the selected one.
+ *
+ * @param {number | null} selectedNoteId - Currently selected note ID (null to clear all)
+ *
+ * @remarks
+ * This function removes cursor and scrollbar positions for all notes
+ * except the currently selected one. Unsaved note content is preserved.
+ *
+ * Called on app initialization to clean up stale editor states from
+ * previous sessions while keeping the current note's state intact.
+ *
+ * @example
+ * ```typescript
+ * // On app mount with selected note ID 5
+ * cleanupEditorStates(5); // Removes editor states for all notes except 5
+ *
+ * // Clear all editor states
+ * cleanupEditorStates(null);
+ * ```
+ */
+export function cleanupEditorStates(selectedNoteId: number | null): void {
+  if (!isLocalStorageAvailable()) {
+    return;
+  }
+
+  try {
+    const editorStatePrefix = `${NAMESPACE}editorState:`;
+    const keysToRemove: string[] = [];
+
+    // Collect editor state keys that should be removed
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+
+      // Skip if not an editor state key
+      if (!key || !key.startsWith(editorStatePrefix)) {
+        continue;
+      }
+
+      // Extract note ID from key (format: "snapp:editorState:123")
+      const noteIdStr = key.substring(editorStatePrefix.length);
+      const noteId = parseInt(noteIdStr, 10);
+
+      // Keep the selected note's editor state, remove all others
+      if (isNaN(noteId) || noteId !== selectedNoteId) {
+        keysToRemove.push(key);
+      }
+    }
+
+    // Remove collected keys
+    keysToRemove.forEach((key) => {
+      localStorage.removeItem(key);
+    });
+  } catch (error) {
+    console.warn('Failed to cleanup editor states from localStorage', error);
+  }
+}

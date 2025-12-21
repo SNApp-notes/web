@@ -138,6 +138,7 @@ const Editor = memo(
   forwardRef<EditorRef, EditorProps>(function Editor(
     {
       value = '',
+      cursorPosition,
       onChange,
       placeholder,
       readOnly = false,
@@ -293,20 +294,10 @@ const Editor = memo(
           if (!view || !state) {
             return;
           }
-          // Restore scroll and cursor in a single dispatch
-          // Selection sets the cursor position (anchor === head for cursor)
-          // Effect scrolls to the anchor position with proper offset
+          // Restore ONLY scroll position, NOT cursor
+          // Cursor is handled by the selection prop
           try {
-            const doc = view.state.doc;
-            // Calculate cursor position from line/column
-            if (state.cursor.line > doc.lines || state.cursor.line < 1) {
-              return;
-            }
-            const lineObj = doc.line(state.cursor.line);
-            const cursorPos = Math.min(lineObj.from + state.cursor.column, lineObj.to);
-
             view.dispatch({
-              selection: { anchor: cursorPos, head: cursorPos }, // Set cursor position
               effects: [
                 EditorView.scrollIntoView(state.scrollAnchor.from, {
                   y: 'start',
@@ -398,28 +389,41 @@ const Editor = memo(
       };
     }, [viewReady, onScrollChange]);
 
+    // Memoize selection object to prevent creating new object on every render
+    const selection = useMemo(() => {
+      if (cursorPosition === undefined) {
+        return undefined;
+      }
+      return { anchor: cursorPosition, head: cursorPosition };
+    }, [cursorPosition]);
+
+    const baseSetup = useMemo(
+      () => ({
+        lineNumbers: true,
+        highlightActiveLine: true,
+        highlightSelectionMatches: true,
+        searchKeymap: true,
+        foldGutter: true,
+        dropCursor: false,
+        allowMultipleSelections: false,
+        bracketMatching: true,
+        closeBrackets: true,
+        autocompletion: true
+      }),
+      []
+    );
+
     return (
       <CodeMirror
         ref={codeMirrorRef}
         value={value}
+        selection={selection}
         height="100%"
         placeholder={placeholder}
         editable={!readOnly}
         onChange={onChange}
-        autoFocus={true}
         extensions={extensions}
-        basicSetup={{
-          lineNumbers: true,
-          highlightActiveLine: true,
-          highlightSelectionMatches: true,
-          searchKeymap: true,
-          foldGutter: true,
-          dropCursor: false,
-          allowMultipleSelections: false,
-          bracketMatching: true,
-          closeBrackets: true,
-          autocompletion: true
-        }}
+        basicSetup={baseSetup}
         theme={themeExtension}
         onCreateEditor={handleCreateEditor}
         className={className}

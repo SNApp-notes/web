@@ -71,6 +71,29 @@ export default function ContentSlotDefault() {
   // Content is now populated server-side, no null values expected
   const content = selectedNote?.data?.content || '';
 
+  // Calculate cursor position from saved editor state
+  const cursorPosition = useMemo(() => {
+    if (!selectedNoteId || !content) return undefined;
+
+    // Load saved cursor position from localStorage
+    const editorState = getEditorState(selectedNoteId);
+    if (!editorState?.cursor) return undefined;
+
+    // Calculate character position from line and column
+    const lines = content.split('\n');
+    let position = 0;
+
+    // Sum up all previous lines
+    for (let i = 0; i < editorState.cursor.line - 1 && i < lines.length; i++) {
+      position += lines[i].length + 1; // +1 for newline character
+    }
+
+    // Add column offset
+    position += editorState.cursor.column;
+
+    return position;
+  }, [selectedNoteId, content]);
+
   // Restore unsaved notes on mount or when note changes
   useEffect(() => {
     if (!selectedNote) return;
@@ -248,6 +271,7 @@ export default function ContentSlotDefault() {
         content={content}
         saveStatus={saveStatus}
         selectedLine={currentLine}
+        cursorPosition={cursorPosition}
         onContentChange={handleContentChange}
         onCursorChange={saveEditorStateDebounced}
         onScrollChange={saveEditorStateDebounced}
@@ -272,28 +296,22 @@ export default function ContentSlotDefault() {
             // Set flag to prevent saving during restoration
             isRestoringRef.current = true;
 
-            // Use multiple render cycles to ensure content is fully laid out
-            // Issue: CodeMirror needs time to calculate content height before scroll works
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                // Add delay to ensure layout is complete
-                // Increased to 200ms for large documents
-                setTimeout(() => {
-                  if (editor) {
-                    // Restore both cursor and scroll position in a single operation
-                    editor.setScrollState(editorState);
+            // Restore scroll position (cursor is already set via selection prop)
+            if (editor) {
+              // setScrollState now only restores scroll, not cursor
+              editor.setScrollState(editorState);
 
-                    // Clear the restoring flag after a short delay
-                    // This allows the scroll/cursor events to fire but be ignored
-                    setTimeout(() => {
-                      isRestoringRef.current = false;
-                    }, 100);
-                  }
-                }, 200); // Increased from 50ms to 200ms for large documents
+              // Focus the editor so user can start typing immediately
+              editor.focus();
+
+              // Clear the restoring flag
+              requestAnimationFrame(() => {
+                isRestoringRef.current = false;
               });
-            });
-          } else {
-            // No state to restore
+            }
+          } else if (editor?.focus) { // check for unit tests
+            // No saved state, but still focus the editor
+            editor.focus();
           }
         }}
       />
