@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Mock server-only package to allow server modules in tests
+vi.mock('server-only', () => ({}));
+
 // Suppress jsdom CSS parsing errors
 if (globalThis.window?._virtualConsole) {
   const originalEmit = globalThis.window._virtualConsole.emit;

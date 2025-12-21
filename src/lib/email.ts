@@ -22,6 +22,8 @@
  * ```
  */
 
+import 'server-only';
+
 import nodemailer from 'nodemailer';
 import Handlebars from 'handlebars';
 import { readFile } from 'fs/promises';

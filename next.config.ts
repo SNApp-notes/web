@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === 'production'
   },
   allowedDevOrigins: ['host.docker.internal'],
+  // Exclude server-only packages from client bundle
+  serverExternalPackages: ['handlebars', 'nodemailer'],
   turbopack: {
     root: resolve('.')
   },

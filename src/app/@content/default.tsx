@@ -309,7 +309,8 @@ export default function ContentSlotDefault() {
                 isRestoringRef.current = false;
               });
             }
-          } else if (editor?.focus) { // check for unit tests
+          } else if (editor?.focus) {
+            // check for unit tests
             // No saved state, but still focus the editor
             editor.focus();
           }
