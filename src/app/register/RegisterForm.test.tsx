@@ -17,7 +17,7 @@ vi.mock('next/link', () => ({
 }));
 
 // Mock auth-client
-const mockRefetch = vi.fn();
+const mockRefetch = vi.fn().mockResolvedValue(undefined);
 vi.mock('@/lib/auth-client', () => ({
   useSession: () => ({
     refetch: mockRefetch
