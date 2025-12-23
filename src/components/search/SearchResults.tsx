@@ -1,51 +1,18 @@
-/**
- * @module components/search/SearchResults
- * @description Search results list component with pagination.
- * Displays search results and handles navigation to notes.
- *
- * @dependencies
- * - @chakra-ui/react - UI components
- * - @/components/search/SearchContext - Search context and types
- * - @/components/search/SearchResultItem - Individual result item
- * - next/navigation - Router for navigation
- *
- * @remarks
- * **Features:**
- * - Displays list of search results
- * - Empty state message
- * - Pagination controls
- * - Navigate to note on click
- * - Close modal after selection
- *
- * @example
- * ```tsx
- * <SearchResults />
- * ```
- */
-
 'use client';
 
-import { Stack, Text, Button, Box } from '@chakra-ui/react';
+import { Stack, Text } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
 import { useSearchContext } from './SearchContext';
 import { SearchResultItem } from './SearchResultItem';
 
 /**
- * Search results list component with pagination.
+ * Search results list component.
  *
  * @component
  * @returns {JSX.Element} Rendered search results list
  */
 export function SearchResults() {
-  const {
-    searchResults,
-    executedQuery,
-    currentPage,
-    totalPages,
-    totalResults,
-    setPage,
-    closeModal
-  } = useSearchContext();
+  const { searchResults, executedQuery, closeModal } = useSearchContext();
   const router = useRouter();
 
   const handleSelectResult = (noteId: number, lineNumber: number) => {
@@ -65,52 +32,15 @@ export function SearchResults() {
   }
 
   return (
-    <Box>
-      {/* Results count */}
-      <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }} mb={3}>
-        {totalResults} {totalResults === 1 ? 'result' : 'results'} found
-      </Text>
-
-      {/* Results list */}
-      <Stack gap={3} mb={4}>
-        {searchResults.map((result) => (
-          <SearchResultItem
-            key={`${result.noteId}-${result.lineNumber}`}
-            result={result}
-            searchQuery={executedQuery}
-            onSelect={() => handleSelectResult(result.noteId, result.lineNumber)}
-          />
-        ))}
-      </Stack>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <Stack direction="row" gap={2} justifyContent="center" alignItems="center">
-          <Button
-            p={3}
-            size="sm"
-            variant="outline"
-            disabled={currentPage === 1}
-            onClick={() => setPage(currentPage - 1)}
-          >
-            Previous
-          </Button>
-
-          <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }}>
-            Page {currentPage} of {totalPages}
-          </Text>
-
-          <Button
-            p={3}
-            size="sm"
-            variant="outline"
-            disabled={currentPage === totalPages}
-            onClick={() => setPage(currentPage + 1)}
-          >
-            Next
-          </Button>
-        </Stack>
-      )}
-    </Box>
+    <Stack gap={3}>
+      {searchResults.map((result) => (
+        <SearchResultItem
+          key={`${result.noteId}-${result.lineNumber}`}
+          result={result}
+          searchQuery={executedQuery}
+          onSelect={() => handleSelectResult(result.noteId, result.lineNumber)}
+        />
+      ))}
+    </Stack>
   );
 }
