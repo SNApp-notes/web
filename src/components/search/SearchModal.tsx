@@ -10,7 +10,8 @@ import {
   ButtonGroup,
   IconButton,
   Pagination,
-  Text
+  Text,
+  CloseButton
 } from '@chakra-ui/react';
 import { Dialog } from '@chakra-ui/react';
 import { useRef, useEffect } from 'react';
@@ -104,8 +105,10 @@ export function SearchModal() {
         >
           <Dialog.Header p={3}>
             <Dialog.Title>Search Notes</Dialog.Title>
-            <Dialog.CloseTrigger aria-label="Close dialog" />
           </Dialog.Header>
+          <Dialog.CloseTrigger asChild position="absolute" top="2" right="2">
+            <CloseButton size="sm" aria-label="Close dialog" />
+          </Dialog.CloseTrigger>
 
           <Dialog.Body
             display="flex"
