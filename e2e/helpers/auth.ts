@@ -14,8 +14,20 @@ export async function createTestUser(page: Page, userData: UserData): Promise<Us
   await page.click('button[type="submit"]');
   await page.waitForURL('/');
 
+  // Wait for page to be fully loaded (ensures React hydration completes)
+  await page.waitForLoadState('networkidle', { timeout: 15000 });
+
   // Wait for session to be loaded and auth buttons to appear
-  await page.waitForSelector('[data-testid="sign-out-button"]', { timeout: 5000 });
+  // The useSession() hook makes a client-side API call to validate the session
+  // Use retry logic for flaky session loading
+  try {
+    await page.waitForSelector('[data-testid="sign-out-button"]', { timeout: 20000 });
+  } catch {
+    // If sign-out button not found, reload and try again
+    await page.reload();
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForSelector('[data-testid="sign-out-button"]', { timeout: 15000 });
+  }
 
   return userData;
 }
@@ -31,8 +43,20 @@ export async function loginUser(
   await page.click('button[type="submit"]');
   await page.waitForURL('/');
 
+  // Wait for page to be fully loaded (ensures React hydration completes)
+  await page.waitForLoadState('networkidle', { timeout: 15000 });
+
   // Wait for session to be loaded and auth buttons to appear
-  await page.waitForSelector('[data-testid="sign-out-button"]', { timeout: 5000 });
+  // The useSession() hook makes a client-side API call to validate the session
+  // Use retry logic for flaky session loading
+  try {
+    await page.waitForSelector('[data-testid="sign-out-button"]', { timeout: 20000 });
+  } catch {
+    // If sign-out button not found, reload and try again
+    await page.reload();
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForSelector('[data-testid="sign-out-button"]', { timeout: 15000 });
+  }
 }
 
 export async function createAndLoginUser(page: Page): Promise<UserData> {

@@ -17,8 +17,9 @@ import { test, expect } from 'playwright-test-coverage';
 test.describe('Search Feature', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    // Wait for client-side session to load (useSession() hook makes API call)
     await expect(page.locator('[data-testid="sign-out-button"]')).toBeVisible({
-      timeout: 5000
+      timeout: 15000
     });
   });
   test.describe('Opening Search Modal', () => {

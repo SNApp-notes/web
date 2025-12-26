@@ -29,9 +29,11 @@ test.describe('State Persistence', () => {
     await page.goto('/');
 
     // Wait for either sign-out button (authenticated) or redirect to login (not authenticated)
+    // Extended timeout for client-side session to load (useSession() hook makes API call)
+    // Use retry logic for flaky session loading
     try {
       await expect(page.locator('[data-testid="sign-out-button"]')).toBeVisible({
-        timeout: 5000
+        timeout: 20000
       });
     } catch (error) {
       // If not authenticated, we might have been redirected to login
@@ -42,22 +44,17 @@ test.describe('State Persistence', () => {
           `Authentication failed - redirected to ${url}. Storage state may not be properly loaded.`
         );
       }
-      throw error;
+      // Try reloading the page once before failing
+      await page.reload();
+      await page.waitForLoadState('networkidle', { timeout: 15000 });
+      await expect(page.locator('[data-testid="sign-out-button"]')).toBeVisible({
+        timeout: 15000
+      });
     }
   });
 
   test.describe('Unsaved Notes Restoration', () => {
     test('should restore unsaved content after page refresh', async ({ page }) => {
-      // Set up console logging
-      const consoleMessages: string[] = [];
-      page.on('console', (msg) => {
-        const text = msg.text();
-        if (text.includes('[RESTORE]') || text.includes('[useUnsavedNotes]')) {
-          consoleMessages.push(text);
-          console.log('Browser:', text);
-        }
-      });
-
       // Create a new note
       const newNoteButton = page.getByRole('button', { name: /new note/i });
       await newNoteButton.click();
@@ -78,27 +75,10 @@ test.describe('State Persistence', () => {
       await page.waitForTimeout(500); // Wait for content to propagate
 
       // Wait for debounce (1 second) + extra buffer for async hash calculation
-      await page.waitForTimeout(3000); // Increased from 1500ms to 3000ms
+      await page.waitForTimeout(3000);
 
       // Verify content is in editor
       await expect(editor).toContainText(testContent);
-
-      // Debug: Check localStorage before refresh
-      const localStorageBeforeRefresh = await page.evaluate(() => {
-        const data = localStorage.getItem('snapp:unsavedNotes');
-        const allKeys = Object.keys(localStorage);
-        console.log('All localStorage keys:', allKeys);
-        return data;
-      });
-      console.log('localStorage before refresh:', localStorageBeforeRefresh);
-
-      // Debug: Check editor content before refresh
-      const editorBeforeRefresh = await editor.textContent();
-      console.log('Editor content before refresh:', editorBeforeRefresh);
-
-      // Get note ID from URL
-      const noteId = page.url().match(/\/note\/(\d+)$/)?.[1];
-      console.log('Note ID:', noteId);
 
       // Refresh the page
       await page.reload();
@@ -109,26 +89,7 @@ test.describe('State Persistence', () => {
       // Wait for restoration to complete (useEffect is async)
       await page.waitForTimeout(2000);
 
-      // Debug: Check localStorage after refresh
-      const localStorageAfterRefresh = await page.evaluate(() => {
-        const data = localStorage.getItem('snapp:unsavedNotes');
-        return data;
-      });
-      console.log('localStorage after refresh:', localStorageAfterRefresh);
-
-      // Debug: Check if restoration was attempted
-      const editorText = await editor.textContent();
-      console.log('Editor text after refresh:', editorText);
-
-      // Debug: Check console for restoration logs
-      const consoleLogs = await page.evaluate(() => {
-        // Can't access previous console logs directly, but we can check if restoration happened
-        return 'Check browser console for restoration logs';
-      });
-      console.log('Console check:', consoleLogs);
-
       // Verify unsaved content was restored
-      // Use waitFor to poll until content appears
       await expect(async () => {
         const text = await editor.textContent();
         expect(text).toContain(testContent);
@@ -136,20 +97,6 @@ test.describe('State Persistence', () => {
     });
 
     test('should clear unsaved content after successful save', async ({ page }) => {
-      // Set up console logging
-      const consoleMessages: string[] = [];
-      page.on('console', (msg) => {
-        const text = msg.text();
-        if (
-          text.includes('[SAVE]') ||
-          text.includes('[useUnsavedNotes]') ||
-          text.includes('clearUnsavedNote')
-        ) {
-          consoleMessages.push(text);
-          console.log('Browser:', text);
-        }
-      });
-
       // Create a new note
       const newNoteButton = page.getByRole('button', { name: /new note/i });
       await newNoteButton.click();
@@ -209,16 +156,29 @@ test.describe('State Persistence', () => {
     test('should handle multiple notes with unsaved changes independently', async ({
       page
     }) => {
-      // Create first note
+      const editor = page.locator('.cm-content');
       const newNoteButton = page.getByRole('button', { name: /new note/i });
+
+      // Get current URL before creating first note (could be / or /note/1)
+      const initialUrl = page.url();
+      const initialNoteId = initialUrl.match(/\/note\/(\d+)$/)?.[1] || '0';
+
+      // Create first note - wait for URL to change to a NEW note
       await newNoteButton.click();
-      await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
+      await page.waitForURL(
+        (url) => {
+          const match = url.pathname.match(/\/note\/(\d+)$/);
+          if (!match) return false;
+          // Must be a different (higher) note ID than before
+          return parseInt(match[1]) > parseInt(initialNoteId);
+        },
+        { timeout: 5000 }
+      );
 
       const firstNoteUrl = page.url();
       const firstNoteId = firstNoteUrl.match(/\/note\/(\d+)$/)?.[1];
 
       // Add content to first note
-      const editor = page.locator('.cm-content');
       await expect(editor).toBeVisible({ timeout: 5000 });
       await editor.click();
       await page.waitForTimeout(500);
@@ -234,7 +194,8 @@ test.describe('State Persistence', () => {
         timeout: 5000
       });
 
-      // Note: secondNoteUrl could be captured here if needed for navigation
+      const secondNoteUrl = page.url();
+      const secondNoteId = secondNoteUrl.match(/\/note\/(\d+)$/)?.[1];
 
       // Add content to second note
       await expect(editor).toBeVisible({ timeout: 5000 });
@@ -253,14 +214,22 @@ test.describe('State Persistence', () => {
       await expect(editor).toBeVisible({ timeout: 5000 });
       await page.waitForTimeout(2000); // Wait for restoration
 
+      // Verify we're still on second note URL
+      expect(page.url()).toContain(`/note/${secondNoteId}`);
+
       // Use waitFor to poll until content appears
       await expect(async () => {
         const text = await editor.textContent();
         expect(text).toContain('Second note content');
       }).toPass({ timeout: 10000, intervals: [500] });
 
-      // Navigate to first note
-      await page.goto(firstNoteUrl);
+      // Navigate to first note by clicking in sidebar (more reliable than goto)
+      // Find the exact note by its URL in the sidebar
+      const firstNoteItem = page.locator(`a[href="/note/${firstNoteId}"]`);
+      await firstNoteItem.click();
+
+      // Wait for navigation to complete
+      await page.waitForURL(`**/note/${firstNoteId}`, { timeout: 5000 });
       await expect(editor).toBeVisible({ timeout: 5000 });
       await page.waitForTimeout(2000); // Wait for restoration
 

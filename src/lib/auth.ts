@@ -63,7 +63,8 @@ export const auth = betterAuth({
   ],
   advanced: {
     // Disable secure cookies in test/dev mode to allow HTTP testing in Docker
-    useSecureCookies: process.env.NODE_ENV === 'production'
+    // In CI/E2E tests, we run production build but over HTTP
+    useSecureCookies: process.env.NODE_ENV === 'production' && process.env.CI !== 'true'
   },
   account: {
     accountLinking: {
@@ -107,7 +108,9 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
-    requireEmailVerification: process.env.NODE_ENV === 'production',
+    // Require email verification in production only, but disable in CI/E2E tests
+    requireEmailVerification:
+      process.env.NODE_ENV === 'production' && process.env.CI !== 'true',
     sendResetPassword: async ({
       user,
       url

@@ -194,8 +194,9 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
     };
   }
 
-  // In development mode, auto-sign in without email verification
-  const requiresEmailVerification = process.env.NODE_ENV === 'production';
+  // In development mode or CI tests, auto-sign in without email verification
+  const requiresEmailVerification =
+    process.env.NODE_ENV === 'production' && process.env.CI !== 'true';
 
   if (requiresEmailVerification) {
     return {

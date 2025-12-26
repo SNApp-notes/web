@@ -331,7 +331,8 @@ test.describe('Session Management', () => {
 
     await createTestUser(page, testUser);
 
-    await expect(page).toHaveURL('/');
+    // After registration, user is redirected to first note (/note/1)
+    await expect(page).toHaveURL(/\/note\/\d+$/);
 
     await signOutUser(page);
 
@@ -348,11 +349,13 @@ test.describe('Session Management', () => {
       name: 'Test User'
     });
 
-    await expect(page).toHaveURL('/');
+    // After registration, user is redirected to first note (/note/1)
+    await expect(page).toHaveURL(/\/note\/\d+$/);
 
     await page.reload();
 
-    await expect(page).toHaveURL('/');
+    // After refresh, should still be on a note page (session persists)
+    await expect(page).toHaveURL(/\/note\/\d+$/);
   });
 });
 

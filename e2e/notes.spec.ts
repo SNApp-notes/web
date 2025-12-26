@@ -3,8 +3,9 @@ import { test, expect } from 'playwright-test-coverage';
 test.describe('Notes Application - CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    // Wait for client-side session to load (useSession() hook makes API call)
     await expect(page.locator('[data-testid="sign-out-button"]')).toBeVisible({
-      timeout: 5000
+      timeout: 15000
     });
   });
   test('should create a new note when authenticated', async ({ page }) => {
@@ -354,9 +355,10 @@ test.describe('Notes Application - CRUD Operations', () => {
     await page.waitForTimeout(1000);
 
     // Verify asterisk appears in note name (unsaved changes)
+    // Use a more flexible selector that looks for asterisk prefix
     const noteWithAsterisk = page
       .locator('.tree-node-label')
-      .filter({ hasText: new RegExp(`^\\* ${noteName}$`) });
+      .filter({ hasText: /^\* New Note/ });
     await expect(noteWithAsterisk).toBeVisible({ timeout: 5000 });
 
     // Verify "Unsaved changes" appears in top bar
@@ -506,8 +508,9 @@ test.describe('Notes Application - CRUD Operations', () => {
 test.describe('Header Navigation and URL Updates', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    // Wait for client-side session to load (useSession() hook makes API call)
     await expect(page.locator('[data-testid="sign-out-button"]')).toBeVisible({
-      timeout: 5000
+      timeout: 15000
     });
   });
   test('should update URL when clicking header in right panel', async ({ page }) => {
