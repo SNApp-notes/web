@@ -3,6 +3,8 @@ import { resolve } from 'path';
 
 const nextConfig: NextConfig = {
   distDir: process.env.E2E_TEST === 'true' ? '.next-e2e' : '.next',
+  // Disable dev indicators (N icon, issue overlay) to prevent E2E test flakiness
+  devIndicators: false,
   experimental: {
     optimizePackageImports: ['@chakra-ui/react']
   },
@@ -10,6 +12,8 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === 'production'
   },
   allowedDevOrigins: ['host.docker.internal'],
+  // Exclude server-only packages from client bundle
+  serverExternalPackages: ['handlebars', 'nodemailer'],
   turbopack: {
     root: resolve('.')
   },

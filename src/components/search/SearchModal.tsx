@@ -1,8 +1,21 @@
 'use client';
 
-import { Input, Stack, Button, Box, Spinner, Alert } from '@chakra-ui/react';
+import {
+  Input,
+  Stack,
+  Button,
+  Box,
+  Spinner,
+  Alert,
+  ButtonGroup,
+  IconButton,
+  Pagination,
+  Text,
+  CloseButton
+} from '@chakra-ui/react';
 import { Dialog } from '@chakra-ui/react';
 import { useRef, useEffect } from 'react';
+import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 
 import { useSearchContext } from './SearchContext';
 import { SearchResults } from './SearchResults';
@@ -30,7 +43,11 @@ export function SearchModal() {
     isLoading,
     error,
     searchResults,
-    executedQuery
+    executedQuery,
+    currentPage,
+    totalPages,
+    totalResults,
+    setPage
   } = useSearchContext();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -78,14 +95,30 @@ export function SearchModal() {
         justifyContent="center"
         pt={20}
       >
-        <Dialog.Content maxW="600px" w="90%" p={3} maxH="80vh">
-          <Dialog.Header>
+        <Dialog.Content
+          maxW="600px"
+          w="90%"
+          p={3}
+          maxH="80vh"
+          display="flex"
+          flexDirection="column"
+        >
+          <Dialog.Header p={3}>
             <Dialog.Title>Search Notes</Dialog.Title>
-            <Dialog.CloseTrigger aria-label="Close dialog" />
           </Dialog.Header>
+          <Dialog.CloseTrigger asChild position="absolute" top="2" right="2">
+            <CloseButton size="sm" aria-label="Close dialog" />
+          </Dialog.CloseTrigger>
 
-          <Dialog.Body overflowY="auto" maxH="calc(80vh - 120px)">
-            <Stack gap={4}>
+          <Dialog.Body
+            display="flex"
+            flexDirection="column"
+            overflow="hidden"
+            p={3}
+            flex="1"
+          >
+            {/* Fixed section: input, button, pagination */}
+            <Stack gap={3} flexShrink={0}>
               {/* Search input */}
               <Input
                 p={3}
@@ -95,7 +128,6 @@ export function SearchModal() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 size="lg"
-                autoFocus
               />
 
               {/* Search button */}
@@ -107,11 +139,61 @@ export function SearchModal() {
                 Search
               </Button>
 
-              {/* Loading indicator */}
-              {isLoading && (
-                <Box display="flex" justifyContent="center" py={4}>
-                  <Spinner size="lg" />
+              {/* Pagination - show when there are multiple pages (persists during page loading) */}
+              {!error && totalPages > 1 && (
+                <Box>
+                  <Text
+                    fontSize="sm"
+                    color="gray.600"
+                    _dark={{ color: 'gray.400' }}
+                    mb={2}
+                  >
+                    {totalResults} {totalResults === 1 ? 'result' : 'results'} found
+                  </Text>
+                  <Pagination.Root
+                    count={totalResults}
+                    pageSize={3}
+                    page={currentPage}
+                    onPageChange={(e) => setPage(e.page)}
+                  >
+                    <ButtonGroup
+                      variant="ghost"
+                      size="sm"
+                      justifyContent="center"
+                      width="100%"
+                    >
+                      <Pagination.PrevTrigger asChild>
+                        <IconButton aria-label="Previous page">
+                          <LuChevronLeft />
+                        </IconButton>
+                      </Pagination.PrevTrigger>
+
+                      <Pagination.Items
+                        render={(page) => (
+                          <IconButton
+                            aria-label={`Page ${page.value}`}
+                            variant={{ base: 'ghost', _selected: 'outline' }}
+                          >
+                            {page.value}
+                          </IconButton>
+                        )}
+                      />
+
+                      <Pagination.NextTrigger asChild>
+                        <IconButton aria-label="Next page">
+                          <LuChevronRight />
+                        </IconButton>
+                      </Pagination.NextTrigger>
+                    </ButtonGroup>
+                  </Pagination.Root>
                 </Box>
+              )}
+
+              {/* Results count for single page (persists during page loading) */}
+              {!error && totalResults > 0 && totalPages <= 1 && (
+                <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }}>
+                  {totalResults} {totalResults === 1 ? 'result' : 'results'} found
+                </Text>
               )}
 
               {/* Error message */}
@@ -121,17 +203,28 @@ export function SearchModal() {
                   <Alert.Title>{error}</Alert.Title>
                 </Alert.Root>
               )}
-
-              {/* Search results */}
-              {!isLoading && !error && searchResults.length > 0 && <SearchResults />}
-
-              {/* Empty state after search */}
-              {!isLoading && !error && executedQuery && searchResults.length === 0 && (
-                <Box textAlign="center" py={8} color="gray.500">
-                  No notes found matching &quot;{executedQuery}&quot;
-                </Box>
-              )}
             </Stack>
+
+            {/* Loading indicator */}
+            {isLoading && (
+              <Box display="flex" justifyContent="center" py={4}>
+                <Spinner size="lg" />
+              </Box>
+            )}
+
+            {/* Scrollable section: results list only */}
+            {!isLoading && !error && searchResults.length > 0 && (
+              <Box overflowY="auto" flex="1" mt={3}>
+                <SearchResults />
+              </Box>
+            )}
+
+            {/* Empty state after search */}
+            {!isLoading && !error && executedQuery && searchResults.length === 0 && (
+              <Box textAlign="center" py={8} color="gray.500">
+                No notes found matching &quot;{executedQuery}&quot;
+              </Box>
+            )}
           </Dialog.Body>
         </Dialog.Content>
       </Dialog.Positioner>

@@ -1,4 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+// Set up console.warn spy before any imports to catch warnings from hooks
+const originalWarn = console.warn;
+vi.spyOn(console, 'warn').mockImplementation((...args) => {
+  // Suppress expected "Base content mismatch" warnings from diff conflict detection
+  // These occur because tests mock note content differently between renders
+  if (typeof args[0] === 'string' && args[0].includes('Base content mismatch')) {
+    return;
+  }
+  originalWarn(...args);
+});
+
 import { render, screen, waitFor, act } from '@/test/utils';
 import { userEvent } from '@testing-library/user-event';
 import ContentSlotDefault from './default';
@@ -24,7 +36,7 @@ vi.mock('@/lib/markdown-parser', () => ({
 
 // Mock nuqs
 const mockSetLineParam = vi.fn();
-let mockLineParam = 0;
+let mockLineParam: number | null = 0;
 
 vi.mock('nuqs', () => ({
   useQueryState: vi.fn(() => [mockLineParam, mockSetLineParam]),
@@ -91,12 +103,20 @@ describe('ContentSlotDefault', () => {
   let mockContext: MockNotesContextValue;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Clear all mocks except console.warn spy
+    mockExtractHeaders.mockClear();
+    mockSetLineParam.mockClear();
+    mockUpdateNote.mockClear();
+    mockUseNotesContext.mockClear();
+    mockUseRouter.mockClear();
+    mockUsePathname.mockClear();
+    mockUseParams.mockClear();
+    mockUseQueryState.mockClear();
+
     mockExtractHeaders.mockReturnValue([]);
 
     // Reset nuqs mock
     mockLineParam = 0;
-    mockSetLineParam.mockClear();
     mockUseQueryState.mockReturnValue([mockLineParam, mockSetLineParam]);
 
     // Reset next/navigation mocks
@@ -107,15 +127,16 @@ describe('ContentSlotDefault', () => {
     mockUseRouter.mockReturnValue(mockRouter);
 
     // Mock window.location
+    delete (window as Record<string, unknown>).location;
     window.location = {
       pathname: '/note/1',
       search: '',
       href: 'http://localhost/note/1'
-    } as unknown as Location;
+    } as Location;
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    // Don't restore console.warn spy - keep it active for entire test file
   });
 
   describe('Component Rendering', () => {
@@ -290,9 +311,12 @@ describe('ContentSlotDefault', () => {
       expect(mockContext.setSaveStatus).not.toHaveBeenCalled();
     });
 
-    it('resets save status to idle after 2 seconds', async () => {
+    it('resets save status to idle after 1 second', async () => {
       const user = userEvent.setup();
-      mockUpdateNote.mockResolvedValue({} as unknown as Note);
+      mockUpdateNote.mockResolvedValue({
+        id: 1,
+        updatedAt: new Date()
+      } as unknown as Note);
 
       const mockNote = createMockNote(1, 'Test Note', 'Content');
       mockContext = setupMockNotesContext(mockUseNotesContext, {
@@ -305,16 +329,17 @@ describe('ContentSlotDefault', () => {
       // Simulate Ctrl+S keyboard shortcut
       await user.keyboard('{Control>}s{/Control}');
 
+      // Wait for 'saved' status
       await waitFor(() => {
         expect(mockContext.setSaveStatus).toHaveBeenCalledWith('saved');
       });
 
-      // Wait for the idle status reset (2 seconds + buffer)
+      // Wait for the idle status reset (1 second + buffer)
       await waitFor(
         () => {
           expect(mockContext.setSaveStatus).toHaveBeenCalledWith('idle');
         },
-        { timeout: 3000 }
+        { timeout: 2000 }
       );
     });
   });
@@ -351,7 +376,7 @@ describe('ContentSlotDefault', () => {
       });
 
       // Make setLineParam actually update the mock value
-      mockSetLineParam.mockImplementation((newLine: number) => {
+      mockSetLineParam.mockImplementation((newLine: number | null) => {
         mockLineParam = newLine;
         mockUseQueryState.mockReturnValue([mockLineParam, mockSetLineParam]);
       });
@@ -478,86 +503,6 @@ describe('ContentSlotDefault', () => {
     });
   });
 
-  describe('Unsaved Changes Warning', () => {
-    it('shows warning when leaving with unsaved changes', () => {
-      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-      const mockNote = createMockNote(1, 'Test Note', 'Content', true);
-      mockContext = setupMockNotesContext(mockUseNotesContext, {
-        selectedNoteId: 1,
-        getNote: vi.fn(() => mockNote)
-      });
-
-      render(<ContentSlotDefault />);
-
-      const event = {
-        preventDefault: vi.fn(),
-        returnValue: ''
-      } as unknown as BeforeUnloadEvent;
-
-      const listener = addEventListenerSpy.mock.calls.find(
-        ([eventName]) => eventName === 'beforeunload'
-      )?.[1] as (e: BeforeUnloadEvent) => void;
-
-      if (listener) {
-        listener(event);
-      }
-
-      expect(event.preventDefault).toHaveBeenCalled();
-      expect(event.returnValue).toBe(
-        'You have unsaved changes. Are you sure you want to leave?'
-      );
-
-      addEventListenerSpy.mockRestore();
-    });
-
-    it('does not show warning when leaving without unsaved changes', () => {
-      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-      const mockNote = createMockNote(1, 'Test Note', 'Content', false);
-      mockContext = setupMockNotesContext(mockUseNotesContext, {
-        selectedNoteId: 1,
-        getNote: vi.fn(() => mockNote)
-      });
-
-      render(<ContentSlotDefault />);
-
-      const event = {
-        preventDefault: vi.fn(),
-        returnValue: ''
-      } as unknown as BeforeUnloadEvent;
-
-      const listener = addEventListenerSpy.mock.calls.find(
-        ([eventName]) => eventName === 'beforeunload'
-      )?.[1] as (e: BeforeUnloadEvent) => void;
-
-      if (listener) {
-        listener(event);
-      }
-
-      expect(event.preventDefault).not.toHaveBeenCalled();
-      expect(event.returnValue).toBe('');
-
-      addEventListenerSpy.mockRestore();
-    });
-
-    it('removes beforeunload listener on unmount', () => {
-      const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-      const mockNote = createMockNote(1, 'Test Note', 'Content', true);
-      mockContext = setupMockNotesContext(mockUseNotesContext, {
-        selectedNoteId: 1,
-        getNote: vi.fn(() => mockNote)
-      });
-
-      const { unmount } = render(<ContentSlotDefault />);
-
-      unmount();
-
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'beforeunload',
-        expect.any(Function)
-      );
-    });
-  });
-
   describe('Editor Ref Management', () => {
     it('sets editor ref when editor is ready', () => {
       const mockNote = createMockNote(1, 'Test Note', 'Content');
@@ -627,6 +572,90 @@ describe('ContentSlotDefault', () => {
       render(<ContentSlotDefault />);
 
       expect(screen.getByTestId('save-status')).toHaveTextContent('error');
+    });
+  });
+
+  describe('Hash-Based Save State Detection', () => {
+    it('sets content hash after successful save', async () => {
+      const user = userEvent.setup();
+      mockUpdateNote.mockResolvedValue({} as unknown as Note);
+
+      const mockNote = createMockNote(1, 'Test Note', 'Original content');
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 1,
+        getNote: vi.fn(() => mockNote)
+      });
+
+      render(<ContentSlotDefault />);
+
+      // Simulate Ctrl+S keyboard shortcut
+      await user.keyboard('{Control>}s{/Control}');
+
+      await waitFor(() => {
+        expect(mockContext.setContentHash).toHaveBeenCalledWith(1, 'Original content');
+      });
+    });
+
+    it('marks note as clean when content is restored to saved state', async () => {
+      const user = userEvent.setup();
+      const mockNote = createMockNote(1, 'Test Note', 'Original content');
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 1,
+        getNote: vi.fn(() => mockNote)
+      });
+
+      render(<ContentSlotDefault />);
+
+      // Change content (marks as dirty via updateNoteContent)
+      const changeButton = screen.getByText('Change Content');
+      await user.click(changeButton);
+      expect(mockContext.updateNoteContent).toHaveBeenCalledWith(1, 'new content');
+
+      // Note: In the real implementation, updateNoteContent in useNodeSelection
+      // compares content hash with contentHash and sets dirty flag accordingly.
+      // The mock just tracks the call, but in integration, dirty would be set to false
+      // when content matches contentHash (e.g., after CTRL+Z undo).
+    });
+
+    it('does not call setContentHash when save fails', async () => {
+      const user = userEvent.setup();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockUpdateNote.mockRejectedValue(new Error('Save failed'));
+
+      const mockNote = createMockNote(1, 'Test Note', 'Content');
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 1,
+        getNote: vi.fn(() => mockNote)
+      });
+
+      render(<ContentSlotDefault />);
+
+      // Simulate Ctrl+S keyboard shortcut
+      await user.keyboard('{Control>}s{/Control}');
+
+      await waitFor(() => {
+        expect(mockContext.setSaveStatus).toHaveBeenCalledWith('error');
+      });
+
+      // setContentHash should not be called on error
+      expect(mockContext.setContentHash).not.toHaveBeenCalled();
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('does not call setContentHash when no note is selected', async () => {
+      const user = userEvent.setup();
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: null,
+        getNote: vi.fn(() => null)
+      });
+
+      render(<ContentSlotDefault />);
+
+      // Simulate Ctrl+S keyboard shortcut
+      await user.keyboard('{Control>}s{/Control}');
+
+      expect(mockContext.setContentHash).not.toHaveBeenCalled();
     });
   });
 });

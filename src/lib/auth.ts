@@ -20,7 +20,7 @@ import { betterAuth } from 'better-auth';
 import { nextCookies } from 'better-auth/next-js';
 
 import prisma, { authPrismaAdapter } from '@/lib/prisma';
-import { sendEmail } from '@/lib/email';
+import { sendResetPasswordEmail, sendVerifyEmail } from '@/lib/email';
 
 /**
  * Authentication instance configured with Better Auth.
@@ -63,7 +63,14 @@ export const auth = betterAuth({
   ],
   advanced: {
     // Disable secure cookies in test/dev mode to allow HTTP testing in Docker
-    useSecureCookies: process.env.NODE_ENV === 'production'
+    // In CI/E2E tests, we run production build but over HTTP
+    useSecureCookies: process.env.NODE_ENV === 'production' && process.env.CI !== 'true'
+  },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ['github']
+    }
   },
   databaseHooks: {
     account: {
@@ -101,7 +108,9 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
-    requireEmailVerification: process.env.NODE_ENV === 'production',
+    // Require email verification in production only, but disable in CI/E2E tests
+    requireEmailVerification:
+      process.env.NODE_ENV === 'production' && process.env.CI !== 'true',
     sendResetPassword: async ({
       user,
       url
@@ -116,49 +125,10 @@ export const auth = betterAuth({
         return;
       }
 
-      await sendEmail({
+      await sendResetPasswordEmail({
         to: user.email,
-        subject: 'Reset Your Password - SNApp',
-        text: `
-Hi ${user.name || 'there'},
-
-We received a request to reset your password. Click the link below to create a new password:
-
-${url}
-
-This link will expire in 1 hour for security reasons.
-
-If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
-        `.trim(),
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #2D3748; text-align: center;">Reset Your Password</h1>
-            <p style="color: #4A5568; font-size: 16px;">
-              Hi ${user.name || 'there'},
-            </p>
-            <p style="color: #4A5568; font-size: 16px;">
-              We received a request to reset your password. Click the button below to create a new password:
-            </p>
-            <div style="text-align: center; margin: 32px 0;">
-              <a href="${url}" style="background-color: #3182CE; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                Reset Password
-              </a>
-            </div>
-            <p style="color: #718096; font-size: 14px;">
-              If the button doesn't work, copy and paste this link into your browser:
-            </p>
-            <p style="color: #718096; font-size: 14px; word-break: break-all;">
-              ${url}
-            </p>
-            <p style="color: #718096; font-size: 14px;">
-              This link will expire in 1 hour for security reasons.
-            </p>
-            <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 32px 0;">
-            <p style="color: #A0AEC0; font-size: 12px; text-align: center;">
-              If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
-            </p>
-          </div>
-        `
+        name: user.name || 'there',
+        url
       });
     }
   },
@@ -171,51 +141,10 @@ If you didn't request a password reset, you can safely ignore this email. Your p
       user: { email: string; name?: string };
       url: string;
     }) => {
-      await sendEmail({
+      await sendVerifyEmail({
         to: user.email,
-        subject: 'Verify your email address - SNApp',
-        text: `
-Hi ${user.name || 'there'},
-
-Welcome to SNApp! Thank you for signing up.
-
-Please verify your email address by clicking the link below:
-
-${url}
-
-This link will expire in 24 hours for security reasons.
-
-If you didn't create an account with SNApp, you can safely ignore this email.
-        `.trim(),
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #2D3748; text-align: center;">Welcome to SNApp!</h1>
-            <p style="color: #4A5568; font-size: 16px;">
-              Hi ${user.name || 'there'},
-            </p>
-            <p style="color: #4A5568; font-size: 16px;">
-              Thank you for signing up! Please verify your email address by clicking the button below:
-            </p>
-            <div style="text-align: center; margin: 32px 0;">
-              <a href="${url}" style="background-color: #3182CE; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                Verify Email Address
-              </a>
-            </div>
-            <p style="color: #718096; font-size: 14px;">
-              If the button doesn't work, copy and paste this link into your browser:
-            </p>
-            <p style="color: #718096; font-size: 14px; word-break: break-all;">
-              ${url}
-            </p>
-            <p style="color: #718096; font-size: 14px;">
-              This link will expire in 24 hours for security reasons.
-            </p>
-            <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 32px 0;">
-            <p style="color: #A0AEC0; font-size: 12px; text-align: center;">
-              If you didn't create an account with SNApp, you can safely ignore this email.
-            </p>
-          </div>
-        `
+        name: user.name || 'there',
+        url
       });
     }
   },

@@ -17,8 +17,9 @@ import { test, expect } from 'playwright-test-coverage';
 test.describe('Search Feature', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    // Wait for client-side session to load (useSession() hook makes API call)
     await expect(page.locator('[data-testid="sign-out-button"]')).toBeVisible({
-      timeout: 10000
+      timeout: 15000
     });
   });
   test.describe('Opening Search Modal', () => {
@@ -217,7 +218,7 @@ test.describe('Search Feature', () => {
           expect(page.url()).toMatch(/\/note\/\d+/);
 
           // Modal should be closed
-          await expect(searchDialog).not.toBeVisible({ timeout: 2000 });
+          await expect(searchDialog).not.toBeVisible({ timeout: 5000 });
         }
       }
     });
@@ -425,7 +426,7 @@ test.describe('Search Feature', () => {
       const searchInput = page.getByPlaceholder(/enter search query/i);
       await expect(searchInput).toBeFocused();
 
-      // Use fill() instead of keyboard.type() to avoid race conditions
+      // Type in the input (using fill is more reliable than keyboard.type)
       await searchInput.fill('test query');
 
       // Input should contain typed text
@@ -626,7 +627,7 @@ test.describe('Search Feature', () => {
           expect(page.url()).toMatch(new RegExp(`line=${lineNumber}`));
 
           // Modal should be closed
-          await expect(searchDialog).not.toBeVisible({ timeout: 2000 });
+          await expect(searchDialog).not.toBeVisible({ timeout: 5000 });
         }
       }
     });

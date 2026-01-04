@@ -383,16 +383,26 @@ describe('Better Auth Email Configuration', () => {
   });
 
   describe('Email Configuration', () => {
-    it('should require email verification only in production', async () => {
-      // Test production
+    it('should require email verification only in production (non-CI)', async () => {
+      // Test production without CI
       vi.stubEnv('NODE_ENV', 'production');
+      vi.stubEnv('CI', '');
       vi.resetModules();
       await import('@/lib/auth');
 
       expect(authConfig?.emailAndPassword?.requireEmailVerification).toBe(true);
 
+      // Test production with CI=true (E2E tests)
+      vi.stubEnv('NODE_ENV', 'production');
+      vi.stubEnv('CI', 'true');
+      vi.resetModules();
+      await import('@/lib/auth');
+
+      expect(authConfig?.emailAndPassword?.requireEmailVerification).toBe(false);
+
       // Test development
       vi.stubEnv('NODE_ENV', 'development');
+      vi.stubEnv('CI', '');
       vi.resetModules();
       await import('@/lib/auth');
 

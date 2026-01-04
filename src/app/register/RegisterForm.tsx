@@ -30,10 +30,16 @@ export default function RegisterForm({ isDevelopment }: RegisterFormProps) {
   useEffect(() => {
     // success in dev mode (no email verification)
     if (state.success && !state.message) {
-      // Refresh Better Auth session
-      refetch();
-      // full page reload to make sure that everything revalidate
-      window.location.href = '/';
+      // Refresh Better Auth session and wait for it to complete
+      // before redirecting to ensure consistent auth state
+      refetch().then(() => {
+        // Use a small delay to ensure session is fully established
+        // before full page reload - prevents race conditions in CI
+        setTimeout(() => {
+          // full page reload to make sure that everything revalidate
+          window.location.href = '/';
+        }, 100);
+      });
     }
   }, [state, refetch]);
 

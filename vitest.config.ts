@@ -11,7 +11,7 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.js', './src/test/setup-db.ts'],
     globals: true,
     css: true,
-    exclude: ['**/node_modules/**', '**/e2e/**', '**/.next/**'],
+    exclude: ['**/node_modules/**', '**/e2e/**', '**/.next/**', '**/prisma-7.0/**'],
     retry: process.env.CI ? 2 : 0,
     // Limit concurrent test files that access the database
     // This prevents "readonly database" errors from parallel access

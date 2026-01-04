@@ -44,7 +44,7 @@
 import { z } from 'zod';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
-import { sendEmail } from '@/lib/email';
+import { sendDeleteAccountEmail } from '@/lib/email';
 import prisma from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 
@@ -194,8 +194,9 @@ export async function signUpAction(_prevState: FormDataState, formData: FormData
     };
   }
 
-  // In development mode, auto-sign in without email verification
-  const requiresEmailVerification = process.env.NODE_ENV === 'production';
+  // In development mode or CI tests, auto-sign in without email verification
+  const requiresEmailVerification =
+    process.env.NODE_ENV === 'production' && process.env.CI !== 'true';
 
   if (requiresEmailVerification) {
     return {
@@ -399,63 +400,10 @@ export async function requestAccountDeletionAction() {
       };
     }
 
-    await sendEmail({
+    await sendDeleteAccountEmail({
       to: session.user.email,
-      subject: 'Confirm Account Deletion - SNApp',
-      text: `
-Hi ${session.user.name || 'there'},
-
-We received a request to delete your SNApp account. This action cannot be undone and will permanently delete:
-
-- Your account and profile information
-- All your notes and content
-- Your login sessions
-
-If you're sure you want to delete your account, click the link below:
-
-${confirmationUrl}
-
-This link will expire in 24 hours for security reasons.
-
-If you didn't request account deletion, you can safely ignore this email. Your account will remain active.
-      `.trim(),
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #E53E3E; text-align: center;">Account Deletion Request</h1>
-          <p style="color: #4A5568; font-size: 16px;">
-            Hi ${session.user.name || 'there'},
-          </p>
-          <p style="color: #4A5568; font-size: 16px;">
-            We received a request to delete your SNApp account. This action cannot be undone and will permanently delete:
-          </p>
-          <ul style="color: #4A5568; font-size: 16px; margin: 16px 0;">
-            <li>Your account and profile information</li>
-            <li>All your notes and content</li>
-            <li>Your login sessions</li>
-          </ul>
-          <p style="color: #4A5568; font-size: 16px;">
-            <strong>If you're sure you want to delete your account, click the button below:</strong>
-          </p>
-          <div style="text-align: center; margin: 32px 0;">
-            <a href="${confirmationUrl}" style="background-color: #E53E3E; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-              Permanently Delete My Account
-            </a>
-          </div>
-          <p style="color: #718096; font-size: 14px;">
-            If the button doesn't work, copy and paste this link into your browser:
-          </p>
-          <p style="color: #718096; font-size: 14px; word-break: break-all;">
-            ${confirmationUrl}
-          </p>
-          <p style="color: #718096; font-size: 14px;">
-            This link will expire in 24 hours for security reasons.
-          </p>
-          <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 32px 0;">
-          <p style="color: #A0AEC0; font-size: 12px; text-align: center;">
-            If you didn't request account deletion, you can safely ignore this email. Your account will remain active.
-          </p>
-        </div>
-      `
+      name: session.user.name || 'there',
+      url: confirmationUrl
     });
 
     return {
@@ -482,6 +430,19 @@ If you didn't request account deletion, you can safely ignore this email. Your a
  */
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters long'),
+  confirmPassword: z.string().min(1, 'Please confirm your new password')
+});
+
+/**
+ * Zod schema for set password validation (OAuth users).
+ *
+ * @remarks
+ * - New password must be at least 8 characters
+ * - Confirmation password is required
+ * - No current password needed (user has no password yet)
+ */
+const setPasswordSchema = z.object({
   newPassword: z.string().min(8, 'Password must be at least 8 characters long'),
   confirmPassword: z.string().min(1, 'Please confirm your new password')
 });
@@ -533,6 +494,59 @@ export async function getUserAuthMethod() {
   } catch (error) {
     console.error('Error checking user auth method:', error);
     return { hasPassword: false };
+  }
+}
+
+/**
+ * Gets the account linking status for the current user.
+ * Returns information about connected authentication providers.
+ *
+ * @async
+ * @returns {Promise<{hasPassword: boolean; hasGitHub: boolean}>} Object with provider status
+ *
+ * @example
+ * ```tsx
+ * const { hasPassword, hasGitHub } = await getAccountLinkingStatus();
+ * ```
+ *
+ * @remarks
+ * - Returns false for both if no active session
+ * - hasPassword: user has email/password authentication
+ * - hasGitHub: user has GitHub OAuth connected
+ */
+export async function getAccountLinkingStatus() {
+  try {
+    const headersList = await headers();
+    const session = await auth.api.getSession({
+      headers: headersList
+    });
+
+    if (!session?.user) {
+      return { hasPassword: false, hasGitHub: false };
+    }
+
+    const accounts = await prisma.account.findMany({
+      where: {
+        userId: session.user.id
+      },
+      select: {
+        providerId: true,
+        password: true
+      }
+    });
+
+    const hasPassword = accounts.some(
+      (acc) => acc.providerId === 'credential' && !!acc.password
+    );
+    const hasGitHub = accounts.some((acc) => acc.providerId === 'github');
+
+    return {
+      hasPassword,
+      hasGitHub
+    };
+  } catch (error) {
+    console.error('Error checking account linking status:', error);
+    return { hasPassword: false, hasGitHub: false };
   }
 }
 
@@ -672,6 +686,106 @@ export async function changePasswordAction(
 }
 
 /**
+ * Server action to set password for OAuth-only users.
+ * Allows users who signed up with GitHub to add password authentication.
+ *
+ * @async
+ * @param {FormDataState} _prevState - Previous form state (unused)
+ * @param {FormData} formData - Form data with newPassword and confirmPassword
+ *
+ * @returns {Promise<FormDataState>} State object with success status or error messages
+ *
+ * @example
+ * ```tsx
+ * const [state, action] = useActionState(setPasswordAction, {});
+ *
+ * <form action={action}>
+ *   <input name="newPassword" type="password" minLength={8} required />
+ *   <input name="confirmPassword" type="password" required />
+ * </form>
+ * ```
+ *
+ * @remarks
+ * - Requires active user session
+ * - Only available for OAuth-only accounts (no existing password)
+ * - Password must be at least 8 characters
+ * - Passwords must match between newPassword and confirmPassword
+ * - Uses Better Auth's setPassword API for secure password creation
+ */
+export async function setPasswordAction(_prevState: FormDataState, formData: FormData) {
+  const validatedFields = setPasswordSchema.safeParse({
+    newPassword: formData.get('newPassword'),
+    confirmPassword: formData.get('confirmPassword')
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Please check your input'
+    };
+  }
+
+  const { newPassword, confirmPassword } = validatedFields.data;
+
+  if (newPassword !== confirmPassword) {
+    return {
+      errors: { confirmPassword: ['Passwords do not match'] },
+      message: 'Passwords do not match'
+    };
+  }
+
+  try {
+    const headersList = await headers();
+    const session = await auth.api.getSession({
+      headers: headersList
+    });
+
+    if (!session?.user) {
+      return {
+        message: 'You must be logged in to set a password'
+      };
+    }
+
+    if (!session.user.email) {
+      return {
+        message: 'Email address is required to set a password'
+      };
+    }
+
+    const existingAccount = await prisma.account.findFirst({
+      where: {
+        userId: session.user.id,
+        providerId: 'credential'
+      }
+    });
+
+    if (existingAccount?.password) {
+      return {
+        message: 'You already have a password. Use Change Password instead.'
+      };
+    }
+
+    await auth.api.setPassword({
+      body: {
+        newPassword: newPassword
+      },
+      headers: headersList,
+      asResponse: false
+    });
+
+    return {
+      success: true,
+      message: 'Password set successfully'
+    };
+  } catch (error) {
+    console.error('Set password error:', error);
+    return {
+      message: 'An unexpected error occurred. Please try again.'
+    };
+  }
+}
+
+/**
  * Server action to verify user email address using a verification token.
  * Called when user clicks email verification link.
  *
@@ -791,7 +905,7 @@ const forgotPasswordSchema = z.object({
  * - Always returns success to prevent email enumeration attacks
  * - Sends email with password reset link to /reset-password page
  * - Reset link includes token for authentication
- * - Email is sent via Better Auth's forgetPassword API
+ * - Email is sent via Better Auth's requestPasswordReset API
  * - Base URL determined from BETTER_AUTH_URL environment variable
  */
 export async function forgotPasswordAction(
@@ -815,7 +929,7 @@ export async function forgotPasswordAction(
     const headersList = await headers();
     const baseUrl = process.env.BETTER_AUTH_URL || 'http://localhost:3000';
 
-    await auth.api.forgetPassword({
+    await auth.api.requestPasswordReset({
       body: {
         email,
         redirectTo: `${baseUrl}/reset-password`

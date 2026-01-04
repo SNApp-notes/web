@@ -17,11 +17,13 @@ import { ColorModeButton } from '@/components/ui/color-mode';
 import {
   requestAccountDeletionAction,
   changePasswordAction,
-  getUserAuthMethod,
+  getAccountLinkingStatus,
+  setPasswordAction,
   FormDataState
 } from '@/app/actions/auth';
 import { Toaster, toaster } from '@/components/ui/toaster';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { linkSocial, unlinkAccount } from '@/lib/auth-client';
 
 export default function SettingsForm() {
   const router = useRouter();
@@ -29,7 +31,9 @@ export default function SettingsForm() {
   const [showPasswordForm, setShowPasswordForm] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState<boolean>(false);
+  const [isStatusLoading, setIsStatusLoading] = useState<boolean>(true);
   const [hasPassword, setHasPassword] = useState<boolean>(false);
+  const [hasGitHub, setHasGitHub] = useState<boolean>(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
   const [deletionUrl, setDeletionUrl] = useState<string>('');
   const [passwordFormData, setPasswordFormData] = useState<FormDataState>({
@@ -38,11 +42,14 @@ export default function SettingsForm() {
   });
 
   useEffect(() => {
-    async function checkAuthMethod() {
-      const result = await getUserAuthMethod();
+    async function checkAuthStatus() {
+      setIsStatusLoading(true);
+      const result = await getAccountLinkingStatus();
       setHasPassword(result.hasPassword);
+      setHasGitHub(result.hasGitHub);
+      setIsStatusLoading(false);
     }
-    checkAuthMethod();
+    checkAuthStatus();
   }, []);
 
   // Handle URL parameters for error/success messages
@@ -137,12 +144,14 @@ export default function SettingsForm() {
 
     const formDataObj = new FormData(target);
 
-    const result = await changePasswordAction(passwordFormData, formDataObj);
+    const result = hasPassword
+      ? await changePasswordAction(passwordFormData, formDataObj)
+      : await setPasswordAction(passwordFormData, formDataObj);
 
     setIsPasswordLoading(false);
     if (result.success) {
       toaster.create({
-        title: 'Password Changed',
+        title: hasPassword ? 'Password Changed' : 'Password Set',
         description: result.message,
         type: 'success',
         duration: 5000
@@ -150,6 +159,9 @@ export default function SettingsForm() {
       setShowPasswordForm(false);
       setPasswordFormData({ errors: undefined, message: '' });
       target.reset();
+      if (!hasPassword) {
+        setHasPassword(true);
+      }
     } else {
       setPasswordFormData({
         errors: result.errors,
@@ -158,6 +170,44 @@ export default function SettingsForm() {
       toaster.create({
         title: 'Error',
         description: result.message,
+        type: 'error'
+      });
+    }
+  };
+
+  const handleLinkGitHub = async () => {
+    try {
+      await linkSocial({
+        provider: 'github',
+        callbackURL: '/settings'
+      });
+    } catch (error) {
+      toaster.create({
+        title: 'Error',
+        description: 'Failed to connect GitHub account. Please try again.',
+        type: 'error'
+      });
+    }
+  };
+
+  const handleUnlinkGitHub = async () => {
+    try {
+      await unlinkAccount({
+        providerId: 'github'
+      });
+      // Refresh the account status
+      const result = await getAccountLinkingStatus();
+      setHasPassword(result.hasPassword);
+      setHasGitHub(result.hasGitHub);
+      toaster.create({
+        title: 'Success',
+        description: 'GitHub account disconnected successfully.',
+        type: 'success'
+      });
+    } catch (error) {
+      toaster.create({
+        title: 'Error',
+        description: 'Failed to disconnect GitHub account. Please try again.',
         type: 'error'
       });
     }
@@ -197,47 +247,61 @@ export default function SettingsForm() {
             </Card.Body>
           </Card.Root>
 
-          {/* Password Change - Only for email/password users */}
-          {hasPassword && (
-            <Card.Root p={3}>
-              <Card.Header>
-                <Card.Title>Password</Card.Title>
-                <Card.Description>Change your account password</Card.Description>
-              </Card.Header>
-              <Card.Body>
-                {!showPasswordForm ? (
-                  <Flex justify="space-between" align="center">
-                    <Box>
-                      <Text fontWeight="medium" mb={1}>
-                        Change Password
-                      </Text>
-                      <Text fontSize="sm" color="fg.muted">
-                        Update your password to keep your account secure
-                      </Text>
-                    </Box>
-                    <Button
-                      p={3}
-                      colorPalette="blue"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowPasswordForm(true)}
-                    >
-                      Change Password
-                    </Button>
-                  </Flex>
-                ) : (
-                  <Stack gap={4}>
-                    <Box>
-                      <Text fontWeight="medium" mb={1}>
-                        Change Your Password
-                      </Text>
-                      <Text fontSize="sm" color="fg.muted" mb={3}>
-                        Enter your current password and choose a new one.
-                      </Text>
-                    </Box>
+          {/* Password Change/Set - Show for all users */}
+          <Card.Root p={3}>
+            <Card.Header>
+              <Card.Title>Password</Card.Title>
+              <Card.Description>
+                {isStatusLoading
+                  ? 'Loading...'
+                  : hasPassword
+                    ? 'Change your account password'
+                    : 'Set a password for email/password authentication'}
+              </Card.Description>
+            </Card.Header>
+            <Card.Body>
+              {isStatusLoading ? (
+                <Text fontSize="sm" color="fg.muted">
+                  Loading account status...
+                </Text>
+              ) : !showPasswordForm ? (
+                <Flex justify="space-between" align="center">
+                  <Box>
+                    <Text fontWeight="medium" mb={1}>
+                      {hasPassword ? 'Change Password' : 'Set Password'}
+                    </Text>
+                    <Text fontSize="sm" color="fg.muted">
+                      {hasPassword
+                        ? 'Update your password to keep your account secure'
+                        : 'Add password authentication to your account'}
+                    </Text>
+                  </Box>
+                  <Button
+                    p={3}
+                    colorPalette="blue"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPasswordForm(true)}
+                  >
+                    {hasPassword ? 'Change Password' : 'Set Password'}
+                  </Button>
+                </Flex>
+              ) : (
+                <Stack gap={4}>
+                  <Box>
+                    <Text fontWeight="medium" mb={1}>
+                      {hasPassword ? 'Change Your Password' : 'Set Your Password'}
+                    </Text>
+                    <Text fontSize="sm" color="fg.muted" mb={3}>
+                      {hasPassword
+                        ? 'Enter your current password and choose a new one.'
+                        : 'Create a secure password (minimum 8 characters).'}
+                    </Text>
+                  </Box>
 
-                    <form onSubmit={handlePasswordChangeSubmit}>
-                      <Stack gap={4}>
+                  <form onSubmit={handlePasswordChangeSubmit}>
+                    <Stack gap={4}>
+                      {hasPassword && (
                         <Field.Root invalid={!!passwordFormData.errors?.currentPassword}>
                           <Field.Label htmlFor="currentPassword">
                             Current Password
@@ -256,73 +320,139 @@ export default function SettingsForm() {
                             </Field.ErrorText>
                           )}
                         </Field.Root>
+                      )}
 
-                        <Field.Root invalid={!!passwordFormData.errors?.newPassword}>
-                          <Field.Label htmlFor="newPassword">New Password</Field.Label>
-                          <Input
-                            p={3}
-                            id="newPassword"
-                            name="newPassword"
-                            type="password"
-                            placeholder="Enter your new password (min 8 characters)"
-                            required
-                          />
-                          {passwordFormData.errors?.newPassword && (
-                            <Field.ErrorText>
-                              {passwordFormData.errors.newPassword[0]}
-                            </Field.ErrorText>
-                          )}
-                        </Field.Root>
+                      <Field.Root invalid={!!passwordFormData.errors?.newPassword}>
+                        <Field.Label htmlFor="newPassword">
+                          {hasPassword ? 'New Password' : 'Password'}
+                        </Field.Label>
+                        <Input
+                          p={3}
+                          id="newPassword"
+                          name="newPassword"
+                          type="password"
+                          placeholder="Enter your new password (min 8 characters)"
+                          required
+                        />
+                        {passwordFormData.errors?.newPassword && (
+                          <Field.ErrorText>
+                            {passwordFormData.errors.newPassword[0]}
+                          </Field.ErrorText>
+                        )}
+                      </Field.Root>
 
-                        <Field.Root invalid={!!passwordFormData.errors?.confirmPassword}>
-                          <Field.Label htmlFor="confirmPassword">
-                            Confirm New Password
-                          </Field.Label>
-                          <Input
-                            p={3}
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            type="password"
-                            placeholder="Confirm your new password"
-                            required
-                          />
-                          {passwordFormData.errors?.confirmPassword && (
-                            <Field.ErrorText>
-                              {passwordFormData.errors.confirmPassword[0]}
-                            </Field.ErrorText>
-                          )}
-                        </Field.Root>
+                      <Field.Root invalid={!!passwordFormData.errors?.confirmPassword}>
+                        <Field.Label htmlFor="confirmPassword">
+                          {hasPassword ? 'Confirm New Password' : 'Confirm Password'}
+                        </Field.Label>
+                        <Input
+                          p={3}
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          type="password"
+                          placeholder="Confirm your new password"
+                          required
+                        />
+                        {passwordFormData.errors?.confirmPassword && (
+                          <Field.ErrorText>
+                            {passwordFormData.errors.confirmPassword[0]}
+                          </Field.ErrorText>
+                        )}
+                      </Field.Root>
 
-                        <Flex gap={2} justify="flex-end">
-                          <Button
-                            p={3}
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              setShowPasswordForm(false);
-                              setPasswordFormData({ errors: undefined, message: '' });
-                            }}
-                            disabled={isPasswordLoading}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            p={3}
-                            type="submit"
-                            colorPalette="blue"
-                            loading={isPasswordLoading}
-                            loadingText="Changing..."
-                          >
-                            Change Password
-                          </Button>
-                        </Flex>
-                      </Stack>
-                    </form>
-                  </Stack>
-                )}
-              </Card.Body>
-            </Card.Root>
-          )}
+                      <Flex gap={2} justify="flex-end">
+                        <Button
+                          p={3}
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setShowPasswordForm(false);
+                            setPasswordFormData({ errors: undefined, message: '' });
+                          }}
+                          disabled={isPasswordLoading}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          p={3}
+                          type="submit"
+                          colorPalette="blue"
+                          loading={isPasswordLoading}
+                          loadingText={hasPassword ? 'Changing...' : 'Setting...'}
+                        >
+                          {hasPassword ? 'Change Password' : 'Set Password'}
+                        </Button>
+                      </Flex>
+                    </Stack>
+                  </form>
+                </Stack>
+              )}
+            </Card.Body>
+          </Card.Root>
+
+          {/* GitHub Connection */}
+          <Card.Root p={3}>
+            <Card.Header>
+              <Card.Title>Connected Accounts</Card.Title>
+              <Card.Description>
+                Link your account with GitHub for easy sign-in
+              </Card.Description>
+            </Card.Header>
+            <Card.Body>
+              {isStatusLoading ? (
+                <Text fontSize="sm" color="fg.muted">
+                  Loading account status...
+                </Text>
+              ) : (
+                <Flex justify="space-between" align="center">
+                  <Box>
+                    <Flex align="center" gap={2} mb={1}>
+                      <Text fontWeight="medium">GitHub</Text>
+                      {hasGitHub && (
+                        <Text
+                          fontSize="xs"
+                          fontWeight="bold"
+                          color="green.600"
+                          bg="green.50"
+                          px={2}
+                          py={0.5}
+                          borderRadius="md"
+                        >
+                          ✓ Connected
+                        </Text>
+                      )}
+                    </Flex>
+                    <Text fontSize="sm" color="fg.muted">
+                      {hasGitHub
+                        ? 'Your GitHub account is connected'
+                        : 'Connect your GitHub account for OAuth sign-in'}
+                    </Text>
+                  </Box>
+                  {hasGitHub ? (
+                    <Button
+                      p={3}
+                      variant="outline"
+                      colorPalette="red"
+                      size="sm"
+                      onClick={handleUnlinkGitHub}
+                    >
+                      Disconnect
+                    </Button>
+                  ) : (
+                    <Button
+                      p={3}
+                      variant="outline"
+                      colorPalette="green"
+                      size="sm"
+                      onClick={handleLinkGitHub}
+                    >
+                      Connect GitHub
+                    </Button>
+                  )}
+                </Flex>
+              )}
+            </Card.Body>
+          </Card.Root>
 
           {/* Account Management */}
           <Card.Root p={3}>

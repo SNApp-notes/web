@@ -77,6 +77,7 @@ import {
   useEffect,
   useCallback,
   useMemo,
+  useRef,
   type ReactNode
 } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
@@ -84,6 +85,7 @@ import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import { useNodeSelection } from '@/hooks/useNodeSelection';
 import { selectNode } from '@/lib/utils';
+import { cleanupEditorStates } from '@/lib/localStorage';
 
 /**
  * NotesContext value interface exposing all notes state and operations.
@@ -97,6 +99,8 @@ import { selectNode } from '@/lib/utils';
  * @property {(noteId: number, content: string) => void} updateNoteContent - Update note content (marks as dirty)
  * @property {(noteId: number, name: string) => void} updateNoteName - Update note name (marks as dirty)
  * @property {(noteId: number, dirty: boolean) => void} markNoteDirty - Set note's dirty flag
+ * @property {(noteId: number, updatedAt: Date) => void} updateNoteTimestamp - Update note's updatedAt timestamp
+ * @property {(noteId: number, content: string) => void} setSavedContentHash - Set saved content hash for undo detection
  * @property {() => NoteTreeNode | null} getSelectedNote - Get currently selected note object
  * @property {(noteId: number) => NoteTreeNode | null} getNote - Get note by ID
  * @property {(noteId: number | null) => void} selectNote - Select note and navigate to URL
@@ -110,6 +114,8 @@ interface NotesContextValue {
   updateNoteContent: (noteId: number, content: string) => void;
   updateNoteName: (noteId: number, name: string) => void;
   markNoteDirty: (noteId: number, dirty: boolean) => void;
+  updateNoteTimestamp: (noteId: number, updatedAt: Date) => void;
+  setContentHash: (noteId: number, content: string) => void;
   getSelectedNote: () => NoteTreeNode | null;
   getNote: (noteId: number) => NoteTreeNode | null;
   selectNote: (noteId: number | null) => void;
@@ -242,8 +248,24 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     updateSelection,
     updateDirtyFlag,
     updateNoteContent,
-    updateNoteName
+    updateNoteName,
+    updateNoteTimestamp,
+    setContentHash
   } = useNodeSelection(updatedNotes, initSelectedNodeId);
+
+  // Track if cleanup has been performed
+  const cleanupPerformedRef = useRef(false);
+
+  // Clean up editor states on mount (remove cursor/scroll for non-selected notes)
+  useEffect(() => {
+    // Only run cleanup once on mount
+    if (cleanupPerformedRef.current) {
+      return;
+    }
+
+    cleanupPerformedRef.current = true;
+    cleanupEditorStates(selectedNoteId);
+  }, [selectedNoteId]);
 
   // Sync notes state when initialNotes prop changes (e.g., after redirect)
   useEffect(() => {
@@ -308,6 +330,8 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     updateNoteContent,
     updateNoteName,
     markNoteDirty,
+    updateNoteTimestamp,
+    setContentHash,
     getSelectedNote,
     getNote,
     selectNote

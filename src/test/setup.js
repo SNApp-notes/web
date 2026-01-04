@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Mock server-only package to allow server modules in tests
+vi.mock('server-only', () => ({}));
+
 // Suppress jsdom CSS parsing errors
 if (globalThis.window?._virtualConsole) {
   const originalEmit = globalThis.window._virtualConsole.emit;
@@ -24,17 +27,19 @@ vi.mock('@chakra-ui/react', async () => {
 });
 
 // Fix for jsdom missing Range API (https://github.com/jsdom/jsdom/issues/3729)
-document.createRange = () => {
-  const range = new Range();
-  range.getClientRects = () => ({
-    item: () => null,
-    length: 0,
-    [Symbol.iterator]: function* () {
-      yield* [];
-    }
-  });
-  return range;
-};
+if (typeof document !== 'undefined') {
+  document.createRange = () => {
+    const range = new Range();
+    range.getClientRects = () => ({
+      item: () => null,
+      length: 0,
+      [Symbol.iterator]: function* () {
+        yield* [];
+      }
+    });
+    return range;
+  };
+}
 
 // Mock ResizeObserver for Chakra UI components that use Zag.js
 global.ResizeObserver = class ResizeObserver {

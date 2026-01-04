@@ -9,8 +9,10 @@ This is your example note. You can:
 console.log('Hello, world!');
 ```
 
-- Save with Ctrl+S
-- Search across all notes with Ctrl+Shift+F (Cmd+Shift+F on Mac)
+- Save with **Ctrl+S** (or **Cmd+S** on Mac)
+- Undo changes with **Ctrl+Z** (or **Cmd+Z** on Mac)
+- Search within the current note with **Ctrl+F** (or **Cmd+F** on Mac)
+- Search across all notes with **Ctrl+Shift+F** (or **Cmd+Shift+F** on Mac)
 - Double-click note names (on the left) to rename them
 - Click on the header on the right to scroll into it's position
 - Use filters on the left and right to find a given note or header
@@ -20,6 +22,19 @@ console.log('Hello, world!');
 Start typing to replace this content!
 
 You can delete this note, or just rename it and use as the first one.
+
+## Keyboard Shortcuts
+
+Master these shortcuts to boost your productivity:
+
+### Editing
+- **Ctrl+S** / **Cmd+S** - Save the current note
+- **Ctrl+Z** / **Cmd+Z** - Undo changes (reverts to last saved state)
+- **Ctrl+F** / **Cmd+F** - Find text within the current note
+
+### Search
+- **Ctrl+Shift+F** / **Cmd+Shift+F** - Search across all notes
+- **Ctrl+G** / **ESC** - Exit search modal
 
 ## Search Feature
 

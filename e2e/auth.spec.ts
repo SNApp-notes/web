@@ -131,12 +131,12 @@ test.describe('Welcome Note Creation', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/', { timeout: 10000 });
+    await page.waitForURL('/', { timeout: 5000 });
 
-    await page.waitForSelector('[data-testid="note-list"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="note-list"]', { timeout: 5000 });
 
     await page.waitForSelector('[data-testid="note-list"] .tree-item', {
-      timeout: 10000
+      timeout: 5000
     });
 
     const noteItems = await page.locator('[data-testid="note-list"] .tree-item').all();
@@ -156,9 +156,9 @@ test.describe('Welcome Note Creation', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/', { timeout: 10000 });
+    await page.waitForURL('/', { timeout: 5000 });
     await page.waitForSelector('[data-testid="note-list"] .tree-item', {
-      timeout: 10000
+      timeout: 5000
     });
 
     const initialNotes = await page.locator('[data-testid="note-list"] .tree-item').all();
@@ -167,7 +167,7 @@ test.describe('Welcome Note Creation', () => {
 
     await page.reload();
     await page.waitForSelector('[data-testid="note-list"] .tree-item', {
-      timeout: 10000
+      timeout: 5000
     });
 
     const notesAfterRefresh = await page
@@ -178,7 +178,7 @@ test.describe('Welcome Note Creation', () => {
 
     await page.reload();
     await page.waitForSelector('[data-testid="note-list"] .tree-item', {
-      timeout: 10000
+      timeout: 5000
     });
 
     const notesAfterSecondRefresh = await page
@@ -199,11 +199,11 @@ test.describe('Welcome Note Creation', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/', { timeout: 10000 });
+    await page.waitForURL('/', { timeout: 5000 });
 
     // Wait for the welcome note to appear in the sidebar
     await page.waitForSelector('[data-testid="note-list"] .tree-item', {
-      timeout: 10000
+      timeout: 5000
     });
 
     // Click on the welcome note to navigate to it
@@ -211,7 +211,7 @@ test.describe('Welcome Note Creation', () => {
     await welcomeNote.click();
 
     // Wait for URL to contain /note/1 (using regex for more flexible matching)
-    await page.waitForURL(/\/note\/1$/, { timeout: 10000 });
+    await page.waitForURL(/\/note\/1$/, { timeout: 5000 });
 
     // Verify the URL ends with /note/1
     const url = page.url();
@@ -230,9 +230,9 @@ test.describe('Welcome Note Creation', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/', { timeout: 10000 });
+    await page.waitForURL('/', { timeout: 5000 });
     await page.waitForSelector('[data-testid="note-list"] .tree-item', {
-      timeout: 10000
+      timeout: 5000
     });
 
     // Click on first user's welcome note
@@ -240,7 +240,7 @@ test.describe('Welcome Note Creation', () => {
     await user1Note.click();
 
     // Wait for URL to contain /note/1
-    await page.waitForURL(/\/note\/1$/, { timeout: 10000 });
+    await page.waitForURL(/\/note\/1$/, { timeout: 5000 });
     const url1 = page.url();
     expect(url1).toMatch(/\/note\/1$/);
 
@@ -256,9 +256,9 @@ test.describe('Welcome Note Creation', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/', { timeout: 10000 });
+    await page.waitForURL('/', { timeout: 5000 });
     await page.waitForSelector('[data-testid="note-list"] .tree-item', {
-      timeout: 10000
+      timeout: 5000
     });
 
     // Click on second user's welcome note
@@ -266,7 +266,7 @@ test.describe('Welcome Note Creation', () => {
     await user2Note.click();
 
     // Verify second user also has /note/1 (independent from first user)
-    await page.waitForURL(/\/note\/1$/, { timeout: 10000 });
+    await page.waitForURL(/\/note\/1$/, { timeout: 5000 });
     const url2 = page.url();
     expect(url2).toMatch(/\/note\/1$/);
   });
@@ -297,7 +297,7 @@ test.describe('Sign In Flow', () => {
     await page.click('button[type="submit"]');
 
     const errorAlert = page.getByTestId('login-error');
-    await expect(errorAlert).toBeVisible({ timeout: 10000 });
+    await expect(errorAlert).toBeVisible({ timeout: 5000 });
     await expect(errorAlert).toContainText('Invalid email or password');
     await expect(page).toHaveURL(/.*login/);
   });
@@ -317,7 +317,7 @@ test.describe('Sign In Flow', () => {
     await page.click('button[type="submit"]');
 
     const errorAlert = page.getByTestId('login-error');
-    await expect(errorAlert).toBeVisible({ timeout: 10000 });
+    await expect(errorAlert).toBeVisible({ timeout: 5000 });
     await expect(errorAlert).toContainText('Invalid email or password');
     await expect(page).toHaveURL(/.*login/);
   });
@@ -335,7 +335,8 @@ test.describe('Session Management', () => {
 
     await createTestUser(page, testUser);
 
-    await expect(page).toHaveURL('/');
+    // After registration, user is redirected to first note (/note/1)
+    await expect(page).toHaveURL(/\/note\/\d+$/);
 
     await signOutUser(page);
 
@@ -352,11 +353,13 @@ test.describe('Session Management', () => {
       name: 'Test User'
     });
 
-    await expect(page).toHaveURL('/');
+    // After registration, user is redirected to first note (/note/1)
+    await expect(page).toHaveURL(/\/note\/\d+$/);
 
     await page.reload();
 
-    await expect(page).toHaveURL('/');
+    // After refresh, should still be on a note page (session persists)
+    await expect(page).toHaveURL(/\/note\/\d+$/);
   });
 });
 

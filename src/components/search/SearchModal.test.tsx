@@ -490,4 +490,339 @@ describe('SearchModal', () => {
       expect(mockCloseModal).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('Results count', () => {
+    it('should display results count with singular form', () => {
+      vi.mocked(useSearchContext).mockReturnValue({
+        ...defaultContextValue,
+        isModalOpen: true,
+        searchResults: [
+          {
+            noteId: 1,
+            noteName: 'Note 1',
+            contentSnippet: 'Content with test keyword',
+            lineNumber: 10,
+            totalMatches: 1
+          }
+        ],
+        executedQuery: 'test',
+        totalResults: 1,
+        totalPages: 1
+      });
+
+      render(<SearchModal />);
+
+      expect(screen.getByText('1 result found')).toBeInTheDocument();
+    });
+
+    it('should display results count with plural form', () => {
+      vi.mocked(useSearchContext).mockReturnValue({
+        ...defaultContextValue,
+        isModalOpen: true,
+        searchResults: [
+          {
+            noteId: 1,
+            noteName: 'Note 1',
+            contentSnippet: 'Content with test keyword',
+            lineNumber: 10,
+            totalMatches: 1
+          }
+        ],
+        executedQuery: 'test',
+        totalResults: 3,
+        totalPages: 1
+      });
+
+      render(<SearchModal />);
+
+      expect(screen.getByText('3 results found')).toBeInTheDocument();
+    });
+
+    it('should handle large number of total results', () => {
+      vi.mocked(useSearchContext).mockReturnValue({
+        ...defaultContextValue,
+        isModalOpen: true,
+        searchResults: [
+          {
+            noteId: 1,
+            noteName: 'Note 1',
+            contentSnippet: 'Content with test keyword',
+            lineNumber: 10,
+            totalMatches: 1
+          }
+        ],
+        executedQuery: 'test',
+        totalResults: 1000,
+        totalPages: 100,
+        currentPage: 1
+      });
+
+      render(<SearchModal />);
+
+      expect(screen.getByText('1000 results found')).toBeInTheDocument();
+    });
+  });
+
+  describe('Pagination', () => {
+    const mockSetPage = vi.fn();
+
+    it('should not show pagination when only one page', () => {
+      vi.mocked(useSearchContext).mockReturnValue({
+        ...defaultContextValue,
+        isModalOpen: true,
+        searchResults: [
+          {
+            noteId: 1,
+            noteName: 'Note 1',
+            contentSnippet: 'content',
+            lineNumber: 1,
+            totalMatches: 1
+          }
+        ],
+        executedQuery: 'test',
+        totalResults: 3,
+        totalPages: 1,
+        currentPage: 1
+      });
+
+      render(<SearchModal />);
+
+      expect(
+        screen.queryByRole('button', { name: /previous page/i })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /next page/i })
+      ).not.toBeInTheDocument();
+    });
+
+    it('should show pagination when multiple pages', () => {
+      vi.mocked(useSearchContext).mockReturnValue({
+        ...defaultContextValue,
+        isModalOpen: true,
+        searchResults: [
+          {
+            noteId: 1,
+            noteName: 'Note 1',
+            contentSnippet: 'content',
+            lineNumber: 1,
+            totalMatches: 1
+          }
+        ],
+        executedQuery: 'test',
+        totalResults: 9,
+        totalPages: 3,
+        currentPage: 1,
+        setPage: mockSetPage
+      });
+
+      render(<SearchModal />);
+
+      expect(screen.getByRole('button', { name: /previous page/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /next page/i })).toBeInTheDocument();
+      // Check for page number buttons
+      expect(screen.getByRole('button', { name: /page 1/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /page 2/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /page 3/i })).toBeInTheDocument();
+    });
+
+    it('should disable Previous button on first page', () => {
+      vi.mocked(useSearchContext).mockReturnValue({
+        ...defaultContextValue,
+        isModalOpen: true,
+        searchResults: [
+          {
+            noteId: 1,
+            noteName: 'Note 1',
+            contentSnippet: 'content',
+            lineNumber: 1,
+            totalMatches: 1
+          }
+        ],
+        executedQuery: 'test',
+        totalResults: 9,
+        totalPages: 3,
+        currentPage: 1,
+        setPage: mockSetPage
+      });
+
+      render(<SearchModal />);
+
+      const prevButton = screen.getByRole('button', { name: /previous page/i });
+      expect(prevButton).toBeDisabled();
+    });
+
+    it('should disable Next button on last page', () => {
+      vi.mocked(useSearchContext).mockReturnValue({
+        ...defaultContextValue,
+        isModalOpen: true,
+        searchResults: [
+          {
+            noteId: 1,
+            noteName: 'Note 1',
+            contentSnippet: 'content',
+            lineNumber: 1,
+            totalMatches: 1
+          }
+        ],
+        executedQuery: 'test',
+        totalResults: 9,
+        totalPages: 3,
+        currentPage: 3,
+        setPage: mockSetPage
+      });
+
+      render(<SearchModal />);
+
+      const nextButton = screen.getByRole('button', { name: /next page/i });
+      expect(nextButton).toBeDisabled();
+    });
+
+    it('should enable both buttons on middle page', () => {
+      vi.mocked(useSearchContext).mockReturnValue({
+        ...defaultContextValue,
+        isModalOpen: true,
+        searchResults: [
+          {
+            noteId: 1,
+            noteName: 'Note 1',
+            contentSnippet: 'content',
+            lineNumber: 1,
+            totalMatches: 1
+          }
+        ],
+        executedQuery: 'test',
+        totalResults: 9,
+        totalPages: 3,
+        currentPage: 2,
+        setPage: mockSetPage
+      });
+
+      render(<SearchModal />);
+
+      const prevButton = screen.getByRole('button', { name: /previous page/i });
+      const nextButton = screen.getByRole('button', { name: /next page/i });
+
+      expect(prevButton).not.toBeDisabled();
+      expect(nextButton).not.toBeDisabled();
+    });
+
+    it('should call setPage when page number is clicked', async () => {
+      const user = userEvent.setup();
+
+      vi.mocked(useSearchContext).mockReturnValue({
+        ...defaultContextValue,
+        isModalOpen: true,
+        searchResults: [
+          {
+            noteId: 1,
+            noteName: 'Note 1',
+            contentSnippet: 'content',
+            lineNumber: 1,
+            totalMatches: 1
+          }
+        ],
+        executedQuery: 'test',
+        totalResults: 9,
+        totalPages: 3,
+        currentPage: 1,
+        setPage: mockSetPage
+      });
+
+      render(<SearchModal />);
+
+      const page2Button = screen.getByRole('button', { name: /page 2/i });
+      await user.click(page2Button);
+
+      expect(mockSetPage).toHaveBeenCalledWith(2);
+    });
+
+    it('should call setPage with previous page when Previous is clicked', async () => {
+      const user = userEvent.setup();
+
+      vi.mocked(useSearchContext).mockReturnValue({
+        ...defaultContextValue,
+        isModalOpen: true,
+        searchResults: [
+          {
+            noteId: 1,
+            noteName: 'Note 1',
+            contentSnippet: 'content',
+            lineNumber: 1,
+            totalMatches: 1
+          }
+        ],
+        executedQuery: 'test',
+        totalResults: 9,
+        totalPages: 3,
+        currentPage: 2,
+        setPage: mockSetPage
+      });
+
+      render(<SearchModal />);
+
+      const prevButton = screen.getByRole('button', { name: /previous page/i });
+      await user.click(prevButton);
+
+      expect(mockSetPage).toHaveBeenCalledWith(1);
+    });
+
+    it('should call setPage with next page when Next is clicked', async () => {
+      const user = userEvent.setup();
+
+      vi.mocked(useSearchContext).mockReturnValue({
+        ...defaultContextValue,
+        isModalOpen: true,
+        searchResults: [
+          {
+            noteId: 1,
+            noteName: 'Note 1',
+            contentSnippet: 'content',
+            lineNumber: 1,
+            totalMatches: 1
+          }
+        ],
+        executedQuery: 'test',
+        totalResults: 9,
+        totalPages: 3,
+        currentPage: 2,
+        setPage: mockSetPage
+      });
+
+      render(<SearchModal />);
+
+      const nextButton = screen.getByRole('button', { name: /next page/i });
+      await user.click(nextButton);
+
+      expect(mockSetPage).toHaveBeenCalledWith(3);
+    });
+
+    it('should persist pagination during page loading', () => {
+      vi.mocked(useSearchContext).mockReturnValue({
+        ...defaultContextValue,
+        isModalOpen: true,
+        searchResults: [
+          {
+            noteId: 1,
+            noteName: 'Note 1',
+            contentSnippet: 'content',
+            lineNumber: 1,
+            totalMatches: 1
+          }
+        ],
+        executedQuery: 'test',
+        totalResults: 9,
+        totalPages: 3,
+        currentPage: 2,
+        isLoading: true,
+        setPage: mockSetPage
+      });
+
+      render(<SearchModal />);
+
+      // Pagination should still be visible during loading
+      expect(screen.getByRole('button', { name: /previous page/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /next page/i })).toBeInTheDocument();
+      expect(screen.getByText('9 results found')).toBeInTheDocument();
+    });
+  });
 });

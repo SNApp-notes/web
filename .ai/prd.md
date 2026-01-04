@@ -314,23 +314,32 @@ Criteria:
 - Open notes and unsaved changes prompt a warning before logout.
 - Edge case: Logout during editing discards unsaved content after confirmation.
 
-US-015 Title: As a user with unsaved changes, I want to be warned before
-leaving the app so that I don't accidentally lose my work. Description: Browser
-navigation protection prevents data loss when there are unsaved changes in the
+US-015 Title: [DEPRECATED - Replaced by US-023] As a user with unsaved changes, I want to be warned before
+leaving the app so that I don't accidentally lose my work. 
+
+**Status**: This user story has been superseded by US-023 (Unsaved State Persistence). 
+Instead of warning users about unsaved changes, the application now automatically 
+persists unsaved changes to localStorage and restores them after page refresh. 
+This provides a better user experience by eliminating data loss concerns without 
+requiring user interaction.
+
+**Original Description**: Browser navigation protection prevents data loss when there are unsaved changes in the
 editor. Acceptance Criteria:
 
-- Given unsaved changes in the current note, when the user tries to close the
+- ~~Given unsaved changes in the current note, when the user tries to close the
   browser tab, navigate away, or refresh the page, a browser confirmation dialog
-  appears asking "You have unsaved changes. Are you sure you want to leave?"
-- The warning uses the standard `beforeunload` event to ensure compatibility
-  across all supported browsers (Chrome v120+, Firefox v115+, Safari v17+, Edge v120+).
-- The warning only appears when `hasUnsavedChanges` is true in the notes context.
-- If the user confirms leaving, unsaved changes are lost (no auto-save in MVP).
-- If the user cancels, they remain on the page with their unsaved work intact.
-- The warning does not appear when navigating between notes within the app or
-  after successfully saving changes.
-- Edge case: The warning also appears when using browser back/forward buttons
-  with unsaved changes.
+  appears asking "You have unsaved changes. Are you sure you want to leave?"~~
+- ~~The warning uses the standard `beforeunload` event to ensure compatibility
+  across all supported browsers (Chrome v120+, Firefox v115+, Safari v17+, Edge v120+).~~
+- ~~The warning only appears when `hasUnsavedChanges` is true in the notes context.~~
+- ~~If the user confirms leaving, unsaved changes are lost (no auto-save in MVP).~~
+- ~~If the user cancels, they remain on the page with their unsaved work intact.~~
+- ~~The warning does not appear when navigating between notes within the app or
+  after successfully saving changes.~~
+- ~~Edge case: The warning also appears when using browser back/forward buttons
+  with unsaved changes.~~
+
+**Note**: See US-023 for the implemented solution using localStorage-based state persistence.
 
 US-016 Title: As a user browsing many notes, I want instant note selection
 without interface delays so that I can navigate efficiently through my note
@@ -603,6 +612,45 @@ used on both server and client to guarantee consistency. Acceptance Criteria:
 - Migration: Existing users with localStorage sorting preferences are migrated
   to database settings on their next login, preserving their preferred sort
   order.
+
+
+US-023 Title: As a user, I want my application state to persist across page
+refreshes so that I don't lose my work when the app auto-refreshes during
+deployment. Description: When a new version is deployed, the application may
+automatically refresh. To prevent data loss and maintain continuity, the
+application state (including unsaved notes and editor position) is saved to
+localStorage and restored after refresh. This ensures a seamless user experience
+even during deployments. Acceptance Criteria:
+
+- Given an authenticated user editing notes, when the page refreshes (manually
+  or during deployment), all application state is preserved and restored.
+- The following state persists across refreshes:
+  - Current note ID (which note is open)
+  - Cursor position (line and column in the editor)
+  - Scroll position in the editor
+  - Unsaved note changes (content not yet saved to server)
+- When the page refreshes, the application reopens the same note, restores the
+  cursor to the exact position, restores the scroll position, and restores any
+  unsaved changes.
+- State updates are debounced to avoid excessive writes (cursor/scroll: 300ms,
+  content: 1 second).
+- Unsaved notes are stored efficiently using diffs rather than full content to
+  minimize localStorage usage.
+- When a note is saved to the server, its unsaved changes are cleared from
+  localStorage.
+- If unsaved changes exist but the server has newer content, a conflict dialog
+  prompts the user to choose between local or server version.
+- No beforeunload warning is shown since changes are automatically persisted.
+- Edge case: If localStorage is full, the application displays a warning and
+  attempts to clear old data before retrying.
+- Edge case: If localStorage is disabled, the application continues functioning
+  without state persistence.
+- Edge case: On logout, all localStorage data is cleared to prevent data leakage
+  between users.
+- Edge case: If the selected note no longer exists after refresh, the first
+  available note is selected instead.
+- Performance: localStorage operations add no more than 5ms overhead to user
+  interactions.
 
 
 ## 6. Success Metrics
