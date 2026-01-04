@@ -39,7 +39,7 @@
     "@emotion/react": "^11.14.0",
     "@prisma/adapter-libsql": "^7.0.1",
     "@prisma/adapter-mariadb": "^7.0.1",
-    "@prisma/client": "^7.0.0",
+    "@prisma/client": "^7.2.0",
     "@snapp-notes/markdown-parser": "^0.1.2",
     "@uiw/codemirror-theme-basic": "^4.25.3",
     "@uiw/react-codemirror": "^4.25.3",
@@ -82,7 +82,7 @@
     "nyc": "^17.1.0",
     "playwright-test-coverage": "^1.2.12",
     "prettier": "^3.6.2",
-    "prisma": "^7.0.1",
+    "prisma": "^7.2.0",
     "sqlite3": "^5.1.7",
     "typescript": "^5",
     "vitest": "^4.0.9"
