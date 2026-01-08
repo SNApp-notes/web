@@ -77,7 +77,6 @@ import {
   useEffect,
   useCallback,
   useMemo,
-  useRef,
   type ReactNode
 } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
@@ -85,7 +84,7 @@ import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import { useNodeSelection } from '@/hooks/useNodeSelection';
 import { selectNode } from '@/lib/utils';
-import { cleanupEditorStates } from '@/lib/localStorage';
+import { clearEditorState } from '@/lib/localStorage';
 
 /**
  * NotesContext value interface exposing all notes state and operations.
@@ -253,20 +252,6 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     setContentHash
   } = useNodeSelection(updatedNotes, initSelectedNodeId);
 
-  // Track if cleanup has been performed
-  const cleanupPerformedRef = useRef(false);
-
-  // Clean up editor states on mount (remove cursor/scroll for non-selected notes)
-  useEffect(() => {
-    // Only run cleanup once on mount
-    if (cleanupPerformedRef.current) {
-      return;
-    }
-
-    cleanupPerformedRef.current = true;
-    cleanupEditorStates(selectedNoteId);
-  }, [selectedNoteId]);
-
   // Sync notes state when initialNotes prop changes (e.g., after redirect)
   useEffect(() => {
     if (initialNotes.length > 0 && notes.length === 0) {
@@ -291,6 +276,11 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
   // Note selection with Next.js router
   const selectNote = useCallback(
     (noteId: number | null) => {
+      // Clear editor state when switching notes
+      // This ensures cursor/scroll position is NOT restored on note switch
+      // (only on page refresh)
+      clearEditorState();
+
       // Update state immediately
       updateSelection(noteId);
 

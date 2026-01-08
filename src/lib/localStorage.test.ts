@@ -11,7 +11,7 @@ import {
   getStorageInfo,
   saveEditorState,
   getEditorState,
-  cleanupEditorStates
+  clearEditorState
 } from './localStorage';
 
 describe('localStorage utilities', () => {
@@ -337,144 +337,92 @@ describe('localStorage utilities', () => {
     });
   });
 
-  describe('cleanupEditorStates', () => {
-    it('should remove editor states for all notes except the selected one', () => {
-      // Set up editor states for multiple notes
+  describe('saveEditorState and getEditorState', () => {
+    it('should store and retrieve editor state with single key', () => {
+      const state = {
+        cursor: { line: 10, column: 5 },
+        scrollAnchor: { from: 100, topOffset: 20, scrollLeft: 0 }
+      };
+
+      const success = saveEditorState(1, state);
+      expect(success).toBe(true);
+
+      const retrieved = getEditorState(1);
+      expect(retrieved).toBeTruthy();
+      expect(retrieved?.noteId).toBe(1);
+      expect(retrieved?.cursor).toEqual(state.cursor);
+      expect(retrieved?.scrollAnchor).toEqual(state.scrollAnchor);
+      expect(retrieved?.timestamp).toBeGreaterThan(0);
+    });
+
+    it('should only store one editor state at a time', () => {
+      // Save state for note 1
       saveEditorState(1, {
         cursor: { line: 1, column: 0 },
         scrollAnchor: { from: 0, topOffset: 0, scrollLeft: 0 }
       });
+
+      // Save state for note 2 (should overwrite note 1's state)
       saveEditorState(2, {
-        cursor: { line: 2, column: 0 },
-        scrollAnchor: { from: 10, topOffset: 5, scrollLeft: 0 }
-      });
-      saveEditorState(3, {
-        cursor: { line: 3, column: 0 },
-        scrollAnchor: { from: 20, topOffset: 10, scrollLeft: 0 }
+        cursor: { line: 2, column: 5 },
+        scrollAnchor: { from: 50, topOffset: 10, scrollLeft: 0 }
       });
 
-      // Verify all states exist
-      expect(getEditorState(1)).toBeTruthy();
-      expect(getEditorState(2)).toBeTruthy();
-      expect(getEditorState(3)).toBeTruthy();
-
-      // Clean up, keeping note 2
-      cleanupEditorStates(2);
-
-      // Check that only note 2's state remains
+      // Note 1's state should no longer be retrievable
       expect(getEditorState(1)).toBeNull();
+      // Note 2's state should be available
       expect(getEditorState(2)).toBeTruthy();
+      expect(getEditorState(2)?.cursor.line).toBe(2);
+    });
+
+    it('should return null when noteId does not match stored state', () => {
+      saveEditorState(1, {
+        cursor: { line: 1, column: 0 },
+        scrollAnchor: { from: 0, topOffset: 0, scrollLeft: 0 }
+      });
+
+      // Trying to get state for a different note should return null
+      expect(getEditorState(2)).toBeNull();
       expect(getEditorState(3)).toBeNull();
     });
 
-    it('should remove all editor states when selectedNoteId is null', () => {
-      // Set up editor states
-      saveEditorState(1, {
-        cursor: { line: 1, column: 0 },
-        scrollAnchor: { from: 0, topOffset: 0, scrollLeft: 0 }
-      });
-      saveEditorState(2, {
-        cursor: { line: 2, column: 0 },
-        scrollAnchor: { from: 10, topOffset: 5, scrollLeft: 0 }
-      });
-
-      // Verify states exist
-      expect(getEditorState(1)).toBeTruthy();
-      expect(getEditorState(2)).toBeTruthy();
-
-      // Clean up all states
-      cleanupEditorStates(null);
-
-      // Check that all states are removed
+    it('should return null when no state is stored', () => {
       expect(getEditorState(1)).toBeNull();
-      expect(getEditorState(2)).toBeNull();
+    });
+  });
+
+  describe('clearEditorState', () => {
+    it('should clear the stored editor state', () => {
+      saveEditorState(1, {
+        cursor: { line: 10, column: 5 },
+        scrollAnchor: { from: 100, topOffset: 20, scrollLeft: 0 }
+      });
+
+      expect(getEditorState(1)).toBeTruthy();
+
+      clearEditorState();
+
+      expect(getEditorState(1)).toBeNull();
     });
 
-    it('should not affect other localStorage keys', () => {
-      // Set up editor states
+    it('should not throw when no state exists', () => {
+      expect(() => clearEditorState()).not.toThrow();
+    });
+
+    it('should not affect other localStorage data', () => {
       saveEditorState(1, {
         cursor: { line: 1, column: 0 },
         scrollAnchor: { from: 0, topOffset: 0, scrollLeft: 0 }
       });
-
-      // Add other data to localStorage
       localStorage.setItem(
         'snapp:unsavedNotes',
         JSON.stringify({ '1': { diff: 'test' } })
       );
-      localStorage.setItem('snapp:otherData', 'test');
 
-      // Clean up editor states
-      cleanupEditorStates(null);
+      clearEditorState();
 
-      // Check that other data is preserved
-      expect(localStorage.getItem('snapp:unsavedNotes')).toBeTruthy();
-      expect(localStorage.getItem('snapp:otherData')).toBeTruthy();
       expect(getEditorState(1)).toBeNull();
-    });
-
-    it('should preserve unsaved notes data', () => {
-      // Set up editor states
-      saveEditorState(1, {
-        cursor: { line: 1, column: 0 },
-        scrollAnchor: { from: 0, topOffset: 0, scrollLeft: 0 }
-      });
-      saveEditorState(2, {
-        cursor: { line: 2, column: 0 },
-        scrollAnchor: { from: 10, topOffset: 5, scrollLeft: 0 }
-      });
-
-      // Add unsaved notes data
-      const unsavedData = {
-        '1': { noteId: 1, baseHash: 'hash1', diff: 'diff1', timestamp: Date.now() },
-        '2': { noteId: 2, baseHash: 'hash2', diff: 'diff2', timestamp: Date.now() },
-        '3': { noteId: 3, baseHash: 'hash3', diff: 'diff3', timestamp: Date.now() }
-      };
-      localStorage.setItem('snapp:unsavedNotes', JSON.stringify(unsavedData));
-
-      // Clean up editor states for note 1
-      cleanupEditorStates(1);
-
-      // Check that unsaved notes are preserved for all notes
-      const preserved = JSON.parse(localStorage.getItem('snapp:unsavedNotes') || '{}');
-      expect(preserved['1']).toBeTruthy();
-      expect(preserved['2']).toBeTruthy();
-      expect(preserved['3']).toBeTruthy();
-
-      // Check that editor states are cleaned up
-      expect(getEditorState(1)).toBeTruthy(); // Selected note
-      expect(getEditorState(2)).toBeNull(); // Non-selected notes
-    });
-
-    it('should handle errors gracefully', () => {
-      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      // Set up editor states
-      saveEditorState(1, {
-        cursor: { line: 1, column: 0 },
-        scrollAnchor: { from: 0, topOffset: 0, scrollLeft: 0 }
-      });
-
-      // Mock localStorage.removeItem to throw an error
-      const originalRemoveItem = Storage.prototype.removeItem;
-      const removeItemSpy = vi
-        .spyOn(Storage.prototype, 'removeItem')
-        .mockImplementation((key: string) => {
-          if (key.startsWith('snapp:editorState:')) {
-            throw new Error('removeItem failed');
-          }
-          originalRemoveItem.call(localStorage, key);
-        });
-
-      // Should not throw
-      expect(() => cleanupEditorStates(null)).not.toThrow();
-      expect(consoleWarn).toHaveBeenCalledWith(
-        'Failed to cleanup editor states from localStorage',
-        expect.any(Error)
-      );
-
-      removeItemSpy.mockRestore();
-      consoleWarn.mockRestore();
+      expect(localStorage.getItem('snapp:unsavedNotes')).toBeTruthy();
     });
   });
 });

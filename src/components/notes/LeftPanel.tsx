@@ -41,7 +41,6 @@
 import { useState, useMemo, memo, useCallback } from 'react';
 import { Box, Button, Input, Stack, Text } from '@chakra-ui/react';
 import type { NoteTreeNode, TreeNode as TreeNodeType } from '@/types/tree';
-import Link from 'next/link';
 import clsx from 'clsx';
 import { FiTrash2 } from 'react-icons/fi';
 
@@ -254,27 +253,9 @@ const LeftPanel = memo(function LeftPanel({
         </>
       );
 
-      const onClick = (e: React.MouseEvent) => {
-        e.preventDefault();
-        onNoteSelect(typedNode.id);
-      };
-
-      const wrappedContent =
-        !hasChildren && !editing ? (
-          <Link
-            href={`/note/${typedNode.id}`}
-            style={{
-              display: 'contents',
-              textDecoration: 'none',
-              color: 'inherit'
-            }}
-            onClick={onClick}
-          >
-            {nodeContent}
-          </Link>
-        ) : (
-          nodeContent
-        );
+      // Don't wrap in Link - handle navigation via onClick on TreeNode.Content
+      // This preserves double-click to edit functionality
+      const wrappedContent = nodeContent;
 
       return (
         <TreeNode.Content

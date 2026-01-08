@@ -9,10 +9,10 @@ export interface TreeNodeTextProps extends TextProps {
 }
 
 export function TreeNodeText({ children, ...props }: TreeNodeTextProps) {
-  const { node, handleDoubleClick } = useTreeNodeContext();
+  const { node } = useTreeNodeContext();
 
   return (
-    <Text onDoubleClick={handleDoubleClick} cursor="pointer" {...props}>
+    <Text cursor="pointer" {...props}>
       {children ?? node.name}
     </Text>
   );

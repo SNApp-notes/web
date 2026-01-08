@@ -224,9 +224,11 @@ test.describe('State Persistence', () => {
       }).toPass({ timeout: 10000, intervals: [500] });
 
       // Navigate to first note by clicking in sidebar (more reliable than goto)
-      // Find the exact note by its URL in the sidebar
-      const firstNoteItem = page.locator(`a[href="/note/${firstNoteId}"]`);
-      await firstNoteItem.click();
+      // Find the exact note by its title attribute containing the URL
+      const firstNoteItem = page.locator(
+        `[data-testid="note-list"] .tree-node-label[title="/note/${firstNoteId}"]`
+      );
+      await firstNoteItem.click({ timeout: 15000 });
 
       // Wait for navigation to complete
       await page.waitForURL(`**/note/${firstNoteId}`, { timeout: 5000 });

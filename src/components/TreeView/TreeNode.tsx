@@ -23,7 +23,13 @@ interface TreeNodeInternalProps<T = unknown> {
 }
 
 function TreeNodeComponent<T = unknown>({ level = 0, render }: TreeNodeInternalProps<T>) {
-  const { nodeRef, node: contextNode, isExpanded, isEditing } = useTreeNodeContext<T>();
+  const {
+    nodeRef,
+    node: contextNode,
+    isExpanded,
+    isEditing,
+    handleDoubleClick
+  } = useTreeNodeContext<T>();
   const params = useParams();
   const urlNoteId = params?.id ? parseInt(params.id as string, 10) : null;
 
@@ -47,7 +53,8 @@ function TreeNodeComponent<T = unknown>({ level = 0, render }: TreeNodeInternalP
     editing: isEditing,
     hasChildren,
     isExpanded,
-    level
+    level,
+    startEditing: handleDoubleClick
   };
 
   const renderedContent = render ? render(renderProps) : null;

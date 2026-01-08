@@ -343,7 +343,6 @@ test.describe('Notes Application - CRUD Operations', () => {
       .filter({ hasText: /^New Note( \d+)?$/ })
       .last();
     await expect(noteLabel).toBeVisible({ timeout: 5000 });
-    const noteName = await noteLabel.textContent();
 
     // Click on the editor to focus it
     await editor.click();

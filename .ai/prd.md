@@ -626,16 +626,30 @@ even during deployments. Acceptance Criteria:
   or during deployment), all application state is preserved and restored.
 - The following state persists across refreshes:
   - Current note ID (which note is open)
-  - Cursor position (line and column in the editor)
-  - Scroll position in the editor
-  - Unsaved note changes (content not yet saved to server)
+  - Cursor position (line and column in the editor) - ONLY for the current note
+  - Scroll position in the editor - ONLY for the current note
+  - Unsaved note changes (content not yet saved to server) - for ALL notes
 - When the page refreshes, the application reopens the same note, restores the
   cursor to the exact position, restores the scroll position, and restores any
   unsaved changes.
+- **Editor state (cursor and scroll) behavior:**
+  - Only ONE note's cursor and scroll position is stored at a time (the currently
+    open note).
+  - When switching notes, the cursor and scroll position for the previous note is
+    DISCARDED (not saved). The new note opens at the beginning (line 1, column 0).
+  - Cursor and scroll position restoration ONLY happens on page refresh, not when
+    switching between notes during a session.
+  - This prevents the issue where switching to a different note and immediately
+    typing causes text to be inserted at a previously saved cursor position
+    instead of where the user expects.
+- **Unsaved content behavior:**
+  - Unsaved content for ALL notes is persisted to localStorage.
+  - When switching notes, any unsaved changes in the previous note remain in
+    localStorage and are restored when switching back to that note.
+  - Unsaved content is stored as diffs (not full content) to minimize localStorage
+    usage.
 - State updates are debounced to avoid excessive writes (cursor/scroll: 300ms,
   content: 1 second).
-- Unsaved notes are stored efficiently using diffs rather than full content to
-  minimize localStorage usage.
 - When a note is saved to the server, its unsaved changes are cleared from
   localStorage.
 - If unsaved changes exist but the server has newer content, a conflict dialog

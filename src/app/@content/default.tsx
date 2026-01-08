@@ -8,7 +8,7 @@ import { updateNote } from '@/app/actions/notes';
 import { extractHeaders } from '@/lib/markdown-parser';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 import { useUnsavedNotes } from '@/hooks/useUnsavedNotes';
-import { saveEditorState, getEditorState, removeEditorState } from '@/lib/localStorage';
+import { saveEditorState, getEditorState, clearEditorState } from '@/lib/localStorage';
 import MiddlePanel from '@/components/notes/MiddlePanel';
 import RightPanel from '@/components/notes/RightPanel';
 import { ConflictDialog } from '@/components/notes/ConflictDialog';
@@ -48,8 +48,13 @@ export default function ContentSlotDefault() {
   // Track if we've already restored for current note
   const restoredNoteIdRef = useRef<number | null>(null);
 
-  // Track editor state restoration per note
-  const restoredEditorStateRef = useRef<Set<number>>(new Set());
+  // Track if this is the initial page load (for editor state restoration)
+  // Editor state (cursor/scroll) should ONLY be restored on page refresh,
+  // not when switching notes during a session
+  const isInitialLoadRef = useRef<boolean>(true);
+
+  // Track editor state restoration - only happens once on initial page load
+  const editorStateRestoredRef = useRef<boolean>(false);
 
   // Debounce timer for cursor position tracking
   const cursorDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -72,8 +77,14 @@ export default function ContentSlotDefault() {
   const content = selectedNote?.data?.content || '';
 
   // Calculate cursor position from saved editor state
+  // Only restore cursor on initial page load, not on note switches
   const cursorPosition = useMemo(() => {
     if (!selectedNoteId || !content) return undefined;
+
+    // Only restore cursor position on initial page load
+    if (!isInitialLoadRef.current || editorStateRestoredRef.current) {
+      return undefined;
+    }
 
     // Load saved cursor position from localStorage
     const editorState = getEditorState(selectedNoteId);
@@ -187,7 +198,7 @@ export default function ContentSlotDefault() {
       clearUnsavedNote(selectedNote.id);
 
       // Clear editor state since content is now saved
-      removeEditorState(selectedNote.id);
+      clearEditorState();
 
       // Update original content ref for next diff
       originalContentRef.current = content;
@@ -283,12 +294,18 @@ export default function ContentSlotDefault() {
             return;
           }
 
-          if (restoredEditorStateRef.current.has(selectedNoteId)) {
+          // Only restore editor state on initial page load, not on note switches
+          // This prevents the issue where switching notes restores old cursor position
+          if (!isInitialLoadRef.current || editorStateRestoredRef.current) {
+            // Not initial load or already restored - just focus the editor
+            if (editor?.focus) {
+              editor.focus();
+            }
             return;
           }
 
-          // Mark as being restored immediately to prevent duplicates
-          restoredEditorStateRef.current.add(selectedNoteId);
+          // Mark as restored to prevent future restoration attempts
+          editorStateRestoredRef.current = true;
 
           const editorState = getEditorState(selectedNoteId);
 

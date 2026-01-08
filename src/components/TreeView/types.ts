@@ -7,6 +7,7 @@ export interface TreeNodeRenderProps<T = unknown> {
   hasChildren: boolean;
   isExpanded: boolean;
   level: number;
+  startEditing: () => void;
 }
 
 export interface TreeNodeProps<T = unknown> {

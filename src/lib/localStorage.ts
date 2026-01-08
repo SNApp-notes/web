@@ -43,8 +43,11 @@ const NAMESPACE = 'snapp:';
  * @remarks
  * Stores both cursor position and scroll anchor data in a single object.
  * The scroll anchor approach mimics CodeMirror's internal scrollSnapshot() method.
+ * Only ONE editor state is stored at a time (for the currently open note).
+ * When switching notes, the editor state is discarded.
  */
 export interface EditorState {
+  noteId: number; // ID of the note this state belongs to
   cursor: { line: number; column: number };
   scrollAnchor: {
     from: number; // Character position at scroll anchor line
@@ -313,16 +316,17 @@ export async function getStorageInfo(): Promise<{
 }
 
 /**
- * Save editor state (cursor and scroll position) for a note.
+ * Save editor state (cursor and scroll position) for the current note.
  *
  * @param {number} noteId - Note ID
  * @param {Object} state - Editor state containing cursor and scroll anchor data
  * @returns {boolean} True if successful
  *
  * @remarks
- * Editor state is stored per note with key `editorState:{noteId}`.
- * Includes timestamp for staleness detection.
- * Uses scroll anchor approach to mimic CodeMirror's internal scrollSnapshot().
+ * Only ONE editor state is stored at a time using a single key `editorState`.
+ * The noteId is stored inside the state to verify it matches on restore.
+ * When switching notes, this state should be cleared (not restored).
+ * State restoration only happens on page refresh.
  *
  * @example
  * ```typescript
@@ -341,17 +345,22 @@ export function saveEditorState(
   }
 ): boolean {
   const editorState: EditorState = {
+    noteId,
     ...state,
     timestamp: Date.now()
   };
-  return setItem(`editorState:${noteId}`, editorState);
+  return setItem('editorState', editorState);
 }
 
 /**
  * Get editor state for a note.
  *
  * @param {number} noteId - Note ID
- * @returns {EditorState | null} Editor state or null
+ * @returns {EditorState | null} Editor state or null if not found or doesn't match noteId
+ *
+ * @remarks
+ * Only returns state if the stored noteId matches the requested noteId.
+ * This ensures we don't restore state from a different note.
  *
  * @example
  * ```typescript
@@ -362,77 +371,41 @@ export function saveEditorState(
  * ```
  */
 export function getEditorState(noteId: number): EditorState | null {
-  return getItem<EditorState>(`editorState:${noteId}`);
+  const state = getItem<EditorState>('editorState');
+  // Only return state if it matches the requested noteId
+  if (state && state.noteId === noteId) {
+    return state;
+  }
+  return null;
 }
 
 /**
- * Remove editor state for a note.
+ * Remove editor state.
  *
- * @param {number} noteId - Note ID
+ * @remarks
+ * Clears the single editor state. Called when saving a note or switching notes.
+ *
+ * @example
+ * ```typescript
+ * clearEditorState();
+ * ```
+ */
+export function clearEditorState(): void {
+  removeItem('editorState');
+}
+
+/**
+ * Remove editor state for a specific note (backward compatibility).
+ *
+ * @param {number} noteId - Note ID (unused, kept for API compatibility)
+ *
+ * @deprecated Use clearEditorState() instead
  *
  * @example
  * ```typescript
  * removeEditorState(123);
  * ```
  */
-export function removeEditorState(noteId: number): void {
-  removeItem(`editorState:${noteId}`);
-}
-
-/**
- * Clean up editor states for all notes except the selected one.
- *
- * @param {number | null} selectedNoteId - Currently selected note ID (null to clear all)
- *
- * @remarks
- * This function removes cursor and scrollbar positions for all notes
- * except the currently selected one. Unsaved note content is preserved.
- *
- * Called on app initialization to clean up stale editor states from
- * previous sessions while keeping the current note's state intact.
- *
- * @example
- * ```typescript
- * // On app mount with selected note ID 5
- * cleanupEditorStates(5); // Removes editor states for all notes except 5
- *
- * // Clear all editor states
- * cleanupEditorStates(null);
- * ```
- */
-export function cleanupEditorStates(selectedNoteId: number | null): void {
-  if (!isLocalStorageAvailable()) {
-    return;
-  }
-
-  try {
-    const editorStatePrefix = `${NAMESPACE}editorState:`;
-    const keysToRemove: string[] = [];
-
-    // Collect editor state keys that should be removed
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-
-      // Skip if not an editor state key
-      if (!key || !key.startsWith(editorStatePrefix)) {
-        continue;
-      }
-
-      // Extract note ID from key (format: "snapp:editorState:123")
-      const noteIdStr = key.substring(editorStatePrefix.length);
-      const noteId = parseInt(noteIdStr, 10);
-
-      // Keep the selected note's editor state, remove all others
-      if (isNaN(noteId) || noteId !== selectedNoteId) {
-        keysToRemove.push(key);
-      }
-    }
-
-    // Remove collected keys
-    keysToRemove.forEach((key) => {
-      localStorage.removeItem(key);
-    });
-  } catch (error) {
-    console.warn('Failed to cleanup editor states from localStorage', error);
-  }
+export function removeEditorState(): void {
+  clearEditorState();
 }
