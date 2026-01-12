@@ -20,6 +20,10 @@ interface TreeNodeInternalProps<T = unknown> {
   onNodeSelect?: (node: TreeNodeType<T>) => void;
   onNodeRename?: (node: TreeNodeType<T>, newName: string) => void;
   onNodeDelete?: (node: TreeNodeType<T>) => void;
+  /** Callback when edit mode ends (save or cancel) */
+  onEditEnd?: (node: TreeNodeType<T>) => void;
+  /** Start in edit mode (for newly created notes) */
+  startInEditMode?: boolean;
 }
 
 function TreeNodeComponent<T = unknown>({ level = 0, render }: TreeNodeInternalProps<T>) {
@@ -92,6 +96,8 @@ export function TreeNodeInternal<T = unknown>(props: TreeNodeInternalProps<T>) {
       onNodeSelect={props.onNodeSelect}
       onNodeRename={props.onNodeRename}
       onNodeDelete={props.onNodeDelete}
+      onEditEnd={props.onEditEnd}
+      startInEditMode={props.startInEditMode}
     >
       <MemoizedTreeNodeComponent {...props} />
     </TreeNodeProvider>
@@ -100,7 +106,10 @@ export function TreeNodeInternal<T = unknown>(props: TreeNodeInternalProps<T>) {
 
 // Memoized version for child nodes that inherit handlers from parent context
 function MemoizedTreeNode<T = unknown>(
-  props: Omit<TreeNodeInternalProps<T>, 'onNodeSelect' | 'onNodeRename' | 'onNodeDelete'>
+  props: Omit<
+    TreeNodeInternalProps<T>,
+    'onNodeSelect' | 'onNodeRename' | 'onNodeDelete' | 'onEditEnd'
+  >
 ) {
   const parentContext = useTreeNodeContext<T>();
 
@@ -111,6 +120,7 @@ function MemoizedTreeNode<T = unknown>(
       onNodeSelect={parentContext.onNodeSelect}
       onNodeRename={parentContext.onNodeRename}
       onNodeDelete={parentContext.onNodeDelete}
+      onEditEnd={parentContext.onEditEnd}
     >
       <MemoizedTreeNodeComponent {...props} />
     </TreeNodeProvider>

@@ -28,6 +28,36 @@ vi.mock('@/components/notes/NotesContext', () => ({
   useNotesContext: vi.fn()
 }));
 
+// Mock next/navigation
+const mockPush = vi.fn();
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(() => ({
+    push: mockPush,
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn()
+  })),
+  usePathname: vi.fn(() => '/'),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
+  useParams: vi.fn(() => ({}))
+}));
+
+// Mock useKeyboardShortcut
+vi.mock('@/hooks/useKeyboardShortcut', () => ({
+  useKeyboardShortcut: vi.fn()
+}));
+
+// Mock toaster
+vi.mock('@/components/ui/toaster', () => ({
+  toaster: {
+    create: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn()
+  }
+}));
+
 // Mock the server actions
 vi.mock('@/app/actions/notes', () => ({
   createNote: vi.fn(),
@@ -58,7 +88,9 @@ describe('SidebarPage', () => {
     selected: false,
     data: {
       content: `Content for ${name}`,
-      dirty: false
+      dirty: false,
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-01-01')
     }
   });
 
@@ -73,7 +105,11 @@ describe('SidebarPage', () => {
     markNoteDirty: vi.fn(),
     getSelectedNote: vi.fn(() => null),
     getNote: vi.fn(),
-    selectNote: vi.fn()
+    selectNote: vi.fn(),
+    updateNoteTimestamp: vi.fn(),
+    setContentHash: vi.fn(),
+    newNoteId: null,
+    setNewNoteId: vi.fn()
   });
 
   beforeEach(() => {

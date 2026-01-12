@@ -1,11 +1,15 @@
 'use client';
 
 import { useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useNotesContext } from '@/components/notes/NotesContext';
 import { createNote, deleteNote, updateNote } from '@/app/actions/notes';
 import LeftPanelComponent from '@/components/notes/LeftPanel';
 import type { NoteTreeNode } from '@/types/tree';
 import { SortKey, SortOrder } from '@/types/notes';
+import { generateDefaultNoteName, predictNextNoteId } from '@/lib/note-utils';
+import { toaster } from '@/components/ui/toaster';
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 
 interface LeftPanelProps {
   initialSortKey?: SortKey;
@@ -13,31 +17,100 @@ interface LeftPanelProps {
 }
 
 export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPanelProps) {
-  const { notes, selectedNoteId, setNotes, updateNoteName, selectNote } =
-    useNotesContext();
+  const {
+    notes,
+    selectedNoteId,
+    setNotes,
+    updateNoteName,
+    selectNote,
+    newNoteId,
+    setNewNoteId
+  } = useNotesContext();
+  const router = useRouter();
 
   const handleNewNote = useCallback(async () => {
+    // 1. Predict next ID and generate default name
+    const predictedId = predictNextNoteId(notes);
+    const defaultName = generateDefaultNoteName(notes);
+
+    // 2. Create optimistic node immediately
+    const optimisticNode: NoteTreeNode = {
+      id: predictedId,
+      name: defaultName,
+      selected: true,
+      data: {
+        content: '',
+        dirty: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    };
+
+    // 3. Update UI immediately (optimistic update)
+    // Deselect all existing notes and add the new one as selected
+    setNotes((prevNotes: NoteTreeNode[]) => [
+      optimisticNode,
+      ...prevNotes.map((n) => (n.selected ? { ...n, selected: false } : n))
+    ]);
+    setNewNoteId(predictedId); // Trigger edit mode
+
+    // Navigate to the new note URL immediately
+    router.push(`/note/${predictedId}`);
+
+    // 4. Create note on server in background
     try {
-      const newNote = await createNote('New Note');
+      const newNote = await createNote(defaultName);
 
-      const newTreeNode: NoteTreeNode = {
-        id: newNote.noteId,
-        name: newNote.name,
-        selected: false,
-        data: {
-          content: newNote.content || '',
-          dirty: false,
-          createdAt: new Date(newNote.createdAt),
-          updatedAt: new Date(newNote.updatedAt)
-        }
-      };
-
-      setNotes((prevNotes: NoteTreeNode[]) => [newTreeNode, ...prevNotes]);
-      selectNote(newNote.noteId);
+      // 5. Sanity check - if server returned different ID, update state
+      if (newNote.noteId !== predictedId) {
+        // Update newNoteId FIRST to ensure filter bypass continues during state update
+        setNewNoteId(newNote.noteId);
+        setNotes((prevNotes: NoteTreeNode[]) =>
+          prevNotes.map((n) =>
+            n.id === predictedId
+              ? {
+                  ...n,
+                  id: newNote.noteId,
+                  name: newNote.name,
+                  data: {
+                    content: newNote.content || '',
+                    dirty: false,
+                    createdAt: new Date(newNote.createdAt),
+                    updatedAt: new Date(newNote.updatedAt)
+                  }
+                }
+              : n
+          )
+        );
+        // Update URL to correct ID
+        router.replace(`/note/${newNote.noteId}`);
+      }
     } catch (error) {
+      // 6. Rollback on error - remove optimistic note
+      setNotes((prevNotes: NoteTreeNode[]) =>
+        prevNotes.filter((n) => n.id !== predictedId)
+      );
+      setNewNoteId(null);
+
+      // Navigate back to previous note or home
+      if (selectedNoteId && selectedNoteId !== predictedId) {
+        router.push(`/note/${selectedNoteId}`);
+      } else {
+        router.push('/');
+      }
+
+      // Show error toast
+      toaster.error({
+        title: 'Failed to create note',
+        description: 'Please try again.'
+      });
+
       console.error('Failed to create note:', error);
     }
-  }, [setNotes, selectNote]);
+  }, [notes, setNotes, setNewNoteId, router, selectedNoteId]);
+
+  // Register Ctrl+N (Windows/Linux) and Cmd+N (MacOS) keyboard shortcut for new note
+  useKeyboardShortcut(['CTRL+N', 'META+N'], handleNewNote);
 
   const handleDeleteNote = useCallback(
     async (noteId: number) => {
@@ -71,15 +144,36 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
     [updateNoteName]
   );
 
+  // Handle note selection - clears newNoteId when selecting a different note
+  const handleNoteSelect = useCallback(
+    (noteId: number) => {
+      // Clear newNoteId if selecting a different note
+      if (newNoteId !== null && noteId !== newNoteId) {
+        setNewNoteId(null);
+      }
+      selectNote(noteId);
+    },
+    [newNoteId, setNewNoteId, selectNote]
+  );
+
+  // Handle filter change - clears newNoteId when filter changes
+  const handleFilterChange = useCallback(() => {
+    if (newNoteId !== null) {
+      setNewNoteId(null);
+    }
+  }, [newNoteId, setNewNoteId]);
+
   return (
     <LeftPanelComponent
       notes={notes}
-      onNoteSelect={selectNote}
+      onNoteSelect={handleNoteSelect}
       onNewNote={handleNewNote}
       onDeleteNote={handleDeleteNote}
       onRenameNote={handleRenameNote}
+      onFilterChange={handleFilterChange}
       initialSortKey={initialSortKey}
       initialSortOrder={initialSortOrder}
+      newNoteId={newNoteId}
     />
   );
 }

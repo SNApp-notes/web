@@ -18,6 +18,8 @@ export interface MockNotesContextValue {
   getSelectedNote: ReturnType<typeof vi.fn>;
   getNote: ReturnType<typeof vi.fn>;
   selectNote: ReturnType<typeof vi.fn>;
+  newNoteId: number | null;
+  setNewNoteId: ReturnType<typeof vi.fn>;
 }
 
 export const createMockNote = (
@@ -54,6 +56,8 @@ export const createMockNotesContext = (
   getSelectedNote: vi.fn(),
   getNote: vi.fn(),
   selectNote: vi.fn(),
+  newNoteId: null,
+  setNewNoteId: vi.fn(),
   ...overrides
 });
 

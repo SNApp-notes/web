@@ -667,6 +667,52 @@ even during deployments. Acceptance Criteria:
   interactions.
 
 
+US-024 Title: As a user, I want new notes to appear instantly in the sidebar with
+immediate rename capability so that I can start organizing my notes without
+waiting for server responses. Description: When creating a new note, the note
+appears immediately in the notes list using optimistic UI update, with the name
+field already in edit mode and the default name pre-selected. This eliminates
+perceived latency and allows users to immediately type a custom name. The note
+remains visible regardless of any active filters. Acceptance Criteria:
+
+- Given an authenticated user with notes displayed, when the user clicks "New
+  Note" or presses Ctrl+N, a new note appears instantly in the left panel notes
+  list without waiting for the server response.
+- The new note uses a predicted ID (last noteId + 1) for immediate display and
+  URL update. After server confirmation, a sanity check verifies the ID matches;
+  if it differs, the note data and URL are updated to reflect the actual ID.
+- The new note entry immediately enters inline edit mode with the default name
+  ("New Note" or "New Note <n>") fully selected, allowing the user to type a
+  replacement name immediately.
+- If the user starts typing while the name is selected, the default name is
+  replaced with the typed text.
+- If the user presses Enter or clicks outside the name field, the name is saved
+  (either the typed name or the default if unchanged).
+- If the user presses Escape during rename, the edit mode exits and the default
+  name is kept.
+- The new note is visible in the notes list even when a filter is active that
+  would normally hide it (e.g., searching for "report" doesn't hide a new note
+  named "New Note").
+- Once the user finishes naming and clears or changes the filter, normal
+  filtering behavior resumes for that note.
+- The editor (middle panel) opens with the new note's empty content simultaneously
+  with the note appearing in the list.
+- The URL updates to `/note/{noteId}` once the server confirms the note ID.
+- If the server request fails, an error message is displayed and the optimistic
+  note is removed from the list (with option to retry).
+- When sorting is active, the new note appears at the correct position according
+  to current sort order after server confirmation.
+- Edge case: Rapid creation of multiple notes (clicking "New Note" repeatedly)
+  queues creation requests and handles them sequentially without duplicates or
+  race conditions.
+- Edge case: If the user navigates away before server confirmation, the note
+  creation still completes in the background.
+- Edge case: Network timeout during creation shows appropriate error and allows
+  retry without losing the entered name.
+- Performance: The note appears in the list within 50ms of user action (before
+  server round-trip completes).
+
+
 ## 6. Success Metrics
 
 Success for the SNApp MVP is measured by user adoption and engagement with core

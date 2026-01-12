@@ -13,6 +13,7 @@ export function TreeNodeEdit(props: TreeNodeEditProps) {
     setEditingName,
     handleEditingKeyDown,
     handleEditingBlur,
+    markUserInteracted,
     inputRef
   } = useTreeNodeContext();
 
@@ -23,12 +24,22 @@ export function TreeNodeEdit(props: TreeNodeEditProps) {
     }
   }, [inputRef]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    markUserInteracted();
+    setEditingName(e.target.value);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    markUserInteracted();
+    handleEditingKeyDown(e);
+  };
+
   return (
     <Input
       ref={inputRef}
       value={editingName}
-      onChange={(e) => setEditingName(e.target.value)}
-      onKeyDown={handleEditingKeyDown}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown}
       onBlur={handleEditingBlur}
       {...props}
     />

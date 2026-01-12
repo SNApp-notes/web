@@ -28,7 +28,8 @@ export default function ContentSlotDefault() {
     markNoteDirty,
     updateNoteTimestamp,
     setContentHash,
-    getNote
+    getNote,
+    newNoteId
   } = useNotesContext();
 
   // Unsaved notes persistence
@@ -291,6 +292,23 @@ export default function ContentSlotDefault() {
 
           // Prevent duplicate restoration calls
           if (!selectedNoteId) {
+            return;
+          }
+
+          // Skip focusing editor when creating a new note
+          // Focus should stay on the note name input in the sidebar
+          const isNewNoteBeingCreated =
+            newNoteId !== null && selectedNoteId === newNoteId;
+          if (isNewNoteBeingCreated) {
+            return;
+          }
+
+          // Don't steal focus from input elements (e.g., filter input, rename input)
+          const activeElement = document.activeElement;
+          const isInputFocused =
+            activeElement instanceof HTMLInputElement ||
+            activeElement instanceof HTMLTextAreaElement;
+          if (isInputFocused) {
             return;
           }
 

@@ -77,6 +77,7 @@ import {
   useEffect,
   useCallback,
   useMemo,
+  useState,
   type ReactNode
 } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
@@ -103,6 +104,8 @@ import { clearEditorState } from '@/lib/localStorage';
  * @property {() => NoteTreeNode | null} getSelectedNote - Get currently selected note object
  * @property {(noteId: number) => NoteTreeNode | null} getNote - Get note by ID
  * @property {(noteId: number | null) => void} selectNote - Select note and navigate to URL
+ * @property {number | null} newNoteId - ID of newly created note in edit mode (null if none)
+ * @property {(noteId: number | null) => void} setNewNoteId - Set new note ID for immediate edit mode
  */
 interface NotesContextValue {
   notes: NoteTreeNode[];
@@ -118,6 +121,8 @@ interface NotesContextValue {
   getSelectedNote: () => NoteTreeNode | null;
   getNote: (noteId: number) => NoteTreeNode | null;
   selectNote: (noteId: number | null) => void;
+  newNoteId: number | null;
+  setNewNoteId: (noteId: number | null) => void;
 }
 
 const NotesContext = createContext<NotesContextValue | undefined>(undefined);
@@ -252,6 +257,9 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     setContentHash
   } = useNodeSelection(updatedNotes, initSelectedNodeId);
 
+  // Track newly created note for immediate edit mode
+  const [newNoteId, setNewNoteId] = useState<number | null>(null);
+
   // Sync notes state when initialNotes prop changes (e.g., after redirect)
   useEffect(() => {
     if (initialNotes.length > 0 && notes.length === 0) {
@@ -324,7 +332,9 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     setContentHash,
     getSelectedNote,
     getNote,
-    selectNote
+    selectNote,
+    newNoteId,
+    setNewNoteId
   };
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;
