@@ -51,6 +51,7 @@ describe('LeftPanel', () => {
   const mockUpdateNoteName = vi.fn();
   const mockSelectNote = vi.fn();
   const mockSetNewNoteId = vi.fn();
+  const mockSetIsCreatingNote = vi.fn();
 
   const createMockNote = (id: number, name: string, dirty = false): NoteTreeNode => ({
     id,
@@ -83,7 +84,12 @@ describe('LeftPanel', () => {
     getNote: vi.fn(),
     selectNote: mockSelectNote,
     newNoteId,
-    setNewNoteId: mockSetNewNoteId
+    setNewNoteId: mockSetNewNoteId,
+    isCreatingNote: false,
+    setIsCreatingNote: mockSetIsCreatingNote,
+    pendingSave: false,
+    requestSave: vi.fn(),
+    executePendingSave: vi.fn()
   });
 
   beforeEach(() => {
@@ -409,7 +415,7 @@ describe('LeftPanel', () => {
       });
     });
 
-    it('should NOT clear newNoteId after renaming a new note (stays visible despite filter)', async () => {
+    it('should clear newNoteId after edit mode ends (via onEditEnd)', async () => {
       const mockNotes = [createMockNote(1, 'New Note')];
       const mockUpdatedNote = {
         noteId: 1,
@@ -425,23 +431,13 @@ describe('LeftPanel', () => {
 
       render(<LeftPanel />);
 
-      const noteElement = screen.getByText('New Note');
-      fireEvent.doubleClick(noteElement);
+      const noteElement = screen.getByDisplayValue('New Note'); // Input field since it's in edit mode
+      // Simulate pressing Enter to exit edit mode (and trigger onEditEnd)
+      fireEvent.keyDown(noteElement, { key: 'Enter' });
 
+      // newNoteId should be cleared after edit mode ends via onEditEnd
       await waitFor(() => {
-        const input = screen.queryByDisplayValue('New Note');
-        if (input) {
-          fireEvent.change(input, { target: { value: 'Renamed Note' } });
-          fireEvent.blur(input);
-        }
-      });
-
-      // newNoteId should NOT be cleared after renaming - note should stay visible
-      // even when filter doesn't match (this is the new intended behavior)
-      await waitFor(() => {
-        if (mockUpdateNote.mock.calls.length > 0) {
-          expect(mockSetNewNoteId).not.toHaveBeenCalledWith(null);
-        }
+        expect(mockSetNewNoteId).toHaveBeenCalledWith(null);
       });
     });
 

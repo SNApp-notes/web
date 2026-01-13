@@ -39,7 +39,9 @@ describe('Navigation', () => {
     selected: false,
     data: {
       content: 'Test content',
-      dirty
+      dirty,
+      createdAt: new Date('2025-01-01'),
+      updatedAt: new Date('2025-01-01')
     }
   });
 
@@ -54,7 +56,16 @@ describe('Navigation', () => {
     markNoteDirty: vi.fn(),
     getSelectedNote: vi.fn(() => selectedNote),
     getNote: vi.fn(),
-    selectNote: vi.fn()
+    selectNote: vi.fn(),
+    updateNoteTimestamp: vi.fn(),
+    setContentHash: vi.fn(),
+    newNoteId: null,
+    setNewNoteId: vi.fn(),
+    isCreatingNote: false,
+    setIsCreatingNote: vi.fn(),
+    pendingSave: false,
+    requestSave: vi.fn(),
+    executePendingSave: vi.fn()
   });
 
   beforeEach(() => {

@@ -29,7 +29,11 @@ export default function ContentSlotDefault() {
     updateNoteTimestamp,
     setContentHash,
     getNote,
-    newNoteId
+    newNoteId,
+    isCreatingNote,
+    pendingSave,
+    requestSave,
+    executePendingSave
   } = useNotesContext();
 
   // Unsaved notes persistence
@@ -183,6 +187,13 @@ export default function ContentSlotDefault() {
   };
 
   const handleSave = useCallback(async () => {
+    // Queue save if note creation is in progress (optimistic update not yet confirmed)
+    if (isCreatingNote) {
+      console.log('Save queued: note creation in progress');
+      requestSave();
+      return;
+    }
+
     if (!selectedNote) return;
 
     try {
@@ -211,6 +222,8 @@ export default function ContentSlotDefault() {
       console.error('Failed to save note:', error);
     }
   }, [
+    isCreatingNote,
+    requestSave,
     selectedNote,
     content,
     setSaveStatus,
@@ -222,6 +235,18 @@ export default function ContentSlotDefault() {
 
   // Register Ctrl+S (Windows/Linux) and Cmd+S (MacOS) keyboard shortcut for save
   useKeyboardShortcut(['CTRL+S', 'META+S'], handleSave);
+
+  // Execute pending save when note creation completes
+  useEffect(() => {
+    if (pendingSave && !isCreatingNote && selectedNote) {
+      console.log('Executing queued save after note creation completed');
+      executePendingSave();
+      // Trigger save asynchronously to ensure state is fully updated
+      setTimeout(() => {
+        handleSave();
+      }, 0);
+    }
+  }, [pendingSave, isCreatingNote, selectedNote, executePendingSave, handleSave]);
 
   // Cleanup debounce timer on unmount
   useEffect(() => {

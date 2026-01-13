@@ -24,7 +24,8 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
     updateNoteName,
     selectNote,
     newNoteId,
-    setNewNoteId
+    setNewNoteId,
+    setIsCreatingNote
   } = useNotesContext();
   const router = useRouter();
 
@@ -53,6 +54,7 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
       ...prevNotes.map((n) => (n.selected ? { ...n, selected: false } : n))
     ]);
     setNewNoteId(predictedId); // Trigger edit mode
+    setIsCreatingNote(true); // Block save operations during creation
 
     // Navigate to the new note URL immediately
     router.push(`/note/${predictedId}`);
@@ -106,8 +108,11 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
       });
 
       console.error('Failed to create note:', error);
+    } finally {
+      // Always clear the creating flag when done
+      setIsCreatingNote(false);
     }
-  }, [notes, setNotes, setNewNoteId, router, selectedNoteId]);
+  }, [notes, setNotes, setNewNoteId, setIsCreatingNote, router, selectedNoteId]);
 
   // Register Ctrl+N (Windows/Linux) and Cmd+N (MacOS) keyboard shortcut for new note
   useKeyboardShortcut(['CTRL+N', 'META+N'], handleNewNote);
@@ -163,6 +168,13 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
     }
   }, [newNoteId, setNewNoteId]);
 
+  // Handle edit end - clears newNoteId when the new note's edit mode ends
+  const handleEditEnd = useCallback(() => {
+    if (newNoteId !== null) {
+      setNewNoteId(null);
+    }
+  }, [newNoteId, setNewNoteId]);
+
   return (
     <LeftPanelComponent
       notes={notes}
@@ -171,6 +183,7 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
       onDeleteNote={handleDeleteNote}
       onRenameNote={handleRenameNote}
       onFilterChange={handleFilterChange}
+      onEditEnd={handleEditEnd}
       initialSortKey={initialSortKey}
       initialSortOrder={initialSortOrder}
       newNoteId={newNoteId}

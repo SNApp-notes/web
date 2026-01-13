@@ -106,6 +106,9 @@ import { clearEditorState } from '@/lib/localStorage';
  * @property {(noteId: number | null) => void} selectNote - Select note and navigate to URL
  * @property {number | null} newNoteId - ID of newly created note in edit mode (null if none)
  * @property {(noteId: number | null) => void} setNewNoteId - Set new note ID for immediate edit mode
+ * @property {boolean} pendingSave - Whether a save is queued waiting for note creation to complete
+ * @property {() => void} requestSave - Request a save (queues if note creation is in progress)
+ * @property {() => void} executePendingSave - Execute any pending save (called after note creation)
  */
 interface NotesContextValue {
   notes: NoteTreeNode[];
@@ -123,6 +126,11 @@ interface NotesContextValue {
   selectNote: (noteId: number | null) => void;
   newNoteId: number | null;
   setNewNoteId: (noteId: number | null) => void;
+  isCreatingNote: boolean;
+  setIsCreatingNote: (isCreating: boolean) => void;
+  pendingSave: boolean;
+  requestSave: () => void;
+  executePendingSave: () => void;
 }
 
 const NotesContext = createContext<NotesContextValue | undefined>(undefined);
@@ -260,6 +268,28 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
   // Track newly created note for immediate edit mode
   const [newNoteId, setNewNoteId] = useState<number | null>(null);
 
+  // Track if note creation is in progress (prevents save during optimistic update)
+  const [isCreatingNote, setIsCreatingNote] = useState<boolean>(false);
+
+  // Track if a save is pending (queued during note creation)
+  const [pendingSave, setPendingSave] = useState<boolean>(false);
+
+  // Request a save - if note creation is in progress, queue it
+  const requestSave = useCallback(() => {
+    if (isCreatingNote) {
+      console.log('Save queued: note creation in progress');
+      setPendingSave(true);
+    }
+  }, [isCreatingNote]);
+
+  // Execute pending save (called from LeftPanel after note creation completes)
+  // This is a no-op in context - the actual save is triggered via effect in content
+  const executePendingSave = useCallback(() => {
+    // Clear the pending flag - the actual save will be triggered
+    // by an effect watching this flag in the content component
+    setPendingSave(false);
+  }, []);
+
   // Sync notes state when initialNotes prop changes (e.g., after redirect)
   useEffect(() => {
     if (initialNotes.length > 0 && notes.length === 0) {
@@ -334,7 +364,12 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     getNote,
     selectNote,
     newNoteId,
-    setNewNoteId
+    setNewNoteId,
+    isCreatingNote,
+    setIsCreatingNote,
+    pendingSave,
+    requestSave,
+    executePendingSave
   };
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;

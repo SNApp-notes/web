@@ -109,7 +109,12 @@ describe('SidebarPage', () => {
     updateNoteTimestamp: vi.fn(),
     setContentHash: vi.fn(),
     newNoteId: null,
-    setNewNoteId: vi.fn()
+    setNewNoteId: vi.fn(),
+    isCreatingNote: false,
+    setIsCreatingNote: vi.fn(),
+    pendingSave: false,
+    requestSave: vi.fn(),
+    executePendingSave: vi.fn()
   });
 
   beforeEach(() => {

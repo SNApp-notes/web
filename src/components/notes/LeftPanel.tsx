@@ -71,6 +71,8 @@ interface LeftPanelProps {
   onRenameNote: (id: number, name: string) => Promise<void>;
   /** Callback invoked when filter changes (to clear newNoteId) */
   onFilterChange?: () => void;
+  /** Callback invoked when edit mode ends (e.g., after renaming a new note) */
+  onEditEnd?: () => void;
   /** Initial sort key from server settings (default: 'creationTime') */
   initialSortKey?: SortKey;
   /** Initial sort order from server settings (default: 'asc') */
@@ -108,6 +110,7 @@ const LeftPanel = memo(function LeftPanel({
   onDeleteNote,
   onRenameNote,
   onFilterChange,
+  onEditEnd,
   initialSortKey = SortKey.CreationTime,
   initialSortOrder = SortOrder.Ascending,
   newNoteId = null
@@ -295,7 +298,7 @@ const LeftPanel = memo(function LeftPanel({
         </TreeNode.Content>
       );
     },
-    [onNoteSelect]
+    []
   );
 
   return (
@@ -341,6 +344,7 @@ const LeftPanel = memo(function LeftPanel({
             onNodeSelect={handleTreeNodeSelect}
             onNodeRename={handleTreeNodeRename}
             onNodeDelete={handleTreeNodeDelete}
+            onEditEnd={onEditEnd}
             editingNodeId={newNoteId}
             title=""
           />
