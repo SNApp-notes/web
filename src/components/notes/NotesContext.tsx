@@ -333,21 +333,34 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
   );
 
   // Sync URL to state on URL changes
+  // Skip when note creation is in progress to prevent race conditions during ID remapping
   useEffect(() => {
+    if (isCreatingNote) {
+      // During note creation, the URL might be changing due to ID remapping
+      // Let the LeftPanel handle the selection update after server confirms
+      return;
+    }
+
     const urlNoteId = parseId(params);
 
-    if (urlNoteId !== null) {
-      updateSelection(urlNoteId);
+    if (urlNoteId !== null && urlNoteId !== selectedNoteId) {
+      // Only update selection if the note exists in our notes array
+      // This prevents issues when URL changes before notes array is updated
+      const noteExists = notes.some((n) => n.id === urlNoteId);
+      if (noteExists) {
+        updateSelection(urlNoteId);
+      }
     }
-  }, [params, updateSelection]);
+  }, [params, updateSelection, isCreatingNote, notes, selectedNoteId]);
 
   // Auto-select first note when at root with notes available
+  // Skip when note creation is in progress to prevent race conditions
   useEffect(() => {
-    if (pathname === '/' && notes.length > 0 && !selectedNoteId) {
+    if (pathname === '/' && notes.length > 0 && !selectedNoteId && !isCreatingNote) {
       const firstNote = notes[0];
       router.push(`/note/${firstNote.id}`);
     }
-  }, [pathname, notes, selectedNoteId, router]);
+  }, [pathname, notes, selectedNoteId, router, isCreatingNote]);
 
   const value: NotesContextValue = {
     notes,
