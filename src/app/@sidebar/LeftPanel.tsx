@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryState, parseAsInteger } from 'nuqs';
 import { useNotesContext } from '@/components/notes/NotesContext';
 import { createNote, deleteNote, updateNote } from '@/app/actions/notes';
 import LeftPanelComponent from '@/components/notes/LeftPanel';
@@ -29,6 +30,9 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
   } = useNotesContext();
   const router = useRouter();
 
+  // Use nuqs to manage line query parameter - clear when switching notes
+  const [, setLineParam] = useQueryState('line', parseAsInteger.withDefault(0));
+
   const handleNewNote = useCallback(async () => {
     // 1. Predict next ID and generate default name
     const predictedId = predictNextNoteId(notes);
@@ -55,6 +59,11 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
     ]);
     setNewNoteId(predictedId); // Trigger edit mode
     setIsCreatingNote(true); // Block save operations during creation
+
+    // Clear line parameter before navigating to new note
+    // Must await to ensure URL state is cleared before navigation
+    // This prevents the bug where header line position persists across notes
+    await setLineParam(null);
 
     // Navigate to the new note URL immediately
     router.push(`/note/${predictedId}`);
@@ -112,7 +121,15 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
       // Always clear the creating flag when done
       setIsCreatingNote(false);
     }
-  }, [notes, setNotes, setNewNoteId, setIsCreatingNote, router, selectedNoteId]);
+  }, [
+    notes,
+    setNotes,
+    setNewNoteId,
+    setIsCreatingNote,
+    setLineParam,
+    router,
+    selectedNoteId
+  ]);
 
   // Register Ctrl+N (Windows/Linux) and Cmd+N (MacOS) keyboard shortcut for new note
   useKeyboardShortcut(['CTRL+N', 'META+N'], handleNewNote);
@@ -150,12 +167,16 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
   );
 
   // Handle note selection - clears newNoteId when selecting a different note
+  // Note: line parameter is automatically cleared because router.push navigates
+  // to a clean URL without query params (e.g., /note/2 instead of /note/1?line=5)
   const handleNoteSelect = useCallback(
     (noteId: number) => {
       // Clear newNoteId if selecting a different note
       if (newNoteId !== null && noteId !== newNoteId) {
         setNewNoteId(null);
       }
+
+      // Select note - this calls router.push which navigates to clean URL
       selectNote(noteId);
     },
     [newNoteId, setNewNoteId, selectNote]

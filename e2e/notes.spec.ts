@@ -860,6 +860,77 @@ test.describe('Header Navigation and URL Updates', () => {
     expect(urlAfterClick).toContain(`?line=${expectedLine}`);
   });
 
+  test('should clear line parameter when switching notes', async ({ page }) => {
+    // This test verifies that the line query parameter is cleared when switching notes
+    // Bug scenario: Click on header -> switch note -> new note jumps to same line position
+
+    // Create first note with headers
+    const newNoteButton = page.getByRole('button', { name: /new note/i });
+    await newNoteButton.click();
+
+    // Wait for URL to change to the new note
+    await page.waitForURL(/\/note\/\d$/, { timeout: 5000 });
+    const firstNoteUrl = page.url();
+    const firstNoteIdMatch = firstNoteUrl.match(/\/note\/(\d)/);
+    expect(firstNoteIdMatch).not.toBeNull();
+    const firstNoteId = firstNoteIdMatch![1];
+
+    // Exit edit mode
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
+
+    // Wait for editor to be visible
+    const editor = page.locator('.cm-editor').first();
+    await expect(editor).toBeVisible({ timeout: 5000 });
+
+    // Add content with headers to first note (using same format as working tests)
+    const editorContent = page.locator('.cm-content').first();
+    await editorContent.click();
+    await page.waitForTimeout(500);
+    await page.keyboard.press('Control+a');
+    await page.keyboard.press('Delete');
+    await page.keyboard.type('---\n\n# Header 1\n\nSome content here.\n\n');
+    await page.keyboard.type('---\n\n## Header 2\n\nMore content.\n\n');
+    await page.keyboard.type('---\n\n### Header 3\n\nEven more content.');
+
+    // Wait for headers to be parsed (longer for CI)
+    await page.waitForTimeout(1500);
+
+    // Click on the second header in the right panel
+    const secondHeader = page.locator('aside').getByText('Header 2').first();
+    await expect(secondHeader).toBeVisible({ timeout: 10000 });
+
+    const secondHeaderBox = secondHeader.locator('..');
+    const headerLine = await secondHeaderBox.getAttribute('data-line');
+    expect(headerLine).toBeTruthy();
+
+    await secondHeader.click();
+
+    // Wait for URL to update with line parameter
+    await page.waitForURL(`**?line=${headerLine}`, { timeout: 5000 });
+    expect(page.url()).toContain(`?line=${headerLine}`);
+
+    // Create a second note
+    await newNoteButton.click();
+
+    // Wait for URL to change to the second note
+    await page.waitForURL(/\/note\/\d+/, { timeout: 5000 });
+    const secondNoteUrl = page.url();
+    const secondNoteIdMatch = secondNoteUrl.match(/\/note\/(\d+)/);
+    expect(secondNoteIdMatch).not.toBeNull();
+    const secondNoteId = secondNoteIdMatch![1];
+
+    // Verify we're on a different note
+    expect(secondNoteId).not.toBe(firstNoteId);
+
+    // CRITICAL: Verify the line parameter is NOT present in the new note's URL
+    // This is the bug: the line parameter persists when switching notes
+    expect(page.url()).not.toContain('?line=');
+    expect(page.url()).not.toContain('&line=');
+  });
+
   test('should auto-select first note when navigating to / with notes available', async ({
     page
   }) => {

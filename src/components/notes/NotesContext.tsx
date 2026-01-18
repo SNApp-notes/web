@@ -323,10 +323,11 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
       updateSelection(noteId);
 
       // Navigate using Next.js router
+      // Use pathname without query params to clear line parameter
       if (noteId === null) {
-        router.push('/');
+        router.push('/', { scroll: false });
       } else {
-        router.push(`/note/${noteId}`);
+        router.push(`/note/${noteId}`, { scroll: false });
       }
     },
     [updateSelection, router]
@@ -343,12 +344,15 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
 
     const urlNoteId = parseId(params);
 
-    if (urlNoteId !== null && urlNoteId !== selectedNoteId) {
-      // Only update selection if the note exists in our notes array
-      // This prevents issues when URL changes before notes array is updated
-      const noteExists = notes.some((n) => n.id === urlNoteId);
-      if (noteExists) {
-        updateSelection(urlNoteId);
+    // Always update selection when URL has a note ID, but only if:
+    // 1. The note exists in our notes array (prevents issues when URL changes before notes array is updated)
+    // 2. The note is different from currently selected (optimization)
+    if (urlNoteId !== null) {
+      if (urlNoteId !== selectedNoteId) {
+        const noteExists = notes.some((n) => n.id === urlNoteId);
+        if (noteExists) {
+          updateSelection(urlNoteId);
+        }
       }
     }
   }, [params, updateSelection, isCreatingNote, notes, selectedNoteId]);
