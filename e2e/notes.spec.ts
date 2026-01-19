@@ -869,9 +869,9 @@ test.describe('Header Navigation and URL Updates', () => {
     await newNoteButton.click();
 
     // Wait for URL to change to the new note
-    await page.waitForURL(/\/note\/\d$/, { timeout: 5000 });
+    await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
     const firstNoteUrl = page.url();
-    const firstNoteIdMatch = firstNoteUrl.match(/\/note\/(\d)/);
+    const firstNoteIdMatch = firstNoteUrl.match(/\/note\/(\d+)/);
     expect(firstNoteIdMatch).not.toBeNull();
     const firstNoteId = firstNoteIdMatch![1];
 
