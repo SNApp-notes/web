@@ -66,8 +66,8 @@ test.describe('Settings Route Protection', () => {
 
     await page.getByRole('button', { name: 'Back to Notes' }).click();
 
-    // Should auto-select first note (welcome note with id 1)
-    await expect(page).toHaveURL('/note/1');
+    // Should auto-select first note (welcome note) - ID may vary in CI
+    await expect(page).toHaveURL(/\/note\/\d+$/);
   });
 });
 

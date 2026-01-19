@@ -372,8 +372,11 @@ describe('SearchContext', () => {
         await result.current.executeSearch();
       });
 
+      // Wait for search to complete fully (currentPage set and executedQuery set)
       await waitFor(() => {
         expect(result.current.currentPage).toBe(1);
+        expect(result.current.executedQuery).toBe('test');
+        expect(result.current.isLoading).toBe(false);
       });
 
       // Mock page 2 response
@@ -392,8 +395,8 @@ describe('SearchContext', () => {
         totalPages: 4
       });
 
-      act(() => {
-        result.current.setPage(2);
+      await act(async () => {
+        await result.current.setPage(2);
       });
 
       // Wait for loading to complete before checking state

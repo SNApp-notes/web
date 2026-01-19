@@ -42,14 +42,17 @@ test.describe('Notes Application - CRUD Operations', () => {
       timeout: 5000
     });
 
-    // Click on welcome note to verify it has ID 1
+    // Click on welcome note to verify it exists and get its ID
     const welcomeNote = page
       .locator('[data-testid="note-list"] .tree-node-label')
       .filter({ hasText: /Welcome/ })
       .first();
     await welcomeNote.click();
-    await page.waitForURL(/\/note\/1$/, { timeout: 5000 });
-    expect(page.url()).toMatch(/\/note\/1$/);
+    await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
+    const welcomeUrl = page.url();
+    const welcomeIdMatch = welcomeUrl.match(/\/note\/(\d+)$/);
+    expect(welcomeIdMatch).not.toBeNull();
+    const welcomeNoteId = parseInt(welcomeIdMatch![1], 10);
 
     // Count existing notes before creating a new one
     const noteCountBefore = await page
@@ -82,15 +85,15 @@ test.describe('Notes Application - CRUD Operations', () => {
     await expect(newNote).toBeVisible({ timeout: 5000 });
     await newNote.click();
 
-    // Wait for URL to update to a note page (resilient to any ID >= 2)
+    // Wait for URL to update to a note page (should be different from welcome note)
     await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
     const url = page.url();
     const noteIdMatch = url.match(/\/note\/(\d+)$/);
     expect(noteIdMatch).not.toBeNull();
     const noteId = parseInt(noteIdMatch![1], 10);
 
-    // Verify note ID is at least 2 (after welcome note with ID 1)
-    expect(noteId).toBeGreaterThanOrEqual(2);
+    // Verify note ID is greater than the welcome note ID
+    expect(noteId).toBeGreaterThan(welcomeNoteId);
   });
 
   test('should rename a note via double-click and Enter key', async ({ page }) => {
@@ -915,8 +918,15 @@ test.describe('Header Navigation and URL Updates', () => {
     // Create a second note
     await newNoteButton.click();
 
-    // Wait for URL to change to the second note
-    await page.waitForURL(/\/note\/\d+/, { timeout: 5000 });
+    // Wait for URL to change to a DIFFERENT note (not the first one)
+    // We need to wait for URL that doesn't contain the first note's ID
+    await page.waitForURL(
+      (url) => {
+        const match = url.pathname.match(/\/note\/(\d+)/);
+        return match !== null && match[1] !== firstNoteId;
+      },
+      { timeout: 5000 }
+    );
     const secondNoteUrl = page.url();
     const secondNoteIdMatch = secondNoteUrl.match(/\/note\/(\d+)/);
     expect(secondNoteIdMatch).not.toBeNull();
