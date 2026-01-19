@@ -145,10 +145,14 @@ describe('LeftPanel', () => {
       const newNoteButton = screen.getByRole('button', { name: 'New Note' });
       fireEvent.click(newNoteButton);
 
-      // Optimistic update should happen immediately
+      // Optimistic update should happen immediately (setNotes and setNewNoteId are sync)
       expect(mockSetNotes).toHaveBeenCalledWith(expect.any(Function));
       expect(mockSetNewNoteId).toHaveBeenCalledWith(1); // Predicted ID
-      expect(mockPush).toHaveBeenCalledWith('/note/1');
+
+      // router.push is called after await setLineParam(null), so wait for it
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith('/note/1');
+      });
 
       // Then server action is called
       await waitFor(() => {
