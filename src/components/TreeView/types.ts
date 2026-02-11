@@ -7,6 +7,7 @@ export interface TreeNodeRenderProps<T = unknown> {
   hasChildren: boolean;
   isExpanded: boolean;
   level: number;
+  startEditing: () => void;
 }
 
 export interface TreeNodeProps<T = unknown> {
@@ -22,4 +23,8 @@ export interface TreeViewProps<T = unknown> {
   onNodeSelect?: (node: TreeNode<T>) => void;
   onNodeRename?: (node: TreeNode<T>, newName: string) => void;
   onNodeDelete?: (node: TreeNode<T>) => void;
+  /** Callback when edit mode ends (save or cancel) */
+  onEditEnd?: (node: TreeNode<T>) => void;
+  /** ID of node that should start in edit mode (for new notes) */
+  editingNodeId?: number | null;
 }

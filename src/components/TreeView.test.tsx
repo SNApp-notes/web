@@ -163,7 +163,10 @@ describe('TreeView Component', () => {
 
       await user.click(screen.getByText('First Note'));
 
-      expect(onNodeSelect).toHaveBeenCalledWith(mockDataFlat[0]);
+      // Wait for delayed click handler (200ms delay to distinguish from double-click)
+      await waitFor(() => expect(onNodeSelect).toHaveBeenCalledWith(mockDataFlat[0]), {
+        timeout: 500
+      });
     });
 
     it('calls onNodeRename when editing completes', async () => {
@@ -289,7 +292,8 @@ describe('TreeNode Sub-Components', () => {
       );
 
       await user.click(screen.getAllByText('Clickable')[0]);
-      expect(onNodeSelect).toHaveBeenCalled();
+      // Wait for delayed click handler (200ms delay to distinguish from double-click)
+      await waitFor(() => expect(onNodeSelect).toHaveBeenCalled(), { timeout: 500 });
     });
   });
 

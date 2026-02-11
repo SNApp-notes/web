@@ -77,7 +77,7 @@ import {
   useEffect,
   useCallback,
   useMemo,
-  useRef,
+  useState,
   type ReactNode
 } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
@@ -85,7 +85,7 @@ import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import { useNodeSelection } from '@/hooks/useNodeSelection';
 import { selectNode } from '@/lib/utils';
-import { cleanupEditorStates } from '@/lib/localStorage';
+import { clearEditorState } from '@/lib/localStorage';
 
 /**
  * NotesContext value interface exposing all notes state and operations.
@@ -104,6 +104,11 @@ import { cleanupEditorStates } from '@/lib/localStorage';
  * @property {() => NoteTreeNode | null} getSelectedNote - Get currently selected note object
  * @property {(noteId: number) => NoteTreeNode | null} getNote - Get note by ID
  * @property {(noteId: number | null) => void} selectNote - Select note and navigate to URL
+ * @property {number | null} newNoteId - ID of newly created note in edit mode (null if none)
+ * @property {(noteId: number | null) => void} setNewNoteId - Set new note ID for immediate edit mode
+ * @property {boolean} pendingSave - Whether a save is queued waiting for note creation to complete
+ * @property {() => void} requestSave - Request a save (queues if note creation is in progress)
+ * @property {() => void} executePendingSave - Execute any pending save (called after note creation)
  */
 interface NotesContextValue {
   notes: NoteTreeNode[];
@@ -119,6 +124,13 @@ interface NotesContextValue {
   getSelectedNote: () => NoteTreeNode | null;
   getNote: (noteId: number) => NoteTreeNode | null;
   selectNote: (noteId: number | null) => void;
+  newNoteId: number | null;
+  setNewNoteId: (noteId: number | null) => void;
+  isCreatingNote: boolean;
+  setIsCreatingNote: (isCreating: boolean) => void;
+  pendingSave: boolean;
+  requestSave: () => void;
+  executePendingSave: () => void;
 }
 
 const NotesContext = createContext<NotesContextValue | undefined>(undefined);
@@ -253,19 +265,30 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     setContentHash
   } = useNodeSelection(updatedNotes, initSelectedNodeId);
 
-  // Track if cleanup has been performed
-  const cleanupPerformedRef = useRef(false);
+  // Track newly created note for immediate edit mode
+  const [newNoteId, setNewNoteId] = useState<number | null>(null);
 
-  // Clean up editor states on mount (remove cursor/scroll for non-selected notes)
-  useEffect(() => {
-    // Only run cleanup once on mount
-    if (cleanupPerformedRef.current) {
-      return;
+  // Track if note creation is in progress (prevents save during optimistic update)
+  const [isCreatingNote, setIsCreatingNote] = useState<boolean>(false);
+
+  // Track if a save is pending (queued during note creation)
+  const [pendingSave, setPendingSave] = useState<boolean>(false);
+
+  // Request a save - if note creation is in progress, queue it
+  const requestSave = useCallback(() => {
+    if (isCreatingNote) {
+      console.log('Save queued: note creation in progress');
+      setPendingSave(true);
     }
+  }, [isCreatingNote]);
 
-    cleanupPerformedRef.current = true;
-    cleanupEditorStates(selectedNoteId);
-  }, [selectedNoteId]);
+  // Execute pending save (called from LeftPanel after note creation completes)
+  // This is a no-op in context - the actual save is triggered via effect in content
+  const executePendingSave = useCallback(() => {
+    // Clear the pending flag - the actual save will be triggered
+    // by an effect watching this flag in the content component
+    setPendingSave(false);
+  }, []);
 
   // Sync notes state when initialNotes prop changes (e.g., after redirect)
   useEffect(() => {
@@ -291,35 +314,57 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
   // Note selection with Next.js router
   const selectNote = useCallback(
     (noteId: number | null) => {
+      // Clear editor state when switching notes
+      // This ensures cursor/scroll position is NOT restored on note switch
+      // (only on page refresh)
+      clearEditorState();
+
       // Update state immediately
       updateSelection(noteId);
 
       // Navigate using Next.js router
+      // Use pathname without query params to clear line parameter
       if (noteId === null) {
-        router.push('/');
+        router.push('/', { scroll: false });
       } else {
-        router.push(`/note/${noteId}`);
+        router.push(`/note/${noteId}`, { scroll: false });
       }
     },
     [updateSelection, router]
   );
 
   // Sync URL to state on URL changes
+  // Skip when note creation is in progress to prevent race conditions during ID remapping
   useEffect(() => {
+    if (isCreatingNote) {
+      // During note creation, the URL might be changing due to ID remapping
+      // Let the LeftPanel handle the selection update after server confirms
+      return;
+    }
+
     const urlNoteId = parseId(params);
 
+    // Always update selection when URL has a note ID, but only if:
+    // 1. The note exists in our notes array (prevents issues when URL changes before notes array is updated)
+    // 2. The note is different from currently selected (optimization)
     if (urlNoteId !== null) {
-      updateSelection(urlNoteId);
+      if (urlNoteId !== selectedNoteId) {
+        const noteExists = notes.some((n) => n.id === urlNoteId);
+        if (noteExists) {
+          updateSelection(urlNoteId);
+        }
+      }
     }
-  }, [params, updateSelection]);
+  }, [params, updateSelection, isCreatingNote, notes, selectedNoteId]);
 
   // Auto-select first note when at root with notes available
+  // Skip when note creation is in progress to prevent race conditions
   useEffect(() => {
-    if (pathname === '/' && notes.length > 0 && !selectedNoteId) {
+    if (pathname === '/' && notes.length > 0 && !selectedNoteId && !isCreatingNote) {
       const firstNote = notes[0];
       router.push(`/note/${firstNote.id}`);
     }
-  }, [pathname, notes, selectedNoteId, router]);
+  }, [pathname, notes, selectedNoteId, router, isCreatingNote]);
 
   const value: NotesContextValue = {
     notes,
@@ -334,7 +379,14 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     setContentHash,
     getSelectedNote,
     getNote,
-    selectNote
+    selectNote,
+    newNoteId,
+    setNewNoteId,
+    isCreatingNote,
+    setIsCreatingNote,
+    pendingSave,
+    requestSave,
+    executePendingSave
   };
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;

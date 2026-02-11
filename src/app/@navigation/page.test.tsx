@@ -41,7 +41,16 @@ describe('NavigationPage', () => {
     markNoteDirty: vi.fn(),
     getSelectedNote: vi.fn(() => null),
     getNote: vi.fn(),
-    selectNote: vi.fn()
+    selectNote: vi.fn(),
+    updateNoteTimestamp: vi.fn(),
+    setContentHash: vi.fn(),
+    newNoteId: null,
+    setNewNoteId: vi.fn(),
+    isCreatingNote: false,
+    setIsCreatingNote: vi.fn(),
+    pendingSave: false,
+    requestSave: vi.fn(),
+    executePendingSave: vi.fn()
   });
 
   beforeEach(() => {

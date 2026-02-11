@@ -1,6 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useCallback, useState, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  useState,
+  useRef,
+  useEffect
+} from 'react';
 import type { TreeNode } from '@/types/tree';
 
 interface TreeNodeContextValue<T = unknown> {
@@ -24,9 +31,11 @@ interface TreeNodeContextValue<T = unknown> {
   handleDeleteClick: (e: React.MouseEvent) => void;
   handleArrowClick: (e: React.MouseEvent) => void;
   handleArrowMouseDown: (e: React.MouseEvent) => void;
+  markUserInteracted: () => void;
   onNodeSelect?: (node: TreeNode<T>) => void;
   onNodeRename?: (node: TreeNode<T>, newName: string) => void;
   onNodeDelete?: (node: TreeNode<T>) => void;
+  onEditEnd?: (node: TreeNode<T>) => void;
 }
 
 const TreeNodeContext = createContext<TreeNodeContextValue<unknown> | undefined>(
@@ -47,6 +56,9 @@ interface TreeNodeProviderProps<T = unknown> {
   onNodeSelect?: (node: TreeNode<T>) => void;
   onNodeRename?: (node: TreeNode<T>, newName: string) => void;
   onNodeDelete?: (node: TreeNode<T>) => void;
+  onEditEnd?: (node: TreeNode<T>) => void;
+  /** Start in edit mode (for newly created notes) */
+  startInEditMode?: boolean;
   children: React.ReactNode;
 }
 
@@ -56,13 +68,25 @@ export function TreeNodeProvider<T = unknown>({
   onNodeSelect,
   onNodeRename,
   onNodeDelete,
+  onEditEnd,
+  startInEditMode = false,
   children
 }: TreeNodeProviderProps<T>) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(startInEditMode);
   const [editingName, setEditingName] = useState(node.name);
+  // Track if user has interacted with the edit (to prevent premature blur handling)
+  const hasUserInteracted = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const nodeRef = useRef<HTMLDivElement>(null);
+
+  // Update isEditing when startInEditMode changes (for newly created notes)
+  useEffect(() => {
+    if (startInEditMode) {
+      setIsEditing(true);
+      setEditingName(node.name);
+    }
+  }, [startInEditMode, node.name]);
 
   const hasChildren = node.children && node.children.length > 0;
 
@@ -93,12 +117,16 @@ export function TreeNodeProvider<T = unknown>({
           onNodeRename?.(node, trimmedName);
         }
         setIsEditing(false);
+        hasUserInteracted.current = false;
+        onEditEnd?.(node);
       } else if (e.key === 'Escape') {
         setIsEditing(false);
         setEditingName(node.name);
+        hasUserInteracted.current = false;
+        onEditEnd?.(node);
       }
     },
-    [editingName, node, onNodeRename]
+    [editingName, node, onNodeRename, onEditEnd]
   );
 
   const handleSaveEdit = useCallback(() => {
@@ -107,15 +135,23 @@ export function TreeNodeProvider<T = unknown>({
       onNodeRename?.(node, trimmedName);
     }
     setIsEditing(false);
-  }, [editingName, node, onNodeRename]);
+    hasUserInteracted.current = false;
+    onEditEnd?.(node);
+  }, [editingName, node, onNodeRename, onEditEnd]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
     setEditingName(node.name);
-  }, [node.name]);
+    hasUserInteracted.current = false;
+    onEditEnd?.(node);
+  }, [node, onEditEnd]);
 
   const handleEditingBlur = useCallback(() => {
-    handleSaveEdit();
+    // Only call onEditEnd if user has interacted (typed or pressed keys)
+    // This prevents premature blur events during navigation/re-renders
+    if (hasUserInteracted.current) {
+      handleSaveEdit();
+    }
   }, [handleSaveEdit]);
 
   const handleDeleteClick = useCallback(
@@ -139,6 +175,10 @@ export function TreeNodeProvider<T = unknown>({
     e.stopPropagation();
   }, []);
 
+  const markUserInteracted = useCallback(() => {
+    hasUserInteracted.current = true;
+  }, []);
+
   const value: TreeNodeContextValue<T> = {
     node,
     level,
@@ -160,9 +200,11 @@ export function TreeNodeProvider<T = unknown>({
     handleDeleteClick,
     handleArrowClick,
     handleArrowMouseDown,
+    markUserInteracted,
     onNodeSelect,
     onNodeRename,
-    onNodeDelete
+    onNodeDelete,
+    onEditEnd
   };
 
   return (

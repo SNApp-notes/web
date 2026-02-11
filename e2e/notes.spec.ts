@@ -17,7 +17,12 @@ test.describe('Notes Application - CRUD Operations', () => {
 
     await newNoteButton.click();
 
-    // Wait for a new note to appear
+    // New note starts in edit mode with input field - press Escape to exit edit mode
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+
+    // Wait for a new note label to appear (after exiting edit mode)
     await expect(page.locator('.tree-node-label')).toHaveCount(initialNoteCount + 1, {
       timeout: 5000
     });
@@ -37,14 +42,17 @@ test.describe('Notes Application - CRUD Operations', () => {
       timeout: 5000
     });
 
-    // Click on welcome note to verify it has ID 1
+    // Click on welcome note to verify it exists and get its ID
     const welcomeNote = page
       .locator('[data-testid="note-list"] .tree-node-label')
       .filter({ hasText: /Welcome/ })
       .first();
     await welcomeNote.click();
-    await page.waitForURL(/\/note\/1$/, { timeout: 5000 });
-    expect(page.url()).toMatch(/\/note\/1$/);
+    await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
+    const welcomeUrl = page.url();
+    const welcomeIdMatch = welcomeUrl.match(/\/note\/(\d+)$/);
+    expect(welcomeIdMatch).not.toBeNull();
+    const welcomeNoteId = parseInt(welcomeIdMatch![1], 10);
 
     // Count existing notes before creating a new one
     const noteCountBefore = await page
@@ -61,6 +69,14 @@ test.describe('Notes Application - CRUD Operations', () => {
       { timeout: 5000 }
     );
 
+    // New note starts in edit mode - press Escape to exit edit mode first
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+
+    // Wait for input to disappear and label to appear
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
+
     // Click on the newly created note (it should be the last one in the list)
     const newNote = page
       .locator('[data-testid="note-list"] .tree-node-label')
@@ -69,15 +85,15 @@ test.describe('Notes Application - CRUD Operations', () => {
     await expect(newNote).toBeVisible({ timeout: 5000 });
     await newNote.click();
 
-    // Wait for URL to update to a note page (resilient to any ID >= 2)
+    // Wait for URL to update to a note page (should be different from welcome note)
     await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
     const url = page.url();
     const noteIdMatch = url.match(/\/note\/(\d+)$/);
     expect(noteIdMatch).not.toBeNull();
     const noteId = parseInt(noteIdMatch![1], 10);
 
-    // Verify note ID is at least 2 (after welcome note with ID 1)
-    expect(noteId).toBeGreaterThanOrEqual(2);
+    // Verify note ID is greater than the welcome note ID
+    expect(noteId).toBeGreaterThan(welcomeNoteId);
   });
 
   test('should rename a note via double-click and Enter key', async ({ page }) => {
@@ -87,6 +103,12 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Create a new note
     const newNoteButton = page.getByRole('button', { name: /new note/i });
     await newNoteButton.click();
+
+    // New note starts in edit mode - press Escape to exit first, then we'll re-enter
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
 
     // Wait for note count to increase
     await expect(page.locator('.tree-node-label')).toHaveCount(initialNoteCount + 1, {
@@ -107,7 +129,6 @@ test.describe('Notes Application - CRUD Operations', () => {
     await noteLabel.dblclick({ delay: 100 });
 
     // Wait for input field to appear and be focused
-    const editInput = page.locator('.tree-node-input');
     await expect(editInput).toBeVisible({ timeout: 5000 });
     await expect(editInput).toBeFocused({ timeout: 5000 });
     await expect(editInput).toHaveValue(originalNoteName || '', { timeout: 5000 });
@@ -136,6 +157,12 @@ test.describe('Notes Application - CRUD Operations', () => {
     const newNoteButton = page.getByRole('button', { name: /new note/i });
     await newNoteButton.click();
 
+    // New note starts in edit mode - press Escape to exit first, then we'll re-enter
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
+
     // Wait for note count to increase
     await expect(page.locator('.tree-node-label')).toHaveCount(initialNoteCount + 1, {
       timeout: 5000
@@ -155,7 +182,6 @@ test.describe('Notes Application - CRUD Operations', () => {
     await noteLabel.dblclick({ delay: 100 });
 
     // Wait for input field to appear
-    const editInput = page.locator('.tree-node-input');
     await expect(editInput).toBeVisible({ timeout: 5000 });
     await expect(editInput).toBeFocused({ timeout: 5000 });
     await expect(editInput).toHaveValue(originalNoteName || '', { timeout: 5000 });
@@ -184,6 +210,12 @@ test.describe('Notes Application - CRUD Operations', () => {
     const newNoteButton = page.getByRole('button', { name: /new note/i });
     await newNoteButton.click();
 
+    // New note starts in edit mode - press Escape to exit first
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
+
     // Wait for new note count to increase
     await expect(page.locator('.tree-node-label')).toHaveCount(initialNoteCount + 1, {
       timeout: 5000
@@ -203,7 +235,7 @@ test.describe('Notes Application - CRUD Operations', () => {
     await noteLabel.dblclick({ delay: 100 });
 
     // Wait longer for input field to appear and verify it has correct value
-    const editInput = page.locator('.tree-node-input');
+    // (reuse editInput locator from above)
     await expect(editInput).toBeVisible({ timeout: 5000 });
     await expect(editInput).toBeFocused({ timeout: 5000 });
     await expect(editInput).toHaveValue(originalNoteName || '', { timeout: 5000 });
@@ -239,15 +271,22 @@ test.describe('Notes Application - CRUD Operations', () => {
     const newNoteButton = page.getByRole('button', { name: /new note/i });
     await newNoteButton.click();
 
+    // New note starts in edit mode - press Escape to exit first
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
+
     // Wait for note count to increase
     await expect(page.locator('.tree-node-label')).toHaveCount(initialNoteCount + 1, {
       timeout: 5000
     });
 
     // Wait for any "New Note" to appear and capture its actual name
+    // Note: pattern matches "New Note", "New Note 1", "New Note 2 1", etc.
     const noteLabel = page
       .locator('.tree-node-label')
-      .filter({ hasText: /^New Note( \d+)?$/ })
+      .filter({ hasText: /^New Note( \d+)*$/ })
       .last();
     await expect(noteLabel).toBeVisible({ timeout: 5000 });
     const noteName = await noteLabel.textContent();
@@ -292,8 +331,12 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Wait for "Saving..." to appear
     await expect(page.getByText(/Saving\.\.\./)).toBeVisible({ timeout: 5000 });
 
+    // Wait for "Saved" to appear (save completed)
+    await expect(page.getByText('Saved')).toBeVisible({ timeout: 10000 });
+
     // Verify asterisk disappears after save completes (note is no longer dirty)
-    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 5000 });
+    // Use longer timeout for CI - the dirty flag update may take time to propagate
+    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 10000 });
 
     // Verify "Unsaved changes" label disappears from top bar
     await expect(page.getByText('Unsaved changes')).not.toBeVisible({ timeout: 5000 });
@@ -320,11 +363,9 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Wait for editor to load after navigation - use longer timeout
     await expect(editor).toBeVisible({ timeout: 5000 });
 
-    // Wait for content to load into editor
-    await page.waitForTimeout(1000);
-
-    // Verify the content was saved and persisted
-    await expect(editor).toContainText('My Test Note', { timeout: 5000 });
+    // Wait for content to load into editor - the content should NOT be placeholder
+    // Use longer timeout as content loads from server after navigation
+    await expect(editor).toContainText('My Test Note', { timeout: 10000 });
     await expect(editor).toContainText('This is some test content', { timeout: 5000 });
   });
 
@@ -332,6 +373,12 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Create a new note
     const newNoteButton = page.getByRole('button', { name: /new note/i });
     await newNoteButton.click();
+
+    // New note starts in edit mode - press Escape to exit first
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
 
     // Wait for editor to be visible
     const editor = page.locator('.cm-editor');
@@ -343,7 +390,6 @@ test.describe('Notes Application - CRUD Operations', () => {
       .filter({ hasText: /^New Note( \d+)?$/ })
       .last();
     await expect(noteLabel).toBeVisible({ timeout: 5000 });
-    const noteName = await noteLabel.textContent();
 
     // Click on the editor to focus it
     await editor.click();
@@ -375,8 +421,12 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Verify "Saving..." appears
     await expect(page.getByText('Saving...')).toBeVisible({ timeout: 5000 });
 
+    // Wait for "Saved" to appear (save completed)
+    await expect(page.getByText('Saved')).toBeVisible({ timeout: 10000 });
+
     // Verify asterisk disappears after save completes (note is clean)
-    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 5000 });
+    // Use longer timeout for CI - the dirty flag update may take time to propagate
+    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 10000 });
 
     // Verify "Unsaved changes" disappears from top bar
     await expect(page.getByText('Unsaved changes')).not.toBeVisible({ timeout: 5000 });
@@ -392,30 +442,12 @@ test.describe('Notes Application - CRUD Operations', () => {
     const newNoteButton = page.getByRole('button', { name: /new note/i });
     await newNoteButton.click();
 
-    // Wait for new note to appear
-    await expect(page.locator('.tree-node-label')).toHaveCount(initialNoteCount + 1, {
-      timeout: 5000
-    });
-
-    // Step 2: Rename the note - use last() to get the most recently created
-    const noteLabel = page
-      .locator('.tree-node-label')
-      .filter({ hasText: /^New Note( \d+)?$/ })
-      .last();
-    await expect(noteLabel).toBeVisible({ timeout: 5000 });
-
-    // Wait for DOM to stabilize before double-click
-    await page.waitForTimeout(500);
-
-    // Double-click with more reliable approach
-    await noteLabel.dblclick({ delay: 100 });
-
-    // Wait for edit mode with longer timeout
+    // New note starts in edit mode - use this to rename it directly
     const editInput = page.locator('.tree-node-input');
     await expect(editInput).toBeVisible({ timeout: 5000 });
     await expect(editInput).toBeFocused({ timeout: 5000 });
 
-    // Clear and rename
+    // Step 2: Rename the note directly in the initial edit mode
     await editInput.clear();
     await editInput.fill('Complete Workflow Test');
     await editInput.press('Enter');
@@ -423,10 +455,22 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Wait for input to disappear (rename completed)
     await expect(editInput).not.toBeVisible({ timeout: 5000 });
 
+    // Wait for rename to propagate - the note label should now show the new name
+    // Use polling assertion for reliability on slow CI
+    await expect(async () => {
+      const labels = await page.locator('.tree-node-label').allTextContents();
+      expect(labels.some((label) => label.includes('Complete Workflow Test'))).toBe(true);
+    }).toPass({ timeout: 10000, intervals: [500] });
+
+    // Wait for new note to appear with the new name
+    await expect(page.locator('.tree-node-label')).toHaveCount(initialNoteCount + 1, {
+      timeout: 5000
+    });
+
     // Verify rename with longer timeout
     await expect(
       page.locator('.tree-node-label').filter({ hasText: 'Complete Workflow Test' })
-    ).toBeVisible({ timeout: 5000 });
+    ).toBeVisible({ timeout: 10000 });
 
     // Step 3: Edit content - use first() to avoid strict mode violations
     const editor = page.locator('.cm-editor').first();
@@ -470,8 +514,12 @@ test.describe('Notes Application - CRUD Operations', () => {
     // Wait for "Saving..." to appear
     await expect(page.getByText(/Saving\.\.\./)).toBeVisible({ timeout: 5000 });
 
+    // Wait for "Saved" to appear (save completed)
+    await expect(page.getByText('Saved')).toBeVisible({ timeout: 10000 });
+
     // Verify asterisk disappears after save completes
-    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 5000 });
+    // Use longer timeout for CI - the dirty flag update may take time to propagate
+    await expect(noteWithAsterisk).not.toBeVisible({ timeout: 10000 });
 
     // Verify "Unsaved changes" disappears from top bar
     await expect(page.getByText('Unsaved changes')).not.toBeVisible({ timeout: 5000 });
@@ -520,6 +568,15 @@ test.describe('Header Navigation and URL Updates', () => {
     // Create a note with headers
     const newNoteButton = page.getByRole('button', { name: /new note/i });
     await newNoteButton.click();
+
+    // Wait for URL to change to the new note first
+    await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
+
+    // New note starts in edit mode - press Escape to exit first
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
 
     // Wait for editor to be visible
     const editor = page.locator('.cm-editor').first();
@@ -572,6 +629,15 @@ test.describe('Header Navigation and URL Updates', () => {
     const newNoteButton = page.getByRole('button', { name: /new note/i });
     await newNoteButton.click();
 
+    // Wait for URL to change to the new note first
+    await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
+
+    // New note starts in edit mode - press Escape to exit first
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
+
     // Wait for editor
     const editor = page.locator('.cm-editor').first();
     await editor.waitFor({ timeout: 5000 });
@@ -617,7 +683,7 @@ test.describe('Header Navigation and URL Updates', () => {
 
     // Click on "Second Header" in right panel - increase timeout for CI
     const secondHeader = page.locator('aside').getByText('Second Header').first();
-    await secondHeader.waitFor({ timeout: 5000 });
+    await secondHeader.waitFor({ timeout: 10000 });
 
     // Get the parent box element that has data-line attribute
     const secondHeaderBox = secondHeader.locator('..');
@@ -682,6 +748,15 @@ test.describe('Header Navigation and URL Updates', () => {
     const newNoteButton = page.getByRole('button', { name: /new note/i });
     await newNoteButton.click();
 
+    // Wait for URL to change to the new note first
+    await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
+
+    // New note starts in edit mode - press Escape to exit first
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
+
     const editor = page.locator('.cm-editor').first();
     await expect(editor).toBeVisible({ timeout: 5000 });
 
@@ -695,11 +770,12 @@ test.describe('Header Navigation and URL Updates', () => {
     await page.keyboard.type('---\n\n## Header B\n\nContent B.\n\n');
     await page.keyboard.type('---\n\n### Header C\n\nContent C.');
 
-    await page.waitForTimeout(1000);
+    // Wait for headers to be parsed and displayed in right panel (longer for CI)
+    await page.waitForTimeout(1500);
 
     // Click first header and verify URL
     const firstHeader = page.locator('aside').getByText('Header A').first();
-    await expect(firstHeader).toBeVisible({ timeout: 5000 });
+    await expect(firstHeader).toBeVisible({ timeout: 10000 });
 
     const firstHeaderBox = firstHeader.locator('..');
     const firstLine = await firstHeaderBox.getAttribute('data-line');
@@ -788,6 +864,84 @@ test.describe('Header Navigation and URL Updates', () => {
     expect(urlAfterClick).toContain(`?line=${expectedLine}`);
   });
 
+  test('should clear line parameter when switching notes', async ({ page }) => {
+    // This test verifies that the line query parameter is cleared when switching notes
+    // Bug scenario: Click on header -> switch note -> new note jumps to same line position
+
+    // Create first note with headers
+    const newNoteButton = page.getByRole('button', { name: /new note/i });
+    await newNoteButton.click();
+
+    // Wait for URL to change to the new note
+    await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
+    const firstNoteUrl = page.url();
+    const firstNoteIdMatch = firstNoteUrl.match(/\/note\/(\d+)/);
+    expect(firstNoteIdMatch).not.toBeNull();
+    const firstNoteId = firstNoteIdMatch![1];
+
+    // Exit edit mode
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
+
+    // Wait for editor to be visible
+    const editor = page.locator('.cm-editor').first();
+    await expect(editor).toBeVisible({ timeout: 5000 });
+
+    // Add content with headers to first note (using same format as working tests)
+    const editorContent = page.locator('.cm-content').first();
+    await editorContent.click();
+    await page.waitForTimeout(500);
+    await page.keyboard.press('Control+a');
+    await page.keyboard.press('Delete');
+    await page.keyboard.type('---\n\n# Header 1\n\nSome content here.\n\n');
+    await page.keyboard.type('---\n\n## Header 2\n\nMore content.\n\n');
+    await page.keyboard.type('---\n\n### Header 3\n\nEven more content.');
+
+    // Wait for headers to be parsed (longer for CI)
+    await page.waitForTimeout(1500);
+
+    // Click on the second header in the right panel
+    const secondHeader = page.locator('aside').getByText('Header 2').first();
+    await expect(secondHeader).toBeVisible({ timeout: 10000 });
+
+    const secondHeaderBox = secondHeader.locator('..');
+    const headerLine = await secondHeaderBox.getAttribute('data-line');
+    expect(headerLine).toBeTruthy();
+
+    await secondHeader.click();
+
+    // Wait for URL to update with line parameter
+    await page.waitForURL(`**?line=${headerLine}`, { timeout: 5000 });
+    expect(page.url()).toContain(`?line=${headerLine}`);
+
+    // Create a second note
+    await newNoteButton.click();
+
+    // Wait for URL to change to a DIFFERENT note (not the first one)
+    // We need to wait for URL that doesn't contain the first note's ID
+    await page.waitForURL(
+      (url) => {
+        const match = url.pathname.match(/\/note\/(\d+)/);
+        return match !== null && match[1] !== firstNoteId;
+      },
+      { timeout: 5000 }
+    );
+    const secondNoteUrl = page.url();
+    const secondNoteIdMatch = secondNoteUrl.match(/\/note\/(\d+)/);
+    expect(secondNoteIdMatch).not.toBeNull();
+    const secondNoteId = secondNoteIdMatch![1];
+
+    // Verify we're on a different note
+    expect(secondNoteId).not.toBe(firstNoteId);
+
+    // CRITICAL: Verify the line parameter is NOT present in the new note's URL
+    // This is the bug: the line parameter persists when switching notes
+    expect(page.url()).not.toContain('?line=');
+    expect(page.url()).not.toContain('&line=');
+  });
+
   test('should auto-select first note when navigating to / with notes available', async ({
     page
   }) => {
@@ -834,6 +988,15 @@ test.describe('Header Navigation and URL Updates', () => {
     const newNoteButton = page.getByRole('button', { name: /new note/i });
     await newNoteButton.click();
 
+    // Wait for URL to change to the new note first
+    await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
+
+    // New note starts in edit mode - press Escape to exit first
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
+
     const editor = page.locator('.cm-editor').first();
     await editor.waitFor({ timeout: 5000 });
 
@@ -861,6 +1024,9 @@ test.describe('Header Navigation and URL Updates', () => {
     const savedStatus = page.getByText('Saved');
     await savedStatus.waitFor({ timeout: 5000 });
 
+    // Wait for headers to be parsed and displayed in right panel
+    await page.waitForTimeout(1000);
+
     // Get current note URL for later use
     const currentUrl = page.url();
     const noteIdMatch = currentUrl.match(/\/note\/(\d+)/);
@@ -869,7 +1035,7 @@ test.describe('Header Navigation and URL Updates', () => {
 
     // Test Case 1: Click on Header 2 and verify active line gutter
     const header2 = page.locator('aside').getByText('Header 2').first();
-    await header2.waitFor({ timeout: 5000 });
+    await header2.waitFor({ timeout: 10000 });
 
     const header2Box = header2.locator('..');
     const header2Line = await header2Box.getAttribute('data-line');

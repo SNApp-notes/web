@@ -41,7 +41,6 @@
 import { useState, useMemo, memo, useCallback } from 'react';
 import { Box, Button, Input, Stack, Text } from '@chakra-ui/react';
 import type { NoteTreeNode, TreeNode as TreeNodeType } from '@/types/tree';
-import Link from 'next/link';
 import clsx from 'clsx';
 import { FiTrash2 } from 'react-icons/fi';
 
@@ -70,10 +69,16 @@ interface LeftPanelProps {
   onDeleteNote: (id: number) => void;
   /** Callback invoked when renaming a note */
   onRenameNote: (id: number, name: string) => Promise<void>;
+  /** Callback invoked when filter changes (to clear newNoteId) */
+  onFilterChange?: () => void;
+  /** Callback invoked when edit mode ends (e.g., after renaming a new note) */
+  onEditEnd?: () => void;
   /** Initial sort key from server settings (default: 'creationTime') */
   initialSortKey?: SortKey;
   /** Initial sort order from server settings (default: 'asc') */
   initialSortOrder?: SortOrder;
+  /** ID of newly created note that should start in edit mode */
+  newNoteId?: number | null;
 }
 
 /**
@@ -104,8 +109,11 @@ const LeftPanel = memo(function LeftPanel({
   onNewNote,
   onDeleteNote,
   onRenameNote,
+  onFilterChange,
+  onEditEnd,
   initialSortKey = SortKey.CreationTime,
-  initialSortOrder = SortOrder.Ascending
+  initialSortOrder = SortOrder.Ascending,
+  newNoteId = null
 }: LeftPanelProps) {
   const [filter, setFilter] = useState('');
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -153,12 +161,14 @@ const LeftPanel = memo(function LeftPanel({
     );
 
     // Map back to NoteTreeNode[] and filter
-    const filtered = sorted
+    // Always include newNoteId note regardless of filter (for new notes)
+    return sorted
       .map((sortedNote) => notes.find((n) => n.id === sortedNote.noteId)!)
-      .filter((note) => note.name.toLowerCase().includes(filter.toLowerCase()));
-
-    return filtered;
-  }, [notes, filter, sortKey, sortOrder]);
+      .filter(
+        (note) =>
+          note.id === newNoteId || note.name.toLowerCase().includes(filter.toLowerCase())
+      );
+  }, [notes, filter, sortKey, sortOrder, newNoteId]);
 
   // Handle TreeNode selection
   const handleTreeNodeSelect = useCallback(
@@ -184,6 +194,15 @@ const LeftPanel = memo(function LeftPanel({
   const handleTreeNodeDelete = useCallback((node: TreeNodeType) => {
     setDeleteDialog({ isOpen: true, note: node as NoteTreeNode });
   }, []);
+
+  // Handle filter input change - notify parent to clear newNoteId
+  const handleFilterInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFilter(e.target.value);
+      onFilterChange?.();
+    },
+    [onFilterChange]
+  );
 
   const handleConfirmDelete = useCallback(() => {
     if (deleteDialog.note) {
@@ -254,27 +273,9 @@ const LeftPanel = memo(function LeftPanel({
         </>
       );
 
-      const onClick = (e: React.MouseEvent) => {
-        e.preventDefault();
-        onNoteSelect(typedNode.id);
-      };
-
-      const wrappedContent =
-        !hasChildren && !editing ? (
-          <Link
-            href={`/note/${typedNode.id}`}
-            style={{
-              display: 'contents',
-              textDecoration: 'none',
-              color: 'inherit'
-            }}
-            onClick={onClick}
-          >
-            {nodeContent}
-          </Link>
-        ) : (
-          nodeContent
-        );
+      // Don't wrap in Link - handle navigation via onClick on TreeNode.Content
+      // This preserves double-click to edit functionality
+      const wrappedContent = nodeContent;
 
       return (
         <TreeNode.Content
@@ -297,7 +298,7 @@ const LeftPanel = memo(function LeftPanel({
         </TreeNode.Content>
       );
     },
-    [onNoteSelect]
+    []
   );
 
   return (
@@ -311,7 +312,7 @@ const LeftPanel = memo(function LeftPanel({
           p={3}
           placeholder="Filter notes..."
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={handleFilterInputChange}
           size="sm"
         />
 
@@ -343,6 +344,8 @@ const LeftPanel = memo(function LeftPanel({
             onNodeSelect={handleTreeNodeSelect}
             onNodeRename={handleTreeNodeRename}
             onNodeDelete={handleTreeNodeDelete}
+            onEditEnd={onEditEnd}
+            editingNodeId={newNoteId}
             title=""
           />
         )}

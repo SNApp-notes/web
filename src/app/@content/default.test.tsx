@@ -63,16 +63,36 @@ vi.mock('next/navigation', () => ({
   useParams: vi.fn(() => mockParams)
 }));
 
+// Shared mock for editor focus tracking
+const mockEditorFocus = vi.fn();
+const mockScrollToLine = vi.fn();
+
 vi.mock('@/components/notes/MiddlePanel', () => ({
-  default: vi.fn(({ note, content, saveStatus, onContentChange, onEditorReady }) => (
-    <div data-testid="middle-panel">
-      <div data-testid="note-id">{note?.id}</div>
-      <div data-testid="note-content">{content}</div>
-      <div data-testid="save-status">{saveStatus}</div>
-      <button onClick={() => onContentChange('new content')}>Change Content</button>
-      <button onClick={() => onEditorReady({ scrollToLine: vi.fn() })}>Ready</button>
-    </div>
-  ))
+  default: vi.fn(({ note, content, saveStatus, onContentChange, onEditorReady }) => {
+    // Use shared mock for focus tracking across renders
+    const mockEditor = {
+      scrollToLine: mockScrollToLine,
+      focus: mockEditorFocus,
+      getScrollState: vi.fn(),
+      setScrollState: vi.fn()
+    };
+    return (
+      <div data-testid="middle-panel">
+        <div data-testid="note-id">{note?.id}</div>
+        <div data-testid="note-content">{content}</div>
+        <div data-testid="save-status">{saveStatus}</div>
+        <button onClick={() => onContentChange('new content')}>Change Content</button>
+        <button
+          data-testid="editor-ready-btn"
+          onClick={() => {
+            onEditorReady(mockEditor);
+          }}
+        >
+          Ready
+        </button>
+      </div>
+    );
+  })
 }));
 
 vi.mock('@/components/notes/RightPanel', () => ({
@@ -112,6 +132,8 @@ describe('ContentSlotDefault', () => {
     mockUsePathname.mockClear();
     mockUseParams.mockClear();
     mockUseQueryState.mockClear();
+    mockEditorFocus.mockClear();
+    mockScrollToLine.mockClear();
 
     mockExtractHeaders.mockReturnValue([]);
 
@@ -656,6 +678,65 @@ describe('ContentSlotDefault', () => {
       await user.keyboard('{Control>}s{/Control}');
 
       expect(mockContext.setContentHash).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('New Note Focus Behavior', () => {
+    it('does not focus editor when creating a new note (newNoteId matches selectedNoteId)', async () => {
+      const user = userEvent.setup();
+      const mockNote = createMockNote(5, 'New Note', '');
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 5,
+        newNoteId: 5, // This indicates a new note is being created
+        getNote: vi.fn(() => mockNote)
+      });
+
+      render(<ContentSlotDefault />);
+
+      // Trigger editor ready callback
+      const readyButton = screen.getByTestId('editor-ready-btn');
+      await user.click(readyButton);
+
+      // Editor focus should NOT be called when newNoteId === selectedNoteId
+      expect(mockEditorFocus).not.toHaveBeenCalled();
+    });
+
+    it('focuses editor for existing notes (newNoteId is null)', async () => {
+      const user = userEvent.setup();
+      const mockNote = createMockNote(1, 'Existing Note', 'Some content');
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 1,
+        newNoteId: null, // No new note being created
+        getNote: vi.fn(() => mockNote)
+      });
+
+      render(<ContentSlotDefault />);
+
+      // Trigger editor ready callback
+      const readyButton = screen.getByTestId('editor-ready-btn');
+      await user.click(readyButton);
+
+      // Editor focus SHOULD be called for existing notes
+      expect(mockEditorFocus).toHaveBeenCalled();
+    });
+
+    it('focuses editor when newNoteId does not match selectedNoteId', async () => {
+      const user = userEvent.setup();
+      const mockNote = createMockNote(1, 'Existing Note', 'Some content');
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 1,
+        newNoteId: 5, // Different note is being created, not the current one
+        getNote: vi.fn(() => mockNote)
+      });
+
+      render(<ContentSlotDefault />);
+
+      // Trigger editor ready callback
+      const readyButton = screen.getByTestId('editor-ready-btn');
+      await user.click(readyButton);
+
+      // Editor focus SHOULD be called since we're viewing a different note
+      expect(mockEditorFocus).toHaveBeenCalled();
     });
   });
 });

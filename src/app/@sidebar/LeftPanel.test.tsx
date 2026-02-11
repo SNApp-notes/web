@@ -17,6 +17,30 @@ vi.mock('@/components/notes/NotesContext', () => ({
   useNotesContext: vi.fn()
 }));
 
+// Mock useRouter
+const mockPush = vi.fn();
+const mockReplace = vi.fn();
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace
+  }),
+  useParams: () => ({}),
+  usePathname: () => '/'
+}));
+
+// Mock the keyboard shortcut hook
+vi.mock('@/hooks/useKeyboardShortcut', () => ({
+  useKeyboardShortcut: vi.fn()
+}));
+
+// Mock the toaster
+vi.mock('@/components/ui/toaster', () => ({
+  toaster: {
+    error: vi.fn()
+  }
+}));
+
 describe('LeftPanel', () => {
   const mockUseNotesContext = vi.mocked(useNotesContext);
   const mockCreateNote = vi.mocked(createNote);
@@ -26,6 +50,8 @@ describe('LeftPanel', () => {
   const mockSetNotes = vi.fn();
   const mockUpdateNoteName = vi.fn();
   const mockSelectNote = vi.fn();
+  const mockSetNewNoteId = vi.fn();
+  const mockSetIsCreatingNote = vi.fn();
 
   const createMockNote = (id: number, name: string, dirty = false): NoteTreeNode => ({
     id,
@@ -33,13 +59,16 @@ describe('LeftPanel', () => {
     selected: false,
     data: {
       content: `Content for ${name}`,
-      dirty
+      dirty,
+      createdAt: new Date('2025-01-01'),
+      updatedAt: new Date('2025-01-01')
     }
   });
 
   const createMockNotesContext = (
     notes: NoteTreeNode[] = [],
-    selectedNoteId: number | null = null
+    selectedNoteId: number | null = null,
+    newNoteId: number | null = null
   ) => ({
     notes,
     selectedNoteId,
@@ -49,9 +78,18 @@ describe('LeftPanel', () => {
     updateNoteContent: vi.fn(),
     updateNoteName: mockUpdateNoteName,
     markNoteDirty: vi.fn(),
+    updateNoteTimestamp: vi.fn(),
+    setContentHash: vi.fn(),
     getSelectedNote: vi.fn(() => notes.find((n) => n.id === selectedNoteId) || null),
     getNote: vi.fn(),
-    selectNote: mockSelectNote
+    selectNote: mockSelectNote,
+    newNoteId,
+    setNewNoteId: mockSetNewNoteId,
+    isCreatingNote: false,
+    setIsCreatingNote: mockSetIsCreatingNote,
+    pendingSave: false,
+    requestSave: vi.fn(),
+    executePendingSave: vi.fn()
   });
 
   beforeEach(() => {
@@ -90,9 +128,47 @@ describe('LeftPanel', () => {
     });
   });
 
-  describe('New Note Creation', () => {
-    it('should create new note and add to context on success', async () => {
-      const mockNewNote = { noteId: 3, name: 'New Note', content: '' };
+  describe('New Note Creation (Optimistic)', () => {
+    it('should add optimistic note to UI immediately before server response', async () => {
+      const mockNewNote = {
+        noteId: 1,
+        name: 'New Note',
+        content: '',
+        userId: 'user-1',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      mockCreateNote.mockResolvedValue(mockNewNote);
+
+      render(<LeftPanel />);
+
+      const newNoteButton = screen.getByRole('button', { name: 'New Note' });
+      fireEvent.click(newNoteButton);
+
+      // Optimistic update should happen immediately (setNotes and setNewNoteId are sync)
+      expect(mockSetNotes).toHaveBeenCalledWith(expect.any(Function));
+      expect(mockSetNewNoteId).toHaveBeenCalledWith(1); // Predicted ID
+
+      // router.push is called after await setLineParam(null), so wait for it
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith('/note/1');
+      });
+
+      // Then server action is called
+      await waitFor(() => {
+        expect(mockCreateNote).toHaveBeenCalledWith('New Note');
+      });
+    });
+
+    it('should handle ID mismatch and update state', async () => {
+      const mockNewNote = {
+        noteId: 5, // Different from predicted ID (1)
+        name: 'New Note',
+        content: '',
+        userId: 'user-1',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
       mockCreateNote.mockResolvedValue(mockNewNote);
 
       render(<LeftPanel />);
@@ -101,14 +177,14 @@ describe('LeftPanel', () => {
       fireEvent.click(newNoteButton);
 
       await waitFor(() => {
-        expect(mockCreateNote).toHaveBeenCalledWith('New Note');
+        // Should update to correct ID
+        expect(mockSetNotes).toHaveBeenCalledTimes(2); // Initial optimistic + correction
+        expect(mockSetNewNoteId).toHaveBeenCalledWith(5); // Updated to server ID
+        expect(mockReplace).toHaveBeenCalledWith('/note/5');
       });
-
-      expect(mockSetNotes).toHaveBeenCalledWith(expect.any(Function));
-      expect(mockSelectNote).toHaveBeenCalledWith(3);
     });
 
-    it('should handle new note creation failure gracefully', async () => {
+    it('should rollback on server error', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockCreateNote.mockRejectedValue(new Error('Failed to create'));
 
@@ -118,20 +194,30 @@ describe('LeftPanel', () => {
       fireEvent.click(newNoteButton);
 
       await waitFor(() => {
+        // Should rollback by filtering out the optimistic note
+        expect(mockSetNotes).toHaveBeenCalledTimes(2); // Optimistic add + rollback
+        expect(mockSetNewNoteId).toHaveBeenLastCalledWith(null);
         expect(consoleSpy).toHaveBeenCalledWith(
           'Failed to create note:',
           expect.any(Error)
         );
       });
 
-      expect(mockSetNotes).not.toHaveBeenCalled();
-      expect(mockSelectNote).not.toHaveBeenCalled();
-
       consoleSpy.mockRestore();
     });
 
-    it('should create new note with correct tree node structure', async () => {
-      const mockNewNote = { noteId: 5, name: 'Test Note', content: 'Test content' };
+    it('should generate unique default name when New Note exists', async () => {
+      const mockNotes = [createMockNote(1, 'New Note')];
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes));
+
+      const mockNewNote = {
+        noteId: 2,
+        name: 'New Note <2>',
+        content: '',
+        userId: 'user-1',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
       mockCreateNote.mockResolvedValue(mockNewNote);
 
       render(<LeftPanel />);
@@ -140,47 +226,8 @@ describe('LeftPanel', () => {
       fireEvent.click(newNoteButton);
 
       await waitFor(() => {
-        expect(mockSetNotes).toHaveBeenCalledWith(expect.any(Function));
+        expect(mockCreateNote).toHaveBeenCalledWith('New Note <2>');
       });
-
-      // Test the function passed to setNotes
-      const setNotesCall = mockSetNotes.mock.calls[0][0];
-      const mockPrevNotes = [createMockNote(1, 'Existing Note')];
-      const result = setNotesCall(mockPrevNotes);
-
-      expect(result).toEqual([
-        {
-          id: 5,
-          name: 'Test Note',
-          selected: false,
-          data: {
-            content: 'Test content',
-            dirty: false,
-            createdAt: new Date(NaN),
-            updatedAt: new Date(NaN)
-          }
-        },
-        ...mockPrevNotes
-      ]);
-    });
-
-    it('should handle new note with empty content', async () => {
-      const mockNewNote = { noteId: 6, name: 'Empty Note', content: null };
-      mockCreateNote.mockResolvedValue(mockNewNote);
-
-      render(<LeftPanel />);
-
-      const newNoteButton = screen.getByRole('button', { name: 'New Note' });
-      fireEvent.click(newNoteButton);
-
-      await waitFor(() => {
-        expect(mockSetNotes).toHaveBeenCalledWith(expect.any(Function));
-      });
-
-      const setNotesCall = mockSetNotes.mock.calls[0][0];
-      const result = setNotesCall([]);
-
-      expect(result[0].data.content).toBe('');
     });
   });
 
@@ -372,6 +419,32 @@ describe('LeftPanel', () => {
       });
     });
 
+    it('should clear newNoteId after edit mode ends (via onEditEnd)', async () => {
+      const mockNotes = [createMockNote(1, 'New Note')];
+      const mockUpdatedNote = {
+        noteId: 1,
+        name: 'Renamed Note',
+        content: '',
+        userId: 'user-1',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      mockUpdateNote.mockResolvedValue(mockUpdatedNote);
+      // Set newNoteId to 1 (simulating a newly created note)
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes, 1, 1));
+
+      render(<LeftPanel />);
+
+      const noteElement = screen.getByDisplayValue('New Note'); // Input field since it's in edit mode
+      // Simulate pressing Enter to exit edit mode (and trigger onEditEnd)
+      fireEvent.keyDown(noteElement, { key: 'Enter' });
+
+      // newNoteId should be cleared after edit mode ends via onEditEnd
+      await waitFor(() => {
+        expect(mockSetNewNoteId).toHaveBeenCalledWith(null);
+      });
+    });
+
     it('should handle note rename failure and log error', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const mockNotes = [createMockNote(1, 'Test Note')];
@@ -534,6 +607,102 @@ describe('LeftPanel', () => {
         expect(screen.getByText('No matching notes')).toBeInTheDocument();
       });
     });
+
+    it('should always show newNoteId note even when filter would hide it', async () => {
+      const mockNotes = [createMockNote(1, 'New Note'), createMockNote(2, 'Other Note')];
+      // newNoteId is 1, so "New Note" should always be visible
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes, 1, 1));
+
+      render(<LeftPanel />);
+
+      // Type in the filter that would normally hide "New Note"
+      const filterInput = screen.getByPlaceholderText('Filter notes...');
+      fireEvent.change(filterInput, { target: { value: 'Other' } });
+
+      // Both notes should be visible - "New Note" because it's newNoteId, "Other Note" because it matches filter
+      await waitFor(() => {
+        expect(screen.getByText('New Note')).toBeInTheDocument();
+        expect(screen.getByText('Other Note')).toBeInTheDocument();
+      });
+    });
+
+    it('should show newNoteId note in edit mode (input field visible)', async () => {
+      const mockNotes = [createMockNote(1, 'New Note')];
+      // newNoteId is 1, so the note should start in edit mode
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes, 1, 1));
+
+      render(<LeftPanel />);
+
+      // The note should be in edit mode, showing an input field with the note name
+      await waitFor(() => {
+        const input = screen.getByDisplayValue('New Note');
+        expect(input).toBeInTheDocument();
+        expect(input.tagName.toLowerCase()).toBe('input');
+      });
+    });
+
+    it('should not show existing notes in edit mode when newNoteId is null', () => {
+      const mockNotes = [createMockNote(1, 'Existing Note')];
+      // newNoteId is null, so no note should be in edit mode
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes, 1, null));
+
+      render(<LeftPanel />);
+
+      // The note should NOT be in edit mode - should show text, not input
+      expect(screen.getByText('Existing Note')).toBeInTheDocument();
+      expect(screen.queryByDisplayValue('Existing Note')).not.toBeInTheDocument();
+    });
+
+    it('should clear newNoteId when selecting a different note', async () => {
+      const mockNotes = [createMockNote(1, 'New Note'), createMockNote(2, 'Other Note')];
+      // newNoteId is 1 (new note)
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes, 1, 1));
+
+      render(<LeftPanel />);
+
+      // Click on a different note to select it
+      const otherNote = screen.getByText('Other Note');
+      fireEvent.click(otherNote);
+
+      // newNoteId should be cleared when selecting a different note
+      await waitFor(() => {
+        expect(mockSetNewNoteId).toHaveBeenCalledWith(null);
+      });
+    });
+
+    it('should NOT clear newNoteId when selecting the same note', async () => {
+      const mockNotes = [createMockNote(1, 'New Note'), createMockNote(2, 'Other Note')];
+      // newNoteId is 1 (new note)
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes, 1, 1));
+
+      render(<LeftPanel />);
+
+      // Click on the same note (the new note)
+      const newNote = screen.getByText('New Note');
+      fireEvent.click(newNote);
+
+      // newNoteId should NOT be cleared when selecting the same note
+      await waitFor(() => {
+        expect(mockSetNewNoteId).not.toHaveBeenCalledWith(null);
+      });
+    });
+
+    it('should clear newNoteId when filter changes', async () => {
+      const mockNotes = [createMockNote(1, 'New Note'), createMockNote(2, 'Other Note')];
+      // newNoteId is 1 (new note)
+      mockUseNotesContext.mockReturnValue(createMockNotesContext(mockNotes, 1, 1));
+
+      render(<LeftPanel />);
+
+      // Change the filter
+      const filterInput = screen.getByPlaceholderText('Filter notes...');
+      fireEvent.change(filterInput, { target: { value: 'something' } });
+
+      // newNoteId should be cleared when filter changes
+      await waitFor(() => {
+        expect(mockSetNewNoteId).toHaveBeenCalledWith(null);
+      });
+    });
   });
 
   describe('Error Handling', () => {
@@ -617,7 +786,14 @@ describe('LeftPanel', () => {
 
   describe('Server Actions Integration', () => {
     it('should call createNote server action with correct parameters', async () => {
-      const mockNewNote = { noteId: 10, name: 'Server Note', content: 'Server content' };
+      const mockNewNote = {
+        noteId: 1,
+        name: 'New Note',
+        content: '',
+        userId: 'user-1',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
       mockCreateNote.mockResolvedValue(mockNewNote);
 
       render(<LeftPanel />);
@@ -632,7 +808,14 @@ describe('LeftPanel', () => {
     });
 
     it('should handle server action async operations', async () => {
-      const mockNewNote = { noteId: 11, name: 'Async Note', content: '' };
+      const mockNewNote = {
+        noteId: 1,
+        name: 'Async Note',
+        content: '',
+        userId: 'user-1',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
       mockCreateNote.mockImplementation(
         () => new Promise((resolve) => setTimeout(() => resolve(mockNewNote), 100))
       );
@@ -642,10 +825,14 @@ describe('LeftPanel', () => {
       const newNoteButton = screen.getByRole('button', { name: 'New Note' });
       fireEvent.click(newNoteButton);
 
+      // Optimistic update should happen immediately
+      expect(mockSetNotes).toHaveBeenCalled();
+      expect(mockSetNewNoteId).toHaveBeenCalledWith(1);
+
+      // Wait for server response
       await waitFor(
         () => {
-          expect(mockSetNotes).toHaveBeenCalled();
-          expect(mockSelectNote).toHaveBeenCalledWith(11);
+          expect(mockCreateNote).toHaveBeenCalled();
         },
         { timeout: 200 }
       );

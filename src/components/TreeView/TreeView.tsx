@@ -11,7 +11,9 @@ function TreeViewComponent<T = unknown>({
   render,
   onNodeSelect,
   onNodeRename,
-  onNodeDelete
+  onNodeDelete,
+  onEditEnd,
+  editingNodeId
 }: TreeViewProps<T>) {
   return (
     <Box
@@ -41,6 +43,8 @@ function TreeViewComponent<T = unknown>({
             onNodeSelect={onNodeSelect}
             onNodeRename={onNodeRename}
             onNodeDelete={onNodeDelete}
+            onEditEnd={onEditEnd}
+            startInEditMode={node.id === editingNodeId}
           />
         ))}
       </VStack>
