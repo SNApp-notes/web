@@ -97,13 +97,22 @@ export const getPrismaE2E = () => {
 /**
  * Selects appropriate Prisma client based on environment.
  *
- * @returns {mainClient | e2eClient} Prisma client instance
+ * @returns {mainClient} Prisma client instance (typed as mainClient for consistency)
  *
  * @remarks
  * - In CI environment (CI=true): uses SQLite
  * - In production/development: uses MySQL
+ * - Type assertion to mainClient avoids TypeScript union type incompatibility
+ * - MySQL and SQLite schemas are identical, but generate different types due to
+ *   provider-specific features (e.g., MySQL's _relevance for fulltext search)
+ * - This causes union type issues where method signatures are incompatible
+ * - Safe at runtime because both clients share the same model API for common operations
+ *
+ * @see https://github.com/prisma/prisma/issues/28620
  */
-const getPrisma = () => (process.env.CI ? getPrismaE2E() : getPrismaMain());
+const getPrisma = (): mainClient => {
+  return (process.env.CI ? getPrismaE2E() : getPrismaMain()) as mainClient;
+};
 
 /**
  * Global object type extension for Prisma singleton storage.
@@ -112,19 +121,21 @@ const getPrisma = () => (process.env.CI ? getPrismaE2E() : getPrismaMain());
  * This prevents creating multiple Prisma instances during hot-reload in development.
  */
 const globalForPrisma = global as unknown as {
-  prisma: ReturnType<typeof getPrisma>;
+  prisma: mainClient;
 };
 
 /**
  * Singleton Prisma client instance.
  * Automatically switches between MySQL and SQLite based on environment.
  *
- * @constant {mainClient | e2eClient} prisma - Unified Prisma client
+ * @constant {mainClient} prisma - Unified Prisma client
  *
  * @remarks
  * - In development: stored globally to persist across hot-reloads
  * - In production: created once per server instance
  * - In CI: uses SQLite for isolated, fast testing
+ * - Type asserted to mainClient to avoid union type incompatibility
+ * - All consumers use types from prisma-main (re-exported at top of file)
  *
  * @example
  * ```ts
@@ -135,7 +146,7 @@ const globalForPrisma = global as unknown as {
  * const note = await prisma.note.create({ data: {...} });
  * ```
  */
-const prisma = globalForPrisma.prisma || getPrisma();
+const prisma: mainClient = globalForPrisma.prisma || getPrisma();
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
