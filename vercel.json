@@ -2,5 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": false
-  }
+  },
+  "buildCommand": "prisma migrate deploy --schema ./prisma-main/schema.prisma && next build --turbopack"
 }

@@ -34,17 +34,17 @@ if (fs.existsSync(nextDir)) {
 const dbUrl = `file:${dbFile}`;
 
 console.log('Generating Prisma client for E2E tests (SQLite)...');
-// CI=true required to select prisma-e2e/schema.prisma in prisma.config.ts
+// CI=true and E2E_TEST=true required to select prisma-e2e/schema.prisma in prisma.config.ts
 execSync('npx prisma generate --schema=prisma-e2e/schema.prisma', {
   stdio: 'inherit',
-  env: { ...process.env, CI: true }
+  env: { ...process.env, CI: true, E2E_TEST: true }
 });
 
 console.log('Creating E2E test database...');
-// CI=true required to select prisma-e2e/schema.prisma in prisma.config.ts
+// CI=true and E2E_TEST=true required to select prisma-e2e/schema.prisma in prisma.config.ts
 execSync('npx prisma db push --schema=prisma-e2e/schema.prisma', {
   stdio: 'inherit',
-  env: { ...process.env, CI: true }
+  env: { ...process.env, CI: true, E2E_TEST: true }
 });
 
 console.log('E2E test database ready');

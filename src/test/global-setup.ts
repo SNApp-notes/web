@@ -27,11 +27,12 @@ export async function setup() {
   }
 
   // Use TEMPLATE_DB_FILE environment variable for database path
-  // prisma.config.ts reads TEMPLATE_DB_FILE when CI=true to determine database location
+  // prisma.config.ts reads E2E_TEST=true when CI=true to determine database type
   execSync(`npx prisma db push --schema=${SCHEMA_PATH}`, {
     stdio: 'pipe',
     env: {
       ...process.env,
+      E2E_TEST: 'true',
       DB_FILE: `file:./${TEMPLATE_DB_FILE}`
     },
     encoding: 'utf-8'

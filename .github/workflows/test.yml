@@ -1,5 +1,10 @@
 name: 'CI CD'
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 on:
   workflow_dispatch:
   push:
@@ -142,6 +147,7 @@ jobs:
         run: npm run test:e2e:coverage
         env:
           CI: 'true'
+          E2E_TEST: 'true'
           COVERAGE: 'true'
           DB_FILE: 'file:./prisma-e2e/test.db'
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'

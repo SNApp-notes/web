@@ -3,17 +3,20 @@
  * @description Prisma configuration with environment-aware schema selection
  *
  * Configuration switches between MySQL (production/dev) and SQLite (CI/test):
- * - CI=true: Uses SQLite schema (prisma-e2e/schema.prisma) for testing
+ * - CI=true AND E2E_TEST=true: Uses SQLite schema (prisma-e2e/schema.prisma) for testing
  * - Otherwise: Uses MySQL schema (prisma-main/schema.prisma) for production/development
  *
  * Database URLs are configured via environment variables (DATABASE_URL) or
  * DB_FILE for test environments.
+ *
+ * Note: Vercel sets CI=true by default, but we only want SQLite for actual E2E tests,
+ * so we check for both CI=true AND E2E_TEST=true.
  */
 import 'dotenv/config';
 import { defineConfig, env } from 'prisma/config';
 
 export default defineConfig(
-  process.env.CI
+  process.env.CI && process.env.E2E_TEST
     ? {
         schema: 'prisma-e2e/schema.prisma',
         migrations: {
