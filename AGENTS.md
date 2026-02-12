@@ -7,7 +7,11 @@ Test: `npm test` (watch) | `npm run test:run` (once) | `npm run test:coverage`
 E2E: `npm run test:e2e:docker` (Fedora) | `npm run test:e2e` (local) | `npm run test:e2e:ui` (UI)
 E2E Docker: `npm run test:e2e:docker:build` (rebuild after Dockerfile changes)
 
-**TypeScript**: NEVER run `tsc` directly - use `npm run build` for type checking (Next.js handles it correctly)
+**TypeScript Type Checking**: 
+- NEVER run `tsc` or `npx tsc` directly - it doesn't work properly with Next.js
+- ALWAYS use `npm run build` for type checking (Next.js handles it correctly)
+- `tsc` will show false errors due to missing Next.js build context
+- Only `npm run build` provides accurate TypeScript validation
 
 ## Build Workflow
 
