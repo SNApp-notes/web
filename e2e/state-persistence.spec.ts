@@ -529,6 +529,19 @@ test.describe('State Persistence', () => {
       await newNoteButton.click();
       await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
 
+      // New note starts in edit mode - press Escape to exit rename mode first
+      const editInput = page.locator('.tree-node-input');
+      await expect(editInput).toBeVisible({ timeout: 5000 });
+      await editInput.press('Escape');
+      await expect(editInput).not.toBeVisible({ timeout: 5000 });
+
+      // Wait for any navigation after Escape and capture the final note ID
+      await page.waitForTimeout(500);
+      const noteUrl = page.url();
+      const noteIdMatch = noteUrl.match(/\/note\/(\d+)$/);
+      expect(noteIdMatch).not.toBeNull();
+      const noteId = noteIdMatch![1];
+
       // Try to add content (should still work even if localStorage fails)
       const editor = page.locator('.cm-content');
       await expect(editor).toBeVisible({ timeout: 5000 });

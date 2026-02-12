@@ -822,6 +822,12 @@ test.describe('Header Navigation and URL Updates', () => {
     const newNoteButton = page.getByRole('button', { name: /new note/i });
     await newNoteButton.click();
 
+    // New note starts in edit mode - press Escape to exit rename mode first
+    const editInput = page.locator('.tree-node-input');
+    await expect(editInput).toBeVisible({ timeout: 5000 });
+    await editInput.press('Escape');
+    await expect(editInput).not.toBeVisible({ timeout: 5000 });
+
     const editor = page.locator('.cm-editor').first();
     await expect(editor).toBeVisible({ timeout: 5000 });
 
@@ -835,7 +841,8 @@ test.describe('Header Navigation and URL Updates', () => {
     await page.keyboard.type("---\n\n## Getting Started\n\nLet's begin.\n\n");
     await page.keyboard.type('---\n\n### Advanced Topics\n\nFor experts.');
 
-    await page.waitForTimeout(1000);
+    // Wait for content to be processed and headers to appear in right panel
+    await page.waitForTimeout(2000);
 
     // Verify headers appear in right panel
     await expect(page.locator('aside').getByText('Introduction')).toBeVisible({

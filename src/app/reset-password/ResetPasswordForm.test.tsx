@@ -198,13 +198,6 @@ describe('ResetPasswordForm', () => {
       });
     });
 
-    // Note: Skipping automatic redirect test due to timer/waitFor conflicts
-    // The redirect functionality is tested via the manual "Go to Login" button
-    it.skip('should redirect to login after 3 seconds', async () => {
-      // This test is skipped because fake timers conflict with waitFor's polling
-      // The redirect functionality is still covered by the manual button test
-    });
-
     it('should have manual go to login button', async () => {
       const user = userEvent.setup({ delay: null });
 

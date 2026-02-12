@@ -216,12 +216,15 @@ export async function createNote(baseName: string = 'New Note'): Promise<Note> {
     // Use transaction for atomicity (prevent race conditions)
     const newNote = await prisma.$transaction(async (tx) => {
       // Find highest noteId for this user
-      const maxNote = await tx.note.findFirst({
+      // Note: Using findMany + take instead of findFirst for better Prisma 7 adapter compatibility
+      const maxNotes = await tx.note.findMany({
         where: { userId: session.user.id },
         orderBy: { noteId: 'desc' },
-        select: { noteId: true }
+        select: { noteId: true },
+        take: 1
       });
 
+      const maxNote = maxNotes[0];
       const nextNoteId = (maxNote?.noteId || 0) + 1;
 
       // Find existing notes with similar names to determine counter

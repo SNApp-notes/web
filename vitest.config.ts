@@ -7,8 +7,11 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom',
-    globalSetup: ['./src/test/global-setup.ts'],
-    setupFiles: ['./src/test/setup.js', './src/test/setup-db.ts'],
+    globalSetup: [path.resolve(__dirname, './src/test/global-setup.ts')],
+    setupFiles: [
+      path.resolve(__dirname, './src/test/setup.js'),
+      path.resolve(__dirname, './src/test/setup-db.ts')
+    ],
     globals: true,
     css: true,
     exclude: ['**/node_modules/**', '**/e2e/**', '**/.next/**', '**/prisma-7.0/**'],

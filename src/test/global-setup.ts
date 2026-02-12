@@ -2,11 +2,22 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 import {
   SCHEMA_PATH,
-  TEMP_SCHEMA_PATH,
+  TEMPLATE_DB_FILE,
   TEMPLATE_DB_PATH,
   TEST_DB_PATH,
   TEST_DB_JOURNAL_PATH
 } from './constants';
+
+/**
+ * Vitest global setup for database testing
+ *
+ * Creates a template SQLite database used for fast test initialization.
+ *
+ * Process:
+ * 1. Deletes existing template database
+ * 2. Runs prisma db push with TEMPLATE_DB_FILE env to create template database
+ * 3. Template database is copied for each test suite (see setup-db.ts)
+ */
 
 export async function setup() {
   console.log('Creating template database for integration tests...');
@@ -15,30 +26,23 @@ export async function setup() {
     fs.unlinkSync(TEMPLATE_DB_PATH);
   }
 
-  const schemaContent = fs.readFileSync(SCHEMA_PATH, 'utf-8');
-  const modifiedSchema = schemaContent.replace(
-    'url      = "file:./test.db"',
-    'url      = "file:./template.db"'
-  );
+  // Use TEMPLATE_DB_FILE environment variable for database path
+  // prisma.config.ts reads E2E_TEST=true when CI=true to determine database type
+  execSync(`npx prisma db push --schema=${SCHEMA_PATH}`, {
+    stdio: 'pipe',
+    env: {
+      ...process.env,
+      E2E_TEST: 'true',
+      DB_FILE: `file:./${TEMPLATE_DB_FILE}`
+    },
+    encoding: 'utf-8'
+  });
 
-  fs.writeFileSync(TEMP_SCHEMA_PATH, modifiedSchema);
-
-  try {
-    execSync(`npx prisma db push --skip-generate --schema=${TEMP_SCHEMA_PATH}`, {
-      stdio: 'pipe',
-      encoding: 'utf-8'
-    });
-
-    if (!fs.existsSync(TEMPLATE_DB_PATH)) {
-      throw new Error(`Template database was not created at ${TEMPLATE_DB_PATH}`);
-    }
-
-    console.log('Template database created successfully');
-  } finally {
-    if (fs.existsSync(TEMP_SCHEMA_PATH)) {
-      fs.unlinkSync(TEMP_SCHEMA_PATH);
-    }
+  if (!fs.existsSync(TEMPLATE_DB_PATH)) {
+    throw new Error(`Template database was not created at ${TEMPLATE_DB_PATH}`);
   }
+
+  console.log('Template database created successfully');
 }
 
 export async function teardown() {

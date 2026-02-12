@@ -1,14 +1,25 @@
 import { beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import fs from 'fs';
-import { PrismaClient as e2eClient } from '../../prisma-e2e/types';
-import { TEMPLATE_DB_PATH, TEST_DB_PATH } from './constants';
+import { TEMPLATE_DB_PATH, TEST_DB_PATH, DB_FILE } from './constants';
+import { getPrismaE2E } from '@/lib/prisma';
 
-let prisma: e2eClient;
+/**
+ * Test database setup utilities for Vitest
+ *
+ * Provides clean database state for each test suite.
+ *
+ * Process:
+ * - beforeAll: Copies template database to test.db and creates Prisma client
+ * - beforeEach: Cleans all tables for fresh test state
+ * - afterAll: Disconnects Prisma client
+ */
+
+let prisma: ReturnType<typeof getPrismaE2E>;
 
 vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
 export async function setupTestDatabase(): Promise<void> {
-  process.env.DATABASE_URL = `file:${TEST_DB_PATH}`;
+  process.env.DB_FILE = `file:${DB_FILE}`;
 
   if (!fs.existsSync(TEMPLATE_DB_PATH)) {
     throw new Error('Template database not found. Global setup may have failed.');
@@ -46,7 +57,8 @@ export async function setupTestDatabase(): Promise<void> {
   // Ensure the copied file has write permissions (0666 = rw-rw-rw-)
   fs.chmodSync(TEST_DB_PATH, 0o666);
 
-  prisma = new e2eClient();
+  // Create Prisma client with LibSQL adapter
+  prisma = getPrismaE2E();
 }
 
 export async function cleanDatabase(): Promise<void> {

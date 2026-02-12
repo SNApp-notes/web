@@ -5,13 +5,15 @@
  * and SQLite (CI/test) based on environment variables.
  *
  * @dependencies
- * - ../../prisma-main/types: MySQL schema types (production/development)
- * - ../../prisma-e2e/types: SQLite schema types (CI/test)
+ * - ../../prisma-main/types/client: MySQL schema types (production/development)
+ * - ../../prisma-e2e/types/client: SQLite schema types (CI/test)
+ * - @prisma/adapter-mariadb: MySQL/MariaDB driver adapter
+ * - @prisma/adapter-libsql: SQLite driver adapter
  *
  * @remarks
  * - Both schemas are identical in structure, only the database engine differs
- * - In CI environment, uses SQLite for faster, isolated testing
- * - In production/development, uses MySQL for persistence and scalability
+ * - In CI environment, uses SQLite with LibSQL adapter for faster, isolated testing
+ * - In production/development, uses MySQL/MariaDB with MariaDB adapter
  * - Singleton pattern prevents multiple instances in hot-reload during development
  * - Re-exports all Prisma types from prisma-main for consistent imports
  *
@@ -23,7 +25,7 @@
  *
  * // ❌ Wrong - Do not import from schema directories
  * import { type Note } from '@prisma/client';
- * import { type Note } from '../../prisma-main/types';
+ * import { type Note } from '../../prisma-main/types/client';
  * ```
  *
  * @example
@@ -47,8 +49,8 @@
  * ```
  */
 
-import { PrismaClient as mainClient } from '../../prisma-main/types';
-import { PrismaClient as e2eClient, Prisma } from '../../prisma-e2e/types';
+import { PrismaClient as mainClient } from '../../prisma-main/types/client';
+import { PrismaClient as e2eClient } from '../../prisma-e2e/types/client';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 
 /**
@@ -59,46 +61,58 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
  * This ensures type consistency across the application regardless of which
  * database engine is used at runtime.
  */
-export * from '../../prisma-main/types';
-
-/**
- * Prisma client options for logging configuration.
- *
- * @constant {Prisma.PrismaClientOptions} options
- * @property {string[]} log - Log levels: only errors and warnings
- *
- * @remarks
- * Logging is kept minimal to reduce noise in production.
- * Add 'query' and 'info' for development debugging if needed.
- */
-const options: Prisma.PrismaClientOptions = {
-  log: ['error', 'warn']
-};
+export * from '../../prisma-main/types/client';
 
 /**
  * Creates a Prisma client for MySQL database (production/development).
+ * Uses MariaDB adapter for MySQL connections.
  *
  * @returns {mainClient} Prisma client instance for MySQL
  */
-const getPrismaMain = () => new mainClient(options);
+
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+
+const getPrismaMain = () => {
+  const adapter = new PrismaMariaDb(process.env.DATABASE_URL as string);
+  return new mainClient({ adapter });
+};
 
 /**
  * Creates a Prisma client for SQLite database (CI/test).
+ * Uses LibSQL adapter for SQLite connections.
  *
  * @returns {e2eClient} Prisma client instance for SQLite
  */
-const getPrismaE2E = () => new e2eClient(options);
+
+import { PrismaLibSql } from '@prisma/adapter-libsql';
+import { DB_FILE } from '@/test/constants';
+
+export const getPrismaE2E = () => {
+  const adapter = new PrismaLibSql({
+    url: process.env.DB_FILE ?? `file:./${DB_FILE}`
+  });
+  return new e2eClient({ adapter });
+};
 
 /**
  * Selects appropriate Prisma client based on environment.
  *
- * @returns {mainClient | e2eClient} Prisma client instance
+ * @returns {mainClient} Prisma client instance (typed as mainClient for consistency)
  *
  * @remarks
  * - In CI environment (CI=true): uses SQLite
  * - In production/development: uses MySQL
+ * - Type assertion to mainClient avoids TypeScript union type incompatibility
+ * - MySQL and SQLite schemas are identical, but generate different types due to
+ *   provider-specific features (e.g., MySQL's _relevance for fulltext search)
+ * - This causes union type issues where method signatures are incompatible
+ * - Safe at runtime because both clients share the same model API for common operations
+ *
+ * @see https://github.com/prisma/prisma/issues/28620
  */
-const getPrisma = () => (process.env.CI ? getPrismaE2E() : getPrismaMain());
+const getPrisma = (): mainClient => {
+  return (process.env.CI ? getPrismaE2E() : getPrismaMain()) as mainClient;
+};
 
 /**
  * Global object type extension for Prisma singleton storage.
@@ -107,19 +121,21 @@ const getPrisma = () => (process.env.CI ? getPrismaE2E() : getPrismaMain());
  * This prevents creating multiple Prisma instances during hot-reload in development.
  */
 const globalForPrisma = global as unknown as {
-  prisma: ReturnType<typeof getPrismaMain>;
+  prisma: mainClient;
 };
 
 /**
  * Singleton Prisma client instance.
  * Automatically switches between MySQL and SQLite based on environment.
  *
- * @constant {mainClient | e2eClient} prisma - Unified Prisma client
+ * @constant {mainClient} prisma - Unified Prisma client
  *
  * @remarks
  * - In development: stored globally to persist across hot-reloads
  * - In production: created once per server instance
  * - In CI: uses SQLite for isolated, fast testing
+ * - Type asserted to mainClient to avoid union type incompatibility
+ * - All consumers use types from prisma-main (re-exported at top of file)
  *
  * @example
  * ```ts
@@ -130,7 +146,7 @@ const globalForPrisma = global as unknown as {
  * const note = await prisma.note.create({ data: {...} });
  * ```
  */
-const prisma = globalForPrisma.prisma || getPrisma();
+const prisma: mainClient = globalForPrisma.prisma || getPrisma();
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 

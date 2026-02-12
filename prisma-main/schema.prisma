@@ -1,13 +1,23 @@
+// Prisma Schema - MySQL/MariaDB (Production/Development)
+//
+// Used for:
+// - Production environment (DATABASE_URL from .env)
+// - Development environment (DATABASE_URL from .env)
+// - Migrations: npx prisma migrate dev --schema=prisma-main/schema.prisma
+//
+// Database configuration in prisma.config.ts
+
 generator client {
-  provider = "prisma-client-js"
-  output   = "../prisma-main/types"
-  binaryTargets = ["native", "linux-musl", "rhel-openssl-3.0.x"]
+  provider             = "prisma-client"
+  output               = "../prisma-main/types"
+  binaryTargets        = ["native", "linux-musl", "rhel-openssl-3.0.x"]
+  moduleFormat = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension = "ts"
 }
 
 datasource db {
-  provider          = "mysql"
-  url               = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  provider = "mysql"
 }
 
 model User {

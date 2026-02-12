@@ -40,6 +40,9 @@ setup('authenticate', async ({ browser }) => {
     timeout: 15000
   });
 
+  // Wait for page to stabilize after initial load
+  await authPage.waitForLoadState('networkidle', { timeout: 5000 });
+
   // Save signed-in state
   await authPage.context().storageState({ path: authFile });
 
