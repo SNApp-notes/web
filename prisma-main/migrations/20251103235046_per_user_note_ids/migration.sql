@@ -7,7 +7,7 @@ ALTER TABLE `note` ADD COLUMN `noteId` INT NOT NULL DEFAULT 0;
 -- Step 2: Populate noteId with per-user sequential numbers based on creation order
 -- Use a subquery with ROW_NUMBER() equivalent using variables
 SET @row_num := 0;
-SET @prev_user := '';
+SET @prev_user := _utf8mb4'' COLLATE utf8mb4_unicode_ci;
 
 UPDATE `note` n
 JOIN (
@@ -22,7 +22,7 @@ JOIN (
 SET n.noteId = ranked.rn;
 
 -- Step 3: Remove AUTO_INCREMENT from id column first
-ALTER TABLE `note` MODIFY COLUMN `id` INT NOT NULL;
+ALTER TABLE `note` MODIFY COLUMN `id` INTEGER NOT NULL;
 
 -- Step 4: Drop the old primary key
 ALTER TABLE `note` DROP PRIMARY KEY;
@@ -37,5 +37,5 @@ ALTER TABLE `note` ALTER COLUMN `noteId` DROP DEFAULT;
 ALTER TABLE `note` ADD PRIMARY KEY (`noteId`, `userId`);
 
 -- Step 8: Ensure the userId index is still present (it should be)
--- This is redundant as Prisma will handle indexes, but included for completeness
-ALTER TABLE `note` ADD INDEX IF NOT EXISTS `note_userId_idx` (`userId`);
+-- The index already exists from previous migrations, so we skip recreating it
+-- ALTER TABLE `note` ADD INDEX `note_userId_idx` (`userId`);
