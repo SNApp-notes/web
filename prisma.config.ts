@@ -13,7 +13,7 @@
  * so we check for both CI=true AND E2E_TEST=true.
  */
 import 'dotenv/config';
-import { defineConfig, env } from 'prisma/config';
+import { defineConfig } from 'prisma/config';
 
 export default defineConfig(
   process.env.CI && process.env.E2E_TEST
@@ -34,8 +34,8 @@ export default defineConfig(
           seed: 'tsx prisma-main/seed.ts'
         },
         datasource: {
-          url: env('DATABASE_URL'),
-          shadowDatabaseUrl: env('SHADOW_DATABASE_URL')
+          url: process.env.DATABASE_URL,
+          shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL
         }
       }
 );
