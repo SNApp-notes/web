@@ -540,7 +540,6 @@ test.describe('State Persistence', () => {
       const noteUrl = page.url();
       const noteIdMatch = noteUrl.match(/\/note\/(\d+)$/);
       expect(noteIdMatch).not.toBeNull();
-      const noteId = noteIdMatch![1];
 
       // Try to add content (should still work even if localStorage fails)
       const editor = page.locator('.cm-content');
