@@ -119,6 +119,16 @@ export default function ContentSlotDefault() {
       return;
     }
 
+    // Skip restoration for newly created notes
+    // This prevents trying to restore localStorage data from a previous note with the same ID
+    if (isCreatingNote || newNoteId === selectedNote.id) {
+      // Mark as restored to prevent future attempts
+      restoredNoteIdRef.current = selectedNote.id;
+      // Store original content for diff generation
+      originalContentRef.current = selectedNote.data?.content || '';
+      return;
+    }
+
     const restoreUnsavedContent = async () => {
       const serverContent = selectedNote.data?.content || '';
 
@@ -147,7 +157,14 @@ export default function ContentSlotDefault() {
 
     restoreUnsavedContent();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedNote, getUnsavedNote, hasUnsavedChanges, updateNoteContent]);
+  }, [
+    selectedNote,
+    getUnsavedNote,
+    hasUnsavedChanges,
+    updateNoteContent,
+    isCreatingNote,
+    newNoteId
+  ]);
 
   // Extract headers from current content
   const headers = useMemo(() => extractHeaders(content), [content]);

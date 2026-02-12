@@ -11,6 +11,8 @@ import { SortKey, SortOrder } from '@/types/notes';
 import { generateDefaultNoteName, predictNextNoteId } from '@/lib/note-utils';
 import { toaster } from '@/components/ui/toaster';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
+import { useUnsavedNotes } from '@/hooks/useUnsavedNotes';
+import { clearEditorState } from '@/lib/localStorage';
 
 interface LeftPanelProps {
   initialSortKey?: SortKey;
@@ -29,6 +31,7 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
     setIsCreatingNote
   } = useNotesContext();
   const router = useRouter();
+  const { clearUnsavedNote } = useUnsavedNotes();
 
   // Use nuqs to manage line query parameter - clear when switching notes
   const [, setLineParam] = useQueryState('line', parseAsInteger.withDefault(0));
@@ -38,7 +41,12 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
     const predictedId = predictNextNoteId(notes);
     const defaultName = generateDefaultNoteName(notes);
 
-    // 2. Create optimistic node immediately
+    // 2. Clear any stale localStorage data for this note ID
+    // This prevents restoration of old content from a previously deleted note with the same ID
+    clearUnsavedNote(predictedId);
+    clearEditorState();
+
+    // 3. Create optimistic node immediately
     const optimisticNode: NoteTreeNode = {
       id: predictedId,
       name: defaultName,
@@ -51,7 +59,7 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
       }
     };
 
-    // 3. Update UI immediately (optimistic update)
+    // 4. Update UI immediately (optimistic update)
     // Deselect all existing notes and add the new one as selected
     setNotes((prevNotes: NoteTreeNode[]) => [
       optimisticNode,
@@ -74,6 +82,9 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
 
       // 5. Sanity check - if server returned different ID, update state
       if (newNote.noteId !== predictedId) {
+        // Clear any stale localStorage data for the actual server ID too
+        clearUnsavedNote(newNote.noteId);
+
         // Update newNoteId FIRST to ensure filter bypass continues during state update
         setNewNoteId(newNote.noteId);
         setNotes((prevNotes: NoteTreeNode[]) =>
@@ -128,7 +139,8 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
     setIsCreatingNote,
     setLineParam,
     router,
-    selectedNoteId
+    selectedNoteId,
+    clearUnsavedNote
   ]);
 
   // Register Ctrl+N (Windows/Linux) and Cmd+N (MacOS) keyboard shortcut for new note
