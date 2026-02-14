@@ -12,9 +12,10 @@ import { saveEditorState, getEditorState, clearEditorState } from '@/lib/localSt
 import MiddlePanel from '@/components/notes/MiddlePanel';
 import RightPanel from '@/components/notes/RightPanel';
 import { ConflictDialog } from '@/components/notes/ConflictDialog';
+import type { EditorRef } from '@/types/editor';
 
 export default function ContentSlotDefault() {
-  const editorRef = useRef<import('@/types/editor').EditorRef | null>(null);
+  const editorRef = useRef<EditorRef | null>(null);
   const params = useParams();
 
   // Use nuqs for type-safe line query parameter management
