@@ -79,6 +79,7 @@ import { languages } from '@codemirror/language-data';
 import { basicLight, basicDark } from '@uiw/codemirror-theme-basic';
 import { useColorMode } from '@/components/ui/color-mode';
 import { EditorView } from '@codemirror/view';
+import { hyperLink } from '@uiw/codemirror-extensions-hyper-link';
 import type { EditorProps, EditorRef, ScrollState } from '@/types/editor';
 
 /**
@@ -199,6 +200,7 @@ const Editor = memo(
           },
           codeLanguages: languages
         }),
+        hyperLink,
         EditorView.lineWrapping,
         editorTheme
       ],
