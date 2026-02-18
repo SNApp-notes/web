@@ -7,24 +7,35 @@
  * Users with only 1 welcome note (content = null) are marked as inactive.
  *
  * Usage:
- *   node usage-stats.js                    # Summary view (default)
- *   node usage-stats.js --detailed         # Detailed view with all users
- *   node usage-stats.js -d                 # Detailed view (short form)
- *   node usage-stats.js --help             # Show help message
+ *   node scripts/usage-stats.mjs                    # Summary view (default)
+ *   node scripts/usage-stats.mjs --detailed         # Detailed view with all users
+ *   node scripts/usage-stats.mjs -d                 # Detailed view (short form)
+ *   node scripts/usage-stats.mjs --help             # Show help message
  *
- * Requires: @jcubic/lily for CLI parsing, cli-table3 for formatting
+ * Requires: @jcubic/lily for CLI parsing, cli-table3 for formatting, dotenv for env vars
  */
 
-const Table = require('cli-table3');
-const lily = require('@jcubic/lily');
+import 'dotenv/config';
+import Table from 'cli-table3';
+import lily from '@jcubic/lily';
+import { PrismaClient as MainClient } from '../prisma-main/types/client.ts';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
-// Import Prisma client
-const { PrismaClient } = require('../prisma-main/types');
+// Validate DATABASE_URL is set
+if (!process.env.DATABASE_URL) {
+  console.error('\n❌ Error: DATABASE_URL environment variable is not set.\n');
+  console.error('Make sure you have a .env file with DATABASE_URL defined.\n');
+  process.exit(1);
+}
+
+// Create Prisma client with MariaDB adapter (same as @/lib/prisma.ts)
+const adapter = new PrismaMariaDb(process.env.DATABASE_URL);
+const prisma = new MainClient({ adapter });
 
 /**
  * Fetch all users with their note counts and activity status
  */
-async function getUserStats(prisma) {
+async function getUserStats() {
   // Get all users with their notes
   const users = await prisma.user.findMany({
     select: {
@@ -169,11 +180,15 @@ function showHelp() {
   console.log('Displays database usage statistics for SNApp.');
   console.log('');
   console.log('Usage:');
-  console.log('  node usage-stats.js              # Summary view (default)');
-  console.log('  node usage-stats.js --detailed   # Detailed view with all users');
-  console.log('  node usage-stats.js -d           # Detailed view (short form)');
-  console.log('  node usage-stats.js --help       # Show this help message');
-  console.log('  node usage-stats.js -h           # Show this help message (short form)');
+  console.log('  node scripts/usage-stats.mjs              # Summary view (default)');
+  console.log(
+    '  node scripts/usage-stats.mjs --detailed   # Detailed view with all users'
+  );
+  console.log('  node scripts/usage-stats.mjs -d           # Detailed view (short form)');
+  console.log('  node scripts/usage-stats.mjs --help       # Show this help message');
+  console.log(
+    '  node scripts/usage-stats.mjs -h           # Show this help message (short form)'
+  );
   console.log('');
 }
 
@@ -196,12 +211,10 @@ async function main() {
     process.exit(0);
   }
 
-  const prisma = new PrismaClient();
-
   try {
     console.log('🔍 Fetching user statistics from database...');
 
-    const userStats = await getUserStats(prisma);
+    const userStats = await getUserStats();
 
     if (userStats.length === 0) {
       console.log('ℹ️  No users found in database.');
@@ -222,16 +235,10 @@ async function main() {
   }
 }
 
-// Run script if executed directly
-if (require.main === module) {
-  main().catch((error) => {
-    console.error('💥 Unexpected error:', error);
-    process.exit(1);
-  });
-}
+// Run script
+main().catch((error) => {
+  console.error('💥 Unexpected error:', error);
+  process.exit(1);
+});
 
-module.exports = {
-  getUserStats,
-  displaySummary,
-  displayDetailed
-};
+export { getUserStats, displaySummary, displayDetailed };
