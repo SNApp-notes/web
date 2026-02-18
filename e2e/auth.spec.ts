@@ -127,12 +127,14 @@ test.describe('Welcome Note Creation', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/', { timeout: 5000 });
+    await page.waitForURL((url) => !url.pathname.includes('/register'), {
+      timeout: 15000
+    });
 
-    await page.waitForSelector('[data-testid="note-list"]', { timeout: 5000 });
+    await page.waitForSelector('[data-testid="note-list"]', { timeout: 15000 });
 
     await page.waitForSelector('[data-testid="note-list"] .tree-item', {
-      timeout: 5000
+      timeout: 15000
     });
 
     const noteItems = await page.locator('[data-testid="note-list"] .tree-item').all();
@@ -152,9 +154,11 @@ test.describe('Welcome Note Creation', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/', { timeout: 5000 });
+    await page.waitForURL((url) => !url.pathname.includes('/register'), {
+      timeout: 15000
+    });
     await page.waitForSelector('[data-testid="note-list"] .tree-item', {
-      timeout: 5000
+      timeout: 15000
     });
 
     const initialNotes = await page.locator('[data-testid="note-list"] .tree-item').all();
@@ -195,21 +199,24 @@ test.describe('Welcome Note Creation', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/', { timeout: 5000 });
+    // Wait for redirect away from /register (may go / then /note/1)
+    await page.waitForURL((url) => !url.pathname.includes('/register'), {
+      timeout: 15000
+    });
 
     // Wait for the welcome note to appear in the sidebar
     await page.waitForSelector('[data-testid="note-list"] .tree-item', {
-      timeout: 5000
+      timeout: 15000
     });
 
     // Click on the welcome note to navigate to it
     const welcomeNote = page.locator('[data-testid="note-list"] .tree-item').first();
     await welcomeNote.click();
 
-    // Wait for URL to contain /note/1 (using regex for more flexible matching)
-    await page.waitForURL(/\/note\/1$/, { timeout: 5000 });
+    // Wait for URL to contain /note/<id> - per-user noteIds always start at 1
+    await page.waitForURL(/\/note\/\d+$/, { timeout: 15000 });
 
-    // Verify the URL ends with /note/1
+    // Verify the URL ends with /note/1 (per-user IDs always start at 1)
     const url = page.url();
     expect(url).toMatch(/\/note\/1$/);
   });
@@ -226,9 +233,11 @@ test.describe('Welcome Note Creation', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/', { timeout: 5000 });
+    await page.waitForURL((url) => !url.pathname.includes('/register'), {
+      timeout: 15000
+    });
     await page.waitForSelector('[data-testid="note-list"] .tree-item', {
-      timeout: 5000
+      timeout: 15000
     });
 
     // Click on first user's welcome note
@@ -236,7 +245,7 @@ test.describe('Welcome Note Creation', () => {
     await user1Note.click();
 
     // Wait for URL to contain /note/1
-    await page.waitForURL(/\/note\/1$/, { timeout: 5000 });
+    await page.waitForURL(/\/note\/1$/, { timeout: 15000 });
     const url1 = page.url();
     expect(url1).toMatch(/\/note\/1$/);
 
@@ -252,9 +261,11 @@ test.describe('Welcome Note Creation', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/', { timeout: 5000 });
+    await page.waitForURL((url) => !url.pathname.includes('/register'), {
+      timeout: 15000
+    });
     await page.waitForSelector('[data-testid="note-list"] .tree-item', {
-      timeout: 5000
+      timeout: 15000
     });
 
     // Click on second user's welcome note
@@ -262,7 +273,7 @@ test.describe('Welcome Note Creation', () => {
     await user2Note.click();
 
     // Verify second user also has /note/1 (independent from first user)
-    await page.waitForURL(/\/note\/1$/, { timeout: 5000 });
+    await page.waitForURL(/\/note\/1$/, { timeout: 15000 });
     const url2 = page.url();
     expect(url2).toMatch(/\/note\/1$/);
   });

@@ -85,8 +85,14 @@ test.describe('Notes Application - CRUD Operations', () => {
     await expect(newNote).toBeVisible({ timeout: 5000 });
     await newNote.click();
 
-    // Wait for URL to update to a note page (should be different from welcome note)
-    await page.waitForURL(/\/note\/\d+$/, { timeout: 5000 });
+    // Wait for URL to update to a note page that is different from welcome note
+    await page.waitForURL(
+      (url) => {
+        const match = url.pathname.match(/\/note\/(\d+)$/);
+        return match !== null && parseInt(match[1], 10) !== welcomeNoteId;
+      },
+      { timeout: 5000 }
+    );
     const url = page.url();
     const noteIdMatch = url.match(/\/note\/(\d+)$/);
     expect(noteIdMatch).not.toBeNull();
