@@ -246,7 +246,17 @@ const Editor = memo(
       }
 
       const editorRef: EditorRef = {
-        focus: () => codeMirrorRef.current?.view?.focus(),
+        focus: () => {
+          const view = codeMirrorRef.current?.view;
+          if (!view) return;
+
+          // Use preventScroll to focus without the browser scrolling to the cursor.
+          // view.focus() internally calls rawSel.collapse() which scrolls ancestors
+          // to bring the cursor (at pos 0) into view — causing the visible jump.
+          // Focusing contentDOM with preventScroll: true skips that scroll entirely.
+          // CodeMirror will sync its native selection on the next user interaction.
+          view.contentDOM.focus({ preventScroll: true });
+        },
         blur: () => codeMirrorRef.current?.view?.contentDOM?.blur(),
         getValue: () => codeMirrorRef.current?.view?.state?.doc?.toString() || '',
         setValue: (newValue: string) => {

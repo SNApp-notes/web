@@ -68,8 +68,33 @@ export default function ContentSlotDefault() {
   // Flag to prevent saving during restoration
   const isRestoringRef = useRef<boolean>(false);
 
+  // Track the previous note ID to detect note switches
+  const prevNoteIdRef = useRef<number | null>(null);
+
+  // Track which note ID the lineParam was set for
+  // This prevents stale lineParams from being used when switching notes
+  // Initialize with selectedNoteId if lineParam is present on initial load (deep link from search)
+  const lineParamNoteIdRef = useRef<number | null>(lineParam > 0 ? selectedNoteId : null);
+
+  // Detect note switches and invalidate stale lineParam
+  useEffect(() => {
+    if (selectedNoteId !== prevNoteIdRef.current) {
+      // Note changed - invalidate any existing lineParam
+      // The lineParam will only be valid again once it's explicitly set for this note
+      lineParamNoteIdRef.current = null;
+      prevNoteIdRef.current = selectedNoteId;
+    }
+  }, [selectedNoteId]);
+
   // Derive current line from query parameter (only on note routes)
-  const currentLine = params?.id && lineParam > 0 ? lineParam : undefined;
+  // Only use lineParam if it was set for the current note (not stale from previous note)
+  const currentLine = useMemo(() => {
+    // Must have a route ID and a positive lineParam
+    if (!params?.id || lineParam <= 0) return undefined;
+    // The lineParam must have been set for the current note
+    if (lineParamNoteIdRef.current !== selectedNoteId) return undefined;
+    return lineParam;
+  }, [params?.id, lineParam, selectedNoteId]);
 
   // Scroll to current line when editor is ready or current line changes
   useEffect(() => {
@@ -276,6 +301,9 @@ export default function ContentSlotDefault() {
   }, []);
 
   const handleHeaderClick = (line: number) => {
+    // Mark this lineParam as being for the current note
+    lineParamNoteIdRef.current = selectedNoteId;
+
     // Update line query parameter for deep linking and visual feedback
     setLineParam(line);
 
@@ -358,9 +386,15 @@ export default function ContentSlotDefault() {
           // Only restore editor state on initial page load, not on note switches
           // This prevents the issue where switching notes restores old cursor position
           if (!isInitialLoadRef.current || editorStateRestoredRef.current) {
-            // Not initial load or already restored - just focus the editor
+            // Not initial load or already restored — just focus the editor.
+            // Defer focus until after React finishes committing the new DOM and the
+            // new EditorView has run its initial updateSelection (rawSel.collapse).
+            // Calling focus() synchronously here would trigger another collapse/scroll
+            // before the layout is settled, causing a visible jump.
             if (editor?.focus) {
-              editor.focus();
+              requestAnimationFrame(() => {
+                editor.focus();
+              });
             }
             return;
           }
