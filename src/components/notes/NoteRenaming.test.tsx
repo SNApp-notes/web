@@ -16,7 +16,9 @@ const mockNotes: NoteTreeNode[] = [
     name: 'Test Note 1',
     data: {
       content: 'Content 1',
-      dirty: false
+      dirty: false,
+      createdAt: new Date('2025-01-01'),
+      updatedAt: new Date('2025-01-01')
     }
   },
   {
@@ -24,7 +26,9 @@ const mockNotes: NoteTreeNode[] = [
     name: 'Test Note 2',
     data: {
       content: 'Content 2',
-      dirty: false
+      dirty: false,
+      createdAt: new Date('2025-01-01'),
+      updatedAt: new Date('2025-01-01')
     }
   }
 ];
@@ -43,7 +47,6 @@ describe('Note Renaming', () => {
     render(
       <LeftPanel
         notes={mockNotes}
-        selectedNoteId={null}
         onNoteSelect={mockOnNoteSelect}
         onNewNote={mockOnNewNote}
         onDeleteNote={mockOnDeleteNote}
@@ -59,7 +62,6 @@ describe('Note Renaming', () => {
     render(
       <LeftPanel
         notes={mockNotes}
-        selectedNoteId={null}
         onNoteSelect={mockOnNoteSelect}
         onNewNote={mockOnNewNote}
         onDeleteNote={mockOnDeleteNote}
@@ -82,7 +84,6 @@ describe('Note Renaming', () => {
     render(
       <LeftPanel
         notes={mockNotes}
-        selectedNoteId={null}
         onNoteSelect={mockOnNoteSelect}
         onNewNote={mockOnNewNote}
         onDeleteNote={mockOnDeleteNote}
@@ -110,7 +111,6 @@ describe('Note Renaming', () => {
     render(
       <LeftPanel
         notes={mockNotes}
-        selectedNoteId={null}
         onNoteSelect={mockOnNoteSelect}
         onNewNote={mockOnNewNote}
         onDeleteNote={mockOnDeleteNote}
@@ -139,7 +139,6 @@ describe('Note Renaming', () => {
     render(
       <LeftPanel
         notes={mockNotes}
-        selectedNoteId={null}
         onNoteSelect={mockOnNoteSelect}
         onNewNote={mockOnNewNote}
         onDeleteNote={mockOnDeleteNote}
@@ -168,7 +167,6 @@ describe('Note Renaming', () => {
     render(
       <LeftPanel
         notes={mockNotes}
-        selectedNoteId={null}
         onNoteSelect={mockOnNoteSelect}
         onNewNote={mockOnNewNote}
         onDeleteNote={mockOnDeleteNote}

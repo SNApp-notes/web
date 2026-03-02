@@ -3,7 +3,6 @@ export type TreeNodeType = 'category' | 'note';
 export interface TreeNode<T = unknown> {
   id: number;
   name: string;
-  selected: boolean;
   data?: T;
   children?: TreeNode<T>[];
 }

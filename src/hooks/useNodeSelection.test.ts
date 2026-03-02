@@ -14,7 +14,6 @@ describe('useNodeSelection', () => {
       {
         id: 1,
         name: 'Note 1',
-        selected: true,
         data: {
           content: originalContent,
           dirty: false,
@@ -26,7 +25,6 @@ describe('useNodeSelection', () => {
       {
         id: 2,
         name: 'Note 2',
-        selected: false,
         data: {
           content: 'Note 2 content',
           dirty: false,
@@ -65,8 +63,7 @@ describe('useNodeSelection', () => {
       });
 
       expect(result.current.selectedNoteId).toBe(2);
-      expect(result.current.notes[0].selected).toBe(false);
-      expect(result.current.notes[1].selected).toBe(true);
+      // Selection is now tracked by selectedNoteId, not by a property on the node
     });
 
     it('sets selected note ID to null when passing null', () => {
@@ -356,7 +353,6 @@ describe('useNodeSelection', () => {
         {
           id: 1,
           name: 'Note 1',
-          selected: true,
           data: {
             content: 'Content',
             dirty: false,

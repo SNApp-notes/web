@@ -50,7 +50,6 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
     const optimisticNode: NoteTreeNode = {
       id: predictedId,
       name: defaultName,
-      selected: true,
       data: {
         content: '',
         dirty: false,
@@ -60,11 +59,8 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
     };
 
     // 4. Update UI immediately (optimistic update)
-    // Deselect all existing notes and add the new one as selected
-    setNotes((prevNotes: NoteTreeNode[]) => [
-      optimisticNode,
-      ...prevNotes.map((n) => (n.selected ? { ...n, selected: false } : n))
-    ]);
+    // Add the new note at the top of the list
+    setNotes((prevNotes: NoteTreeNode[]) => [optimisticNode, ...prevNotes]);
     setNewNoteId(predictedId); // Trigger edit mode
     setIsCreatingNote(true); // Block save operations during creation
 
@@ -220,6 +216,7 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
       initialSortKey={initialSortKey}
       initialSortOrder={initialSortOrder}
       newNoteId={newNoteId}
+      selectedNoteId={selectedNoteId}
     />
   );
 }

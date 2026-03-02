@@ -36,7 +36,6 @@ describe('Navigation', () => {
   const createMockNote = (id: number, dirty: boolean = false): NoteTreeNode => ({
     id,
     name: `Note ${id}`,
-    selected: false,
     data: {
       content: 'Test content',
       dirty,
@@ -160,8 +159,7 @@ describe('Navigation', () => {
 
       const noteWithoutData: NoteTreeNode = {
         id: 1,
-        name: 'Note 1',
-        selected: false
+        name: 'Note 1'
       };
       mockUseNotesContext.mockReturnValue(createMockNotesContext(noteWithoutData));
 

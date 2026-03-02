@@ -40,7 +40,7 @@
 
 import { useState, useMemo, memo, useCallback } from 'react';
 import { Box, Button, Input, Stack, Text } from '@chakra-ui/react';
-import type { NoteTreeNode, TreeNode as TreeNodeType } from '@/types/tree';
+import type { NoteTreeNode } from '@/types/tree';
 import clsx from 'clsx';
 import { FiTrash2 } from 'react-icons/fi';
 
@@ -79,6 +79,8 @@ interface LeftPanelProps {
   initialSortOrder?: SortOrder;
   /** ID of newly created note that should start in edit mode */
   newNoteId?: number | null;
+  /** ID of currently selected note, for syncing tree selection highlight */
+  selectedNoteId?: number | null;
 }
 
 /**
@@ -113,7 +115,8 @@ const LeftPanel = memo(function LeftPanel({
   onEditEnd,
   initialSortKey = SortKey.CreationTime,
   initialSortOrder = SortOrder.Ascending,
-  newNoteId = null
+  newNoteId = null,
+  selectedNoteId = null
 }: LeftPanelProps) {
   const [filter, setFilter] = useState('');
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -172,17 +175,17 @@ const LeftPanel = memo(function LeftPanel({
 
   // Handle TreeNode selection
   const handleTreeNodeSelect = useCallback(
-    (node: TreeNodeType) => {
-      onNoteSelect((node as NoteTreeNode).id);
+    (node: NoteTreeNode) => {
+      onNoteSelect(node.id);
     },
     [onNoteSelect]
   );
 
   // Handle TreeNode rename
   const handleTreeNodeRename = useCallback(
-    async (node: TreeNodeType, newName: string) => {
+    async (node: NoteTreeNode, newName: string) => {
       try {
-        await onRenameNote?.((node as NoteTreeNode).id, newName);
+        await onRenameNote?.(node.id, newName);
       } catch {
         // Error is already logged by the parent handler
       }
@@ -191,8 +194,8 @@ const LeftPanel = memo(function LeftPanel({
   );
 
   // Handle TreeNode delete
-  const handleTreeNodeDelete = useCallback((node: TreeNodeType) => {
-    setDeleteDialog({ isOpen: true, note: node as NoteTreeNode });
+  const handleTreeNodeDelete = useCallback((node: NoteTreeNode) => {
+    setDeleteDialog({ isOpen: true, note: node });
   }, []);
 
   // Handle filter input change - notify parent to clear newNoteId
@@ -346,6 +349,7 @@ const LeftPanel = memo(function LeftPanel({
             onNodeDelete={handleTreeNodeDelete}
             onEditEnd={onEditEnd}
             editingNodeId={newNoteId}
+            selectedNodeId={selectedNoteId}
             title=""
           />
         )}

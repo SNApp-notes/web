@@ -85,7 +85,6 @@ describe('SidebarPage', () => {
   const createMockNote = (id: number, name: string): NoteTreeNode => ({
     id,
     name,
-    selected: false,
     data: {
       content: `Content for ${name}`,
       dirty: false,

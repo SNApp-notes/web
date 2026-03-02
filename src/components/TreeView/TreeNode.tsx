@@ -5,6 +5,7 @@ import { VStack } from '@chakra-ui/react';
 import { useParams } from 'next/navigation';
 import type { TreeNode as TreeNodeType } from '@/types/tree';
 import { TreeNodeProvider, useTreeNodeContext } from './TreeNodeContext';
+import { useTreeViewContext } from './TreeViewContext';
 import type { TreeNodeRenderProps } from './types';
 import { TreeNodeEdit } from './TreeNodeEdit';
 import { TreeNodeText } from './TreeNodeText';
@@ -17,11 +18,6 @@ interface TreeNodeInternalProps<T = unknown> {
   node: TreeNodeType<T>;
   level?: number;
   render?: (props: TreeNodeRenderProps<T>) => React.ReactNode;
-  onNodeSelect?: (node: TreeNodeType<T>) => void;
-  onNodeRename?: (node: TreeNodeType<T>, newName: string) => void;
-  onNodeDelete?: (node: TreeNodeType<T>) => void;
-  /** Callback when edit mode ends (save or cancel) */
-  onEditEnd?: (node: TreeNodeType<T>) => void;
   /** Start in edit mode (for newly created notes) */
   startInEditMode?: boolean;
 }
@@ -34,11 +30,12 @@ function TreeNodeComponent<T = unknown>({ level = 0, render }: TreeNodeInternalP
     isEditing,
     handleDoubleClick
   } = useTreeNodeContext<T>();
+  const treeContext = useTreeViewContext<T>();
   const params = useParams();
   const urlNoteId = params?.id ? parseInt(params.id as string, 10) : null;
 
   const hasChildren = Boolean(contextNode.children && contextNode.children.length > 0);
-  const selected = contextNode.selected;
+  const selected = treeContext.selectedNode?.id === contextNode.id;
 
   useEffect(() => {
     const shouldScrollIntoView = urlNoteId !== null && contextNode.id === urlNoteId;
@@ -84,19 +81,15 @@ function TreeNodeComponent<T = unknown>({ level = 0, render }: TreeNodeInternalP
 }
 
 const MemoizedTreeNodeComponent = memo(TreeNodeComponent) as <T = unknown>(
-  props: Omit<TreeNodeInternalProps<T>, 'onNodeSelect' | 'onNodeRename' | 'onNodeDelete'>
+  props: TreeNodeInternalProps<T>
 ) => React.ReactElement;
 
-// Internal component that wraps with provider and passes handlers
+// Internal component that wraps with provider
 export function TreeNodeInternal<T = unknown>(props: TreeNodeInternalProps<T>) {
   return (
     <TreeNodeProvider
       node={props.node}
       level={props.level || 0}
-      onNodeSelect={props.onNodeSelect}
-      onNodeRename={props.onNodeRename}
-      onNodeDelete={props.onNodeDelete}
-      onEditEnd={props.onEditEnd}
       startInEditMode={props.startInEditMode}
     >
       <MemoizedTreeNodeComponent {...props} />
@@ -104,24 +97,11 @@ export function TreeNodeInternal<T = unknown>(props: TreeNodeInternalProps<T>) {
   );
 }
 
-// Memoized version for child nodes that inherit handlers from parent context
-function MemoizedTreeNode<T = unknown>(
-  props: Omit<
-    TreeNodeInternalProps<T>,
-    'onNodeSelect' | 'onNodeRename' | 'onNodeDelete' | 'onEditEnd'
-  >
-) {
-  const parentContext = useTreeNodeContext<T>();
-
+// Memoized version for child nodes — no need to read parent context for callbacks
+// since all callbacks are in TreeViewContext
+function MemoizedTreeNode<T = unknown>(props: TreeNodeInternalProps<T>) {
   return (
-    <TreeNodeProvider
-      node={props.node}
-      level={props.level || 0}
-      onNodeSelect={parentContext.onNodeSelect}
-      onNodeRename={parentContext.onNodeRename}
-      onNodeDelete={parentContext.onNodeDelete}
-      onEditEnd={parentContext.onEditEnd}
-    >
+    <TreeNodeProvider node={props.node} level={props.level || 0}>
       <MemoizedTreeNodeComponent {...props} />
     </TreeNodeProvider>
   );

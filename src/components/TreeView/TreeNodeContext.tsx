@@ -9,6 +9,7 @@ import React, {
   useEffect
 } from 'react';
 import type { TreeNode } from '@/types/tree';
+import { useTreeViewContext } from './TreeViewContext';
 
 interface TreeNodeContextValue<T = unknown> {
   node: TreeNode<T>;
@@ -32,10 +33,6 @@ interface TreeNodeContextValue<T = unknown> {
   handleArrowClick: (e: React.MouseEvent) => void;
   handleArrowMouseDown: (e: React.MouseEvent) => void;
   markUserInteracted: () => void;
-  onNodeSelect?: (node: TreeNode<T>) => void;
-  onNodeRename?: (node: TreeNode<T>, newName: string) => void;
-  onNodeDelete?: (node: TreeNode<T>) => void;
-  onEditEnd?: (node: TreeNode<T>) => void;
 }
 
 const TreeNodeContext = createContext<TreeNodeContextValue<unknown> | undefined>(
@@ -53,10 +50,6 @@ export function useTreeNodeContext<T = unknown>(): TreeNodeContextValue<T> {
 interface TreeNodeProviderProps<T = unknown> {
   node: TreeNode<T>;
   level: number;
-  onNodeSelect?: (node: TreeNode<T>) => void;
-  onNodeRename?: (node: TreeNode<T>, newName: string) => void;
-  onNodeDelete?: (node: TreeNode<T>) => void;
-  onEditEnd?: (node: TreeNode<T>) => void;
   /** Start in edit mode (for newly created notes) */
   startInEditMode?: boolean;
   children: React.ReactNode;
@@ -65,13 +58,11 @@ interface TreeNodeProviderProps<T = unknown> {
 export function TreeNodeProvider<T = unknown>({
   node,
   level,
-  onNodeSelect,
-  onNodeRename,
-  onNodeDelete,
-  onEditEnd,
   startInEditMode = false,
   children
 }: TreeNodeProviderProps<T>) {
+  const treeContext = useTreeViewContext<T>();
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(startInEditMode);
   const [editingName, setEditingName] = useState(node.name);
@@ -92,15 +83,16 @@ export function TreeNodeProvider<T = unknown>({
 
   const handleToggle = useCallback(() => {
     if (hasChildren) {
-      setIsExpanded(!isExpanded);
+      setIsExpanded((prev) => !prev);
     }
-  }, [hasChildren, isExpanded]);
+  }, [hasChildren]);
 
   const handleNodeSelect = useCallback(() => {
     if (!hasChildren && !isEditing) {
-      onNodeSelect?.(node);
+      treeContext.setSelectedNode(node);
+      treeContext.onNodeSelect?.(node);
     }
-  }, [hasChildren, isEditing, onNodeSelect, node]);
+  }, [hasChildren, isEditing, treeContext, node]);
 
   const handleDoubleClick = useCallback(() => {
     if (!hasChildren && !isEditing) {
@@ -114,37 +106,37 @@ export function TreeNodeProvider<T = unknown>({
       if (e.key === 'Enter') {
         const trimmedName = editingName.trim();
         if (trimmedName && trimmedName !== node.name) {
-          onNodeRename?.(node, trimmedName);
+          treeContext.onNodeRename?.(node, trimmedName);
         }
         setIsEditing(false);
         hasUserInteracted.current = false;
-        onEditEnd?.(node);
+        treeContext.onEditEnd?.(node);
       } else if (e.key === 'Escape') {
         setIsEditing(false);
         setEditingName(node.name);
         hasUserInteracted.current = false;
-        onEditEnd?.(node);
+        treeContext.onEditEnd?.(node);
       }
     },
-    [editingName, node, onNodeRename, onEditEnd]
+    [editingName, node, treeContext]
   );
 
   const handleSaveEdit = useCallback(() => {
     const trimmedName = editingName.trim();
     if (trimmedName && trimmedName !== node.name) {
-      onNodeRename?.(node, trimmedName);
+      treeContext.onNodeRename?.(node, trimmedName);
     }
     setIsEditing(false);
     hasUserInteracted.current = false;
-    onEditEnd?.(node);
-  }, [editingName, node, onNodeRename, onEditEnd]);
+    treeContext.onEditEnd?.(node);
+  }, [editingName, node, treeContext]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
     setEditingName(node.name);
     hasUserInteracted.current = false;
-    onEditEnd?.(node);
-  }, [node, onEditEnd]);
+    treeContext.onEditEnd?.(node);
+  }, [node, treeContext]);
 
   const handleEditingBlur = useCallback(() => {
     // Only call onEditEnd if user has interacted (typed or pressed keys)
@@ -157,9 +149,9 @@ export function TreeNodeProvider<T = unknown>({
   const handleDeleteClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onNodeDelete?.(node);
+      treeContext.onNodeDelete?.(node);
     },
-    [node, onNodeDelete]
+    [node, treeContext]
   );
 
   const handleArrowClick = useCallback(
@@ -200,11 +192,7 @@ export function TreeNodeProvider<T = unknown>({
     handleDeleteClick,
     handleArrowClick,
     handleArrowMouseDown,
-    markUserInteracted,
-    onNodeSelect,
-    onNodeRename,
-    onNodeDelete,
-    onEditEnd
+    markUserInteracted
   };
 
   return (

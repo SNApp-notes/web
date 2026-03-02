@@ -9,7 +9,6 @@
  *
  * @remarks
  * - Used in NotesLayoutWrapper to manage note list and selection state
- * - Ensures only one note is selected at a time
  * - Tracks dirty flags for unsaved changes
  * - Optimized with useCallback to prevent unnecessary re-renders
  * - Immutable state updates for predictable behavior
@@ -42,7 +41,6 @@
 import { useState, useCallback } from 'react';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
-import { selectNode } from '@/lib/utils';
 import { hashContent } from '@/lib/hash';
 
 /**
@@ -96,10 +94,6 @@ export function useNodeSelection(
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
   const updateSelection = useCallback((newSelectedId: number | null) => {
-    setNotes((prevNotes) => {
-      return selectNode(prevNotes, newSelectedId);
-    });
-
     setSelectedNoteId(newSelectedId);
   }, []);
 

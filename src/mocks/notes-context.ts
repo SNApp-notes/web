@@ -30,7 +30,6 @@ export const createMockNote = (
 ): NoteTreeNode => ({
   id,
   name,
-  selected: false,
   data: {
     content,
     dirty,

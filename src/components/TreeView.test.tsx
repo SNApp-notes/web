@@ -6,35 +6,32 @@ import type { TreeNode as TreeNodeType } from '@/types/tree';
 
 // Mock data
 const mockDataFlat: TreeNodeType[] = [
-  { id: 1, name: 'First Note', selected: false },
-  { id: 2, name: 'Second Note', selected: true },
-  { id: 3, name: 'Third Note', selected: false }
+  { id: 1, name: 'First Note' },
+  { id: 2, name: 'Second Note' },
+  { id: 3, name: 'Third Note' }
 ];
 
 const mockDataNested: TreeNodeType[] = [
   {
     id: 1,
     name: 'Folder',
-    selected: false,
     children: [
-      { id: 2, name: 'Child Note 1', selected: false },
-      { id: 3, name: 'Child Note 2', selected: false }
+      { id: 2, name: 'Child Note 1' },
+      { id: 3, name: 'Child Note 2' }
     ]
   },
-  { id: 4, name: 'Root Note', selected: false }
+  { id: 4, name: 'Root Note' }
 ];
 
 const mockDataDeep: TreeNodeType[] = [
   {
     id: 1,
     name: 'Root Folder',
-    selected: false,
     children: [
       {
         id: 2,
         name: 'Sub Folder',
-        selected: false,
-        children: [{ id: 3, name: 'Deep Note', selected: false }]
+        children: [{ id: 3, name: 'Deep Note' }]
       }
     ]
   }
@@ -119,11 +116,11 @@ describe('TreeView Component', () => {
       const renderSpy = vi.fn(defaultRender);
       render(<TreeView data={mockDataFlat} render={renderSpy} />);
 
-      // Second node is selected
+      // No node is selected by default
       expect(renderSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           node: mockDataFlat[1],
-          selected: true
+          selected: false
         })
       );
     });
@@ -664,9 +661,9 @@ describe('TreeNodeContext', () => {
 describe('Edge Cases and Special Scenarios', () => {
   it('handles nodes with special characters', () => {
     const specialData: TreeNodeType[] = [
-      { id: 1, name: 'Note with "quotes"', selected: false },
-      { id: 2, name: 'Note with <tags>', selected: false },
-      { id: 3, name: 'Note with & symbols', selected: false }
+      { id: 1, name: 'Note with "quotes"' },
+      { id: 2, name: 'Note with <tags>' },
+      { id: 3, name: 'Note with & symbols' }
     ];
 
     render(<TreeView data={specialData} render={defaultRender} />);
@@ -680,8 +677,7 @@ describe('Edge Cases and Special Scenarios', () => {
     const longData: TreeNodeType[] = [
       {
         id: 1,
-        name: 'This is a very long node name that should be handled gracefully by the tree view component without breaking the layout or causing display issues',
-        selected: false
+        name: 'This is a very long node name that should be handled gracefully by the tree view component without breaking the layout or causing display issues'
       }
     ];
 
@@ -722,7 +718,7 @@ describe('Edge Cases and Special Scenarios', () => {
     expect(screen.getByText('Child Note 1')).toBeInTheDocument();
 
     // Add a new node
-    const newData = [...mockDataNested, { id: 5, name: 'New Note', selected: false }];
+    const newData = [...mockDataNested, { id: 5, name: 'New Note' }];
 
     rerender(<TreeView data={newData} render={defaultRender} />);
 

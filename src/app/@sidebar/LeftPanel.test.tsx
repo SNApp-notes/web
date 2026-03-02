@@ -56,7 +56,6 @@ describe('LeftPanel', () => {
   const createMockNote = (id: number, name: string, dirty = false): NoteTreeNode => ({
     id,
     name,
-    selected: false,
     data: {
       content: `Content for ${name}`,
       dirty,

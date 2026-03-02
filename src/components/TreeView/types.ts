@@ -27,4 +27,6 @@ export interface TreeViewProps<T = unknown> {
   onEditEnd?: (node: TreeNode<T>) => void;
   /** ID of node that should start in edit mode (for new notes) */
   editingNodeId?: number | null;
+  /** ID of the currently selected node (for external selection sync) */
+  selectedNodeId?: number | null;
 }

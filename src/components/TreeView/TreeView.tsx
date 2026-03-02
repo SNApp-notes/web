@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import { Box, VStack, Text } from '@chakra-ui/react';
 import { TreeNodeInternal } from './TreeNode';
+import { TreeViewProvider } from './TreeViewContext';
 import type { TreeViewProps } from './types';
 
 function TreeViewComponent<T = unknown>({
@@ -13,42 +14,48 @@ function TreeViewComponent<T = unknown>({
   onNodeRename,
   onNodeDelete,
   onEditEnd,
-  editingNodeId
+  editingNodeId,
+  selectedNodeId
 }: TreeViewProps<T>) {
   return (
-    <Box
-      h="100%"
-      overflowY="auto"
-      className="tree-view-container"
-      data-testid="tree-view"
+    <TreeViewProvider
+      onNodeSelect={onNodeSelect}
+      onNodeRename={onNodeRename}
+      onNodeDelete={onNodeDelete}
+      onEditEnd={onEditEnd}
+      selectedNodeId={selectedNodeId}
+      data={data}
     >
-      {title && (
-        <Text
-          fontSize="lg"
-          fontWeight="bold"
-          mb={3}
-          color="fg"
-          className="tree-view-title"
-        >
-          {title}
-        </Text>
-      )}
-      <VStack align="stretch" gap={1} p={2}>
-        {data.map((node) => (
-          <TreeNodeInternal
-            key={node.id}
-            node={node}
-            level={0}
-            render={render}
-            onNodeSelect={onNodeSelect}
-            onNodeRename={onNodeRename}
-            onNodeDelete={onNodeDelete}
-            onEditEnd={onEditEnd}
-            startInEditMode={node.id === editingNodeId}
-          />
-        ))}
-      </VStack>
-    </Box>
+      <Box
+        h="100%"
+        overflowY="auto"
+        className="tree-view-container"
+        data-testid="tree-view"
+      >
+        {title && (
+          <Text
+            fontSize="lg"
+            fontWeight="bold"
+            mb={3}
+            color="fg"
+            className="tree-view-title"
+          >
+            {title}
+          </Text>
+        )}
+        <VStack align="stretch" gap={1} p={2}>
+          {data.map((node) => (
+            <TreeNodeInternal
+              key={node.id}
+              node={node}
+              level={0}
+              render={render}
+              startInEditMode={node.id === editingNodeId}
+            />
+          ))}
+        </VStack>
+      </Box>
+    </TreeViewProvider>
   );
 }
 

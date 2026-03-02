@@ -84,7 +84,6 @@ import { useParams, usePathname, useRouter } from 'next/navigation';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import { useNodeSelection } from '@/hooks/useNodeSelection';
-import { selectNode } from '@/lib/utils';
 import { clearEditorState } from '@/lib/localStorage';
 
 /**
@@ -245,10 +244,6 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
 
   // list of notes that with marked selected node if it exists in URL
   const initSelectedNodeId = useMemo(() => parseId(params), [params]);
-  const updatedNotes = useMemo(
-    () => selectNode(initialNotes, initSelectedNodeId),
-    [initialNotes, initSelectedNodeId]
-  );
 
   // Use the hook that manages all the state
   const {
@@ -263,7 +258,7 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     updateNoteName,
     updateNoteTimestamp,
     setContentHash
-  } = useNodeSelection(updatedNotes, initSelectedNodeId);
+  } = useNodeSelection(initialNotes, initSelectedNodeId);
 
   // Track newly created note for immediate edit mode
   const [newNoteId, setNewNoteId] = useState<number | null>(null);
