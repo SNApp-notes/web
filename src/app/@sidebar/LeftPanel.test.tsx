@@ -211,7 +211,7 @@ describe('LeftPanel', () => {
 
       const mockNewNote = {
         noteId: 2,
-        name: 'New Note <2>',
+        name: 'New Note 1',
         content: '',
         userId: 'user-1',
         createdAt: new Date(),
@@ -225,7 +225,7 @@ describe('LeftPanel', () => {
       fireEvent.click(newNoteButton);
 
       await waitFor(() => {
-        expect(mockCreateNote).toHaveBeenCalledWith('New Note <2>');
+        expect(mockCreateNote).toHaveBeenCalledWith('New Note 1');
       });
     });
   });

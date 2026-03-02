@@ -511,8 +511,8 @@ describe('ContentSlotDefault', () => {
 
       expect(screen.getByTestId('current-line')).toHaveTextContent('42');
 
-      // When note changes, line param persists (URL state managed by nuqs)
-      // This is expected behavior - line parameter is independent of note selection
+      // When note changes, line param is cleared to prevent stale scroll position
+      // in the newly selected note
       mockContext = setupMockNotesContext(mockUseNotesContext, {
         selectedNoteId: 2,
         getNote: vi.fn(() => mockNote2)
@@ -520,8 +520,8 @@ describe('ContentSlotDefault', () => {
 
       rerender(<ContentSlotDefault />);
 
-      // Current line should still be 42 (line parameter persists in URL)
-      expect(screen.getByTestId('current-line')).toHaveTextContent('42');
+      // Current line should be cleared (undefined) when note changes
+      expect(screen.getByTestId('current-line')).toHaveTextContent('undefined');
     });
   });
 

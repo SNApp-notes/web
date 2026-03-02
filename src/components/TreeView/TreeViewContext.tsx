@@ -11,6 +11,7 @@ import type { TreeNode } from '@/types/tree';
 
 interface TreeViewContextValue<T = unknown> {
   selectedNode: TreeNode<T> | null;
+  selectedNodeId?: number | null;
   setSelectedNode: (node: TreeNode<T> | null) => void;
   onNodeSelect?: (node: TreeNode<T>) => void;
   onNodeRename?: (node: TreeNode<T>, newName: string) => void;
@@ -70,6 +71,7 @@ export function TreeViewProvider<T = unknown>({
 
   const value: TreeViewContextValue<T> = {
     selectedNode,
+    selectedNodeId,
     setSelectedNode,
     onNodeSelect,
     onNodeRename,

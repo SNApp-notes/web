@@ -91,8 +91,12 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
                   id: newNote.noteId,
                   name: newNote.name,
                   data: {
-                    content: newNote.content || '',
-                    dirty: false,
+                    // Preserve any content the user may have typed during optimistic creation.
+                    // The server creates the note with empty content, but the user could
+                    // have started typing before the server responded. Using n.data?.content
+                    // ensures their work is not lost when the ID is remapped.
+                    content: n.data?.content || newNote.content || '',
+                    dirty: n.data?.dirty ?? false,
                     createdAt: new Date(newNote.createdAt),
                     updatedAt: new Date(newNote.updatedAt)
                   }

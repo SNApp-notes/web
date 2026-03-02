@@ -21,13 +21,14 @@ export function TreeNodeContent({ children, ...props }: TreeNodeContentProps) {
       // For folders, toggle immediately
       handleToggle();
     } else {
-      // For leaf nodes, delay to detect double-click
+      // For leaf nodes, fire selection immediately but keep a sentinel
+      // timeout so double-click can cancel rename if it fires within CLICK_DELAY
       if (clickTimeoutRef.current) {
         clearTimeout(clickTimeoutRef.current);
         clickTimeoutRef.current = null;
       }
+      handleNodeSelect();
       clickTimeoutRef.current = setTimeout(() => {
-        handleNodeSelect();
         clickTimeoutRef.current = null;
       }, CLICK_DELAY);
     }

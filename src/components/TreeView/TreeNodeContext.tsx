@@ -89,6 +89,10 @@ export function TreeNodeProvider<T = unknown>({
 
   const handleNodeSelect = useCallback(() => {
     if (!hasChildren && !isEditing) {
+      // Skip if this node is already selected to avoid re-triggering state updates.
+      // Use selectedNodeId (the prop) as it's available from the first render,
+      // unlike selectedNode (derived state) which syncs asynchronously via useEffect.
+      if (treeContext.selectedNodeId === node.id) return;
       treeContext.setSelectedNode(node);
       treeContext.onNodeSelect?.(node);
     }

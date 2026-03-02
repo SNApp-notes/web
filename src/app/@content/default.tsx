@@ -51,6 +51,11 @@ export default function ContentSlotDefault() {
   // Track original content for diff generation
   const originalContentRef = useRef<string>('');
 
+  // Always-current content ref — updated synchronously on every content change.
+  // Used by handleSave to avoid stale-closure issues (e.g., when the pending-save
+  // effect fires after isCreatingNote flips and React may not have re-rendered yet).
+  const contentRef = useRef<string>('');
+
   // Track if we've already restored for current note
   const restoredNoteIdRef = useRef<number | null>(null);
 
@@ -106,6 +111,9 @@ export default function ContentSlotDefault() {
   const selectedNote = selectedNoteId ? getNote(selectedNoteId) : null;
   // Content is now populated server-side, no null values expected
   const content = selectedNote?.data?.content || '';
+
+  // Keep contentRef in sync with reactive content (covers initial load and note switches)
+  contentRef.current = content;
 
   // Calculate cursor position from saved editor state
   // Only restore cursor on initial page load, not on note switches
@@ -219,6 +227,9 @@ export default function ContentSlotDefault() {
   }, [selectedNoteId]);
 
   const handleContentChange = (newContent: string) => {
+    // Always keep contentRef current — used by handleSave to avoid stale closures
+    contentRef.current = newContent;
+
     if (selectedNoteId) {
       // Update local state immediately for responsiveness
       updateNoteContent(selectedNoteId, newContent);
@@ -239,15 +250,22 @@ export default function ContentSlotDefault() {
 
     if (!selectedNote) return;
 
+    // Use contentRef.current to always get the latest editor content, regardless of
+    // whether the React state has been flushed in this render cycle.  This avoids
+    // stale-closure issues that can arise when handleSave is invoked from the
+    // pendingSave effect (which fires after isCreatingNote flips) or from a queued
+    // setTimeout, where the captured reactive `content` variable may lag behind.
+    const currentContent = contentRef.current;
+
     try {
       setSaveStatus('saving');
-      const updatedNote = await updateNote(selectedNote.id, { content });
+      const updatedNote = await updateNote(selectedNote.id, { content: currentContent });
       setSaveStatus('saved');
       markNoteDirty(selectedNote.id, false);
       // Update the timestamp to trigger re-sorting
       updateNoteTimestamp(selectedNote.id, updatedNote.updatedAt);
       // Store hash of saved content for undo detection
-      setContentHash(selectedNote.id, content);
+      setContentHash(selectedNote.id, currentContent);
 
       // Clear unsaved changes from localStorage
       clearUnsavedNote(selectedNote.id);
@@ -256,7 +274,7 @@ export default function ContentSlotDefault() {
       clearEditorState();
 
       // Update original content ref for next diff
-      originalContentRef.current = content;
+      originalContentRef.current = currentContent;
 
       // Reset status after 1 second
       setTimeout(() => setSaveStatus('idle'), 1000);
@@ -268,7 +286,6 @@ export default function ContentSlotDefault() {
     isCreatingNote,
     requestSave,
     selectedNote,
-    content,
     setSaveStatus,
     markNoteDirty,
     updateNoteTimestamp,

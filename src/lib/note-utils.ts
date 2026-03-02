@@ -10,11 +10,13 @@
  * Generates a default name for a new note, avoiding duplicates.
  *
  * @param existingNotes - Array of existing notes with name property
- * @returns A unique default name like "New Note" or "New Note <2>"
+ * @returns A unique default name like "New Note" or "New Note 1"
  *
  * @remarks
- * Uses the pattern "New Note" for first note, then "New Note <N>" for subsequent.
- * Extracts counters from existing names to find the next available number.
+ * Uses the pattern "New Note" for first note, then "New Note N" for subsequent.
+ * This matches the server-side naming convention used by createNote(), ensuring
+ * the optimistic client name matches what the server will assign.
+ * Counter logic mirrors the server: finds highest existing counter and increments.
  *
  * @example
  * ```ts
@@ -22,13 +24,13 @@
  * generateDefaultNoteName([]) // "New Note"
  *
  * // "New Note" exists
- * generateDefaultNoteName([{ name: 'New Note' }]) // "New Note <2>"
+ * generateDefaultNoteName([{ name: 'New Note' }]) // "New Note 1"
  *
- * // "New Note" and "New Note <2>" exist
+ * // "New Note" and "New Note 1" exist
  * generateDefaultNoteName([
  *   { name: 'New Note' },
- *   { name: 'New Note <2>' }
- * ]) // "New Note <3>"
+ *   { name: 'New Note 1' }
+ * ]) // "New Note 2"
  * ```
  */
 export function generateDefaultNoteName(existingNotes: { name: string }[]): string {
@@ -39,18 +41,19 @@ export function generateDefaultNoteName(existingNotes: { name: string }[]): stri
     return baseName;
   }
 
-  // Extract counters from "New Note <N>" pattern
-  const counterRegex = /^New Note <(\d+)>$/;
-  let maxCounter = 1;
+  // Mirror the server counter logic: "New Note" = counter 0, "New Note N" = counter N
+  // Find the highest counter among all existing notes starting with baseName
+  const counterRegex = new RegExp(`^${baseName} (\\d+)$`);
+  let highestCounter = 0; // "New Note" itself counts as 0
 
   for (const name of existingNames) {
     const match = name.match(counterRegex);
     if (match) {
-      maxCounter = Math.max(maxCounter, parseInt(match[1], 10));
+      highestCounter = Math.max(highestCounter, parseInt(match[1], 10));
     }
   }
 
-  return `New Note <${maxCounter + 1}>`;
+  return `${baseName} ${highestCounter + 1}`;
 }
 
 /**

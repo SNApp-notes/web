@@ -309,6 +309,13 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
   // Note selection with Next.js router
   const selectNote = useCallback(
     (noteId: number | null) => {
+      // If already on this note, refresh server data to ensure content is up-to-date
+      // (avoids stale content after page reload without resetting editor state)
+      if (noteId === selectedNoteId) {
+        router.refresh();
+        return;
+      }
+
       // Clear editor state when switching notes
       // This ensures cursor/scroll position is NOT restored on note switch
       // (only on page refresh)
@@ -325,18 +332,11 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
         router.push(`/note/${noteId}`, { scroll: false });
       }
     },
-    [updateSelection, router]
+    [updateSelection, router, selectedNoteId]
   );
 
   // Sync URL to state on URL changes
-  // Skip when note creation is in progress to prevent race conditions during ID remapping
   useEffect(() => {
-    if (isCreatingNote) {
-      // During note creation, the URL might be changing due to ID remapping
-      // Let the LeftPanel handle the selection update after server confirms
-      return;
-    }
-
     const urlNoteId = parseId(params);
 
     // Always update selection when URL has a note ID, but only if:
@@ -350,7 +350,7 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
         }
       }
     }
-  }, [params, updateSelection, isCreatingNote, notes, selectedNoteId]);
+  }, [params, updateSelection, notes, selectedNoteId]);
 
   // Auto-select first note when at root with notes available
   // Skip when note creation is in progress to prevent race conditions
