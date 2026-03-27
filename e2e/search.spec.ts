@@ -264,9 +264,9 @@ test.describe('Search Feature', () => {
       const lineNumber = parseInt(lineMatch![1]);
       if (lineNumber > 5) {
         await page.waitForTimeout(500);
-        const scrollTop = await page.locator('.cm-scroller').evaluate(
-          (el) => el.scrollTop
-        );
+        const scrollTop = await page
+          .locator('.cm-scroller')
+          .evaluate((el) => el.scrollTop);
         expect(scrollTop).toBeGreaterThan(0);
       }
     });
@@ -663,9 +663,7 @@ test.describe('Search Feature', () => {
 
       // Verify the editor scrolled (scrollTop > 0 for line 31)
       await page.waitForTimeout(500);
-      const scrollTop = await page.locator('.cm-scroller').evaluate(
-        (el) => el.scrollTop
-      );
+      const scrollTop = await page.locator('.cm-scroller').evaluate((el) => el.scrollTop);
       expect(scrollTop).toBeGreaterThan(0);
     });
 
