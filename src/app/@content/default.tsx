@@ -81,11 +81,19 @@ export default function ContentSlotDefault() {
   // Initialize with selectedNoteId if lineParam is present on initial load (deep link from search)
   const lineParamNoteIdRef = useRef<number | null>(lineParam > 0 ? selectedNoteId : null);
 
+  // When lineParam is positive, associate it with the current note.
+  // This runs during render (before effects) so the currentLine memo sees it.
+  // Handles search result clicks which set ?line= via router.push().
+  if (lineParam > 0) {
+    lineParamNoteIdRef.current = selectedNoteId;
+  }
+
   // Detect note switches and invalidate stale lineParam
   useEffect(() => {
     if (selectedNoteId !== prevNoteIdRef.current) {
       // Note changed - invalidate any existing lineParam
       // The lineParam will only be valid again once it's explicitly set for this note
+      // (either via search navigation changing lineParam, or handleHeaderClick)
       lineParamNoteIdRef.current = null;
       prevNoteIdRef.current = selectedNoteId;
     }

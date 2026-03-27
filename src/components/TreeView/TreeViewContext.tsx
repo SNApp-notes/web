@@ -1,12 +1,6 @@
 'use client';
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect
-} from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import type { TreeNode } from '@/types/tree';
 
 interface TreeViewContextValue<T = unknown> {
@@ -52,22 +46,22 @@ export function TreeViewProvider<T = unknown>({
   data,
   children
 }: TreeViewProviderProps<T>) {
-  const [selectedNode, setSelectedNodeState] = useState<TreeNode<T> | null>(null);
+  // Internal override: set by direct node clicks via setSelectedNode.
+  // Kept as a fallback for cases where data/selectedNodeId are not provided.
+  const [directSelectedNode, setDirectSelectedNode] = useState<TreeNode<T> | null>(null);
 
   const setSelectedNode = useCallback((node: TreeNode<T> | null) => {
-    setSelectedNodeState(node);
+    setDirectSelectedNode(node);
   }, []);
 
-  // Sync selectedNode with external selectedNodeId whenever it changes
-  useEffect(() => {
-    if (selectedNodeId == null) {
-      setSelectedNodeState(null);
-      return;
-    }
-    if (!data) return;
-    const found = data.find((n) => n.id === selectedNodeId) ?? null;
-    setSelectedNodeState(found as TreeNode<T> | null);
-  }, [selectedNodeId, data]);
+  // Derive selectedNode directly from the external selectedNodeId + data during
+  // render (no useEffect) so the highlight updates on the same frame as the prop
+  // change — avoids the one-render delay that useEffect would introduce.
+  const selectedNode = useMemo<TreeNode<T> | null>(() => {
+    if (selectedNodeId == null) return null;
+    if (!data) return directSelectedNode;
+    return (data.find((n) => n.id === selectedNodeId) as TreeNode<T> | undefined) ?? null;
+  }, [selectedNodeId, data, directSelectedNode]);
 
   const value: TreeViewContextValue<T> = {
     selectedNode,

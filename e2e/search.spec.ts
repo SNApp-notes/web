@@ -229,7 +229,7 @@ test.describe('Search Feature', () => {
       const searchDialog = page.getByRole('dialog', { name: /search notes/i });
       await expect(searchDialog).toBeVisible();
 
-      // Search for content
+      // Search for content that appears in the welcome note
       const searchInput = page.getByPlaceholder(/enter search query/i);
       await searchInput.fill('Welcome');
 
@@ -238,23 +238,36 @@ test.describe('Search Feature', () => {
       await searchButton.click();
 
       // Wait for results
-      await page.waitForTimeout(1000);
+      await expect(page.getByText(/result.*found/i)).toBeVisible({
+        timeout: 5000
+      });
 
       // Check if results exist and have line numbers
       const lineNumberText = searchDialog.getByText(/Line \d+/);
-      if ((await lineNumberText.count()) > 0) {
-        // Get the line number from the first result
-        const lineText = await lineNumberText.first().textContent();
-        const lineMatch = lineText?.match(/Line (\d+)/);
+      await expect(lineNumberText.first()).toBeVisible({ timeout: 5000 });
 
-        if (lineMatch) {
-          // Click result
-          await lineNumberText.first().click();
+      // Get the line number from the first result
+      const lineText = await lineNumberText.first().textContent();
+      const lineMatch = lineText?.match(/Line (\d+)/);
+      expect(lineMatch).toBeTruthy();
 
-          // URL should contain line parameter
-          await page.waitForTimeout(500);
-          expect(page.url()).toMatch(/line=\d+/);
-        }
+      // Click the first result item
+      const firstResult = page.locator('[data-testid="search-result-item"]').first();
+      await firstResult.click();
+
+      // URL should contain line parameter
+      await page.waitForURL(/line=\d+/, { timeout: 5000 });
+      expect(page.url()).toMatch(/line=\d+/);
+
+      // Verify the editor scrolled to the correct line
+      // For lines beyond the visible area, scrollTop should be > 0
+      const lineNumber = parseInt(lineMatch![1]);
+      if (lineNumber > 5) {
+        await page.waitForTimeout(500);
+        const scrollTop = await page.locator('.cm-scroller').evaluate(
+          (el) => el.scrollTop
+        );
+        expect(scrollTop).toBeGreaterThan(0);
       }
     });
   });
@@ -589,47 +602,71 @@ test.describe('Search Feature', () => {
       }
     });
 
-    test('should navigate to specific line when clicking occurrence', async ({
+    test('should navigate to specific line and scroll editor when clicking occurrence', async ({
       page
     }) => {
+      // Create a note with multi-line content so we can test scroll behavior
+      const newNoteButton = page.getByRole('button', { name: /new note/i });
+      await newNoteButton.click();
+
+      // Wait for note to be created and editor to be ready
+      await page.waitForTimeout(500);
+
+      // Type content with a unique searchable term on a later line
+      const editor = page.locator('.cm-content');
+      await editor.click();
+
+      // Build multi-line content with a unique keyword deep in the note
+      // Avoid using "Line N" text to prevent collision with search result metadata
+      const lines = [];
+      for (let i = 1; i <= 30; i++) {
+        lines.push(`Row ${i} - padding text for scroll test`);
+      }
+      lines.push('This row contains UNIQUESEARCHTERM99 for testing');
+      const content = lines.join('\n');
+
+      await editor.fill(content);
+
+      // Save the note so it's searchable in the DB
+      await page.keyboard.press('Control+S');
+      await page.waitForTimeout(1000);
+
       // Open search modal
       await page.keyboard.press('Control+Shift+F');
       const searchDialog = page.getByRole('dialog', { name: /search notes/i });
       await expect(searchDialog).toBeVisible();
 
-      // Search for content
+      // Search for the unique term
       const searchInput = page.getByPlaceholder(/enter search query/i);
-      await searchInput.fill('function');
+      await searchInput.fill('UNIQUESEARCHTERM99');
 
       // Click search button
       const searchButton = searchDialog.getByRole('button', { name: /^search$/i });
       await searchButton.click();
 
       // Wait for results
-      await page.waitForTimeout(1000);
+      await expect(page.getByText(/result.*found/i)).toBeVisible({
+        timeout: 5000
+      });
 
-      // Get first result with a line number
-      const lineNumbers = searchDialog.getByText(/Line \d+/);
+      // Click the first result
+      const firstResult = page.locator('[data-testid="search-result-item"]').first();
+      await firstResult.click();
 
-      if ((await lineNumbers.count()) > 0) {
-        const firstLineText = await lineNumbers.first().textContent();
-        const lineNumber = firstLineText?.match(/Line (\d+)/)?.[1];
+      // Modal should close after clicking result
+      await expect(searchDialog).not.toBeVisible({ timeout: 5000 });
 
-        if (lineNumber) {
-          // Click the first result
-          const firstResult = page.locator('[data-testid="search-result-item"]').first();
-          await firstResult.click();
+      // Wait for URL to update with line parameter (soft navigation)
+      await expect(async () => {
+        expect(page.url()).toMatch(/line=\d+/);
+      }).toPass({ timeout: 5000 });
 
-          // Wait for navigation
-          await page.waitForTimeout(500);
-
-          // URL should contain the line parameter
-          expect(page.url()).toMatch(new RegExp(`line=${lineNumber}`));
-
-          // Modal should be closed
-          await expect(searchDialog).not.toBeVisible({ timeout: 5000 });
-        }
-      }
+      // Verify the editor scrolled (scrollTop > 0 for line 31)
+      await page.waitForTimeout(500);
+      const scrollTop = await page.locator('.cm-scroller').evaluate(
+        (el) => el.scrollTop
+      );
+      expect(scrollTop).toBeGreaterThan(0);
     });
 
     test('should show different snippets for occurrences on different lines', async ({

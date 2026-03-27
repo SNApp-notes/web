@@ -80,6 +80,7 @@ import {
   useState,
   type ReactNode
 } from 'react';
+import { flushSync } from 'react-dom';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
@@ -260,6 +261,14 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     setContentHash
   } = useNodeSelection(initialNotes, initSelectedNodeId);
 
+  // Optimistic selection: a local state that is updated synchronously via
+  // flushSync before router.push() runs, so the blue highlight paints on the
+  // very next frame instead of waiting for the server round-trip to complete.
+  // It mirrors selectedNoteId and is kept in sync by the useEffect below.
+  const [optimisticSelectedNoteId, setOptimisticSelectedNoteId] = useState<number | null>(
+    initSelectedNodeId
+  );
+
   // Track newly created note for immediate edit mode
   const [newNoteId, setNewNoteId] = useState<number | null>(null);
 
@@ -295,9 +304,9 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
   const markNoteDirty = updateDirtyFlag;
 
   const getSelectedNote = useCallback((): NoteTreeNode | null => {
-    if (!selectedNoteId) return null;
-    return notes.find((note) => note.id === selectedNoteId) || null;
-  }, [notes, selectedNoteId]);
+    if (!optimisticSelectedNoteId) return null;
+    return notes.find((note) => note.id === optimisticSelectedNoteId) || null;
+  }, [notes, optimisticSelectedNoteId]);
 
   const getNote = useCallback(
     (noteId: number): NoteTreeNode | null => {
@@ -321,8 +330,13 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
       // (only on page refresh)
       clearEditorState();
 
-      // Update state immediately
-      updateSelection(noteId);
+      // Update the optimistic selection synchronously so the blue highlight
+      // paints on the very next frame. flushSync forces React to flush this
+      // state update before returning, which means the DOM is updated before
+      // router.push() schedules its (deferred) startTransition navigation.
+      flushSync(() => {
+        setOptimisticSelectedNoteId(noteId);
+      });
 
       // Navigate using Next.js router
       // Use pathname without query params to clear line parameter
@@ -332,7 +346,7 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
         router.push(`/note/${noteId}`, { scroll: false });
       }
     },
-    [updateSelection, router, selectedNoteId]
+    [setOptimisticSelectedNoteId, router, selectedNoteId]
   );
 
   // Sync URL to state on URL changes
@@ -352,6 +366,13 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     }
   }, [params, updateSelection, notes, selectedNoteId]);
 
+  // Keep optimisticSelectedNoteId in sync with the committed selectedNoteId
+  // so that back/forward navigation (which goes through updateSelection above)
+  // is always reflected correctly.
+  useEffect(() => {
+    setOptimisticSelectedNoteId(selectedNoteId);
+  }, [selectedNoteId]);
+
   // Auto-select first note when at root with notes available
   // Skip when note creation is in progress to prevent race conditions
   useEffect(() => {
@@ -363,7 +384,7 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
 
   const value: NotesContextValue = {
     notes,
-    selectedNoteId,
+    selectedNoteId: optimisticSelectedNoteId,
     saveStatus,
     setNotes,
     setSaveStatus,
