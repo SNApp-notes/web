@@ -100,7 +100,7 @@ jobs:
         run: npm run test:coverage
 
       - name: Upload unit coverage artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: unit-coverage
           path: coverage/unit/
@@ -129,7 +129,7 @@ jobs:
         run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').dependencies['@playwright/test'].version)")" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -167,7 +167,7 @@ jobs:
 
       - name: Upload E2E test artifacts
         if: always() && steps.check-artifacts.outputs.has_artifacts == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-test-results
           path: |
@@ -199,7 +199,7 @@ jobs:
           fi
 
       - name: Upload E2E coverage artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-coverage
           path: coverage/e2e/
@@ -309,13 +309,13 @@ jobs:
         run: npm ci
 
       - name: Download unit coverage artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: unit-coverage
           path: coverage/unit/
 
       - name: Download E2E coverage artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: e2e-coverage
           path: coverage/e2e/
