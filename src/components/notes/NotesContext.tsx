@@ -86,6 +86,7 @@ import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import { useNodeSelection } from '@/hooks/useNodeSelection';
 import { clearEditorState } from '@/lib/localStorage';
+import { useQueryState, parseAsInteger } from 'nuqs';
 
 /**
  * NotesContext value interface exposing all notes state and operations.
@@ -242,6 +243,7 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
   const params = useParams();
   const pathname = usePathname();
   const router = useRouter();
+  const [, setLineParam] = useQueryState('line', parseAsInteger.withDefault(0));
 
   // list of notes that with marked selected node if it exists in URL
   const initSelectedNodeId = useMemo(() => parseId(params), [params]);
@@ -317,7 +319,7 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
 
   // Note selection with Next.js router
   const selectNote = useCallback(
-    (noteId: number | null) => {
+    async (noteId: number | null) => {
       // If already on this note, refresh server data to ensure content is up-to-date
       // (avoids stale content after page reload without resetting editor state)
       if (noteId === selectedNoteId) {
@@ -338,15 +340,15 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
         setOptimisticSelectedNoteId(noteId);
       });
 
-      // Navigate using Next.js router
-      // Use pathname without query params to clear line parameter
+      await setLineParam(null);
+
       if (noteId === null) {
         router.push('/', { scroll: false });
       } else {
         router.push(`/note/${noteId}`, { scroll: false });
       }
     },
-    [setOptimisticSelectedNoteId, router, selectedNoteId]
+    [setOptimisticSelectedNoteId, router, selectedNoteId, setLineParam]
   );
 
   // Sync URL to state on URL changes
