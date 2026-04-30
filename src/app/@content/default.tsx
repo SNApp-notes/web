@@ -420,7 +420,13 @@ export default function ContentSlotDefault() {
             // before the layout is settled, causing a visible jump.
             if (editor?.focus) {
               requestAnimationFrame(() => {
-                editor.focus();
+                const active = document.activeElement;
+                const isStillInputFocused =
+                  active instanceof HTMLInputElement ||
+                  active instanceof HTMLTextAreaElement;
+                if (!isStillInputFocused) {
+                  editor.focus();
+                }
               });
             }
             return;
