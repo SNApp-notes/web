@@ -155,6 +155,11 @@ const Editor = memo(
     const mount = useRef<boolean>(true);
     const [viewReady, setViewReady] = useState(false);
 
+    const onEditorReadyRef = useRef(onEditorReady);
+    useEffect(() => {
+      onEditorReadyRef.current = onEditorReady;
+    });
+
     const { colorMode } = useColorMode();
     const themeExtension = useMemo(
       () => (colorMode === 'dark' ? basicDark : basicLight),
@@ -334,10 +339,10 @@ const Editor = memo(
         }
       }
 
-      if (onEditorReady) {
-        onEditorReady(editorRef);
+      if (onEditorReadyRef.current) {
+        onEditorReadyRef.current(editorRef);
       }
-    }, [viewReady, onEditorReady, scrollToLine, ref]);
+    }, [viewReady, scrollToLine, ref]);
 
     // Handle line scrolling when selectedLine changes
     useEffect(() => {

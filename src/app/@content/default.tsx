@@ -236,7 +236,7 @@ export default function ContentSlotDefault() {
     }, 300);
   }, [selectedNoteId]);
 
-  const handleContentChange = (newContent: string) => {
+  const handleContentChange = useCallback((newContent: string) => {
     // Always keep contentRef current — used by handleSave to avoid stale closures
     contentRef.current = newContent;
 
@@ -248,7 +248,7 @@ export default function ContentSlotDefault() {
       const originalContent = originalContentRef.current || '';
       saveUnsavedNote(selectedNoteId, originalContent, newContent);
     }
-  };
+  }, [selectedNoteId, updateNoteContent, saveUnsavedNote]);
 
   const handleSave = useCallback(async () => {
     // Queue save if note creation is in progress (optimistic update not yet confirmed)
@@ -374,6 +374,62 @@ export default function ContentSlotDefault() {
     setConflictData(null);
   };
 
+  const handleEditorReady = useCallback((editor: EditorRef) => {
+    editorRef.current = editor;
+
+    if (!selectedNoteId) {
+      return;
+    }
+
+    const isNewNoteBeingCreated =
+      newNoteId !== null && selectedNoteId === newNoteId;
+    if (isNewNoteBeingCreated) {
+      return;
+    }
+
+    const activeElement = document.activeElement;
+    const isInputFocused =
+      activeElement instanceof HTMLInputElement ||
+      activeElement instanceof HTMLTextAreaElement;
+    if (isInputFocused) {
+      return;
+    }
+
+    if (!isInitialLoadRef.current || editorStateRestoredRef.current) {
+      if (editor?.focus) {
+        requestAnimationFrame(() => {
+          const active = document.activeElement;
+          const isStillInputFocused =
+            active instanceof HTMLInputElement ||
+            active instanceof HTMLTextAreaElement;
+          if (!isStillInputFocused) {
+            editor.focus();
+          }
+        });
+      }
+      return;
+    }
+
+    editorStateRestoredRef.current = true;
+
+    const editorState = getEditorState(selectedNoteId);
+
+    if (editorState) {
+      isRestoringRef.current = true;
+
+      if (editor) {
+        editor.setScrollState(editorState);
+        editor.focus();
+
+        requestAnimationFrame(() => {
+          isRestoringRef.current = false;
+        });
+      }
+    } else if (editor?.focus) {
+      editor.focus();
+    }
+  }, [selectedNoteId, newNoteId]);
+
   return (
     <>
       <MiddlePanel
@@ -385,81 +441,7 @@ export default function ContentSlotDefault() {
         onContentChange={handleContentChange}
         onCursorChange={saveEditorStateDebounced}
         onScrollChange={saveEditorStateDebounced}
-        onEditorReady={(editor) => {
-          editorRef.current = editor;
-
-          // Prevent duplicate restoration calls
-          if (!selectedNoteId) {
-            return;
-          }
-
-          // Skip focusing editor when creating a new note
-          // Focus should stay on the note name input in the sidebar
-          const isNewNoteBeingCreated =
-            newNoteId !== null && selectedNoteId === newNoteId;
-          if (isNewNoteBeingCreated) {
-            return;
-          }
-
-          // Don't steal focus from input elements (e.g., filter input, rename input)
-          const activeElement = document.activeElement;
-          const isInputFocused =
-            activeElement instanceof HTMLInputElement ||
-            activeElement instanceof HTMLTextAreaElement;
-          if (isInputFocused) {
-            return;
-          }
-
-          // Only restore editor state on initial page load, not on note switches
-          // This prevents the issue where switching notes restores old cursor position
-          if (!isInitialLoadRef.current || editorStateRestoredRef.current) {
-            // Not initial load or already restored — just focus the editor.
-            // Defer focus until after React finishes committing the new DOM and the
-            // new EditorView has run its initial updateSelection (rawSel.collapse).
-            // Calling focus() synchronously here would trigger another collapse/scroll
-            // before the layout is settled, causing a visible jump.
-            if (editor?.focus) {
-              requestAnimationFrame(() => {
-                const active = document.activeElement;
-                const isStillInputFocused =
-                  active instanceof HTMLInputElement ||
-                  active instanceof HTMLTextAreaElement;
-                if (!isStillInputFocused) {
-                  editor.focus();
-                }
-              });
-            }
-            return;
-          }
-
-          // Mark as restored to prevent future restoration attempts
-          editorStateRestoredRef.current = true;
-
-          const editorState = getEditorState(selectedNoteId);
-
-          if (editorState) {
-            // Set flag to prevent saving during restoration
-            isRestoringRef.current = true;
-
-            // Restore scroll position (cursor is already set via selection prop)
-            if (editor) {
-              // setScrollState now only restores scroll, not cursor
-              editor.setScrollState(editorState);
-
-              // Focus the editor so user can start typing immediately
-              editor.focus();
-
-              // Clear the restoring flag
-              requestAnimationFrame(() => {
-                isRestoringRef.current = false;
-              });
-            }
-          } else if (editor?.focus) {
-            // check for unit tests
-            // No saved state, but still focus the editor
-            editor.focus();
-          }
-        }}
+        onEditorReady={handleEditorReady}
       />
       <RightPanel
         headers={headers}
