@@ -65,6 +65,8 @@ export default function ContentSlotDefault() {
   const isInitialLoadRef = useRef<boolean>(true);
 
   // Track editor state restoration - only happens once on initial page load
+  // State is used by cursorPosition memo; ref is used by handleEditorReady callback
+  const [editorStateRestored, setEditorStateRestored] = useState(false);
   const editorStateRestoredRef = useRef<boolean>(false);
 
   // Debounce timer for cursor position tracking
@@ -79,27 +81,32 @@ export default function ContentSlotDefault() {
   // Track which note ID the lineParam was set for
   // This prevents stale lineParams from being used when switching notes
   // Initialize with selectedNoteId if lineParam is present on initial load (deep link from search)
-  const lineParamNoteIdRef = useRef<number | null>(lineParam > 0 ? selectedNoteId : null);
-  const prevLineParamRef = useRef(lineParam);
+  const [lineParamNoteId, setLineParamNoteId] = useState<number | null>(
+    lineParam > 0 ? selectedNoteId : null
+  );
+  const [prevLineParam, setPrevLineParam] = useState(lineParam);
 
   // When lineParam changes to a positive value, associate it with the current note.
-  // This runs during render (before effects) so the currentLine memo sees it.
-  // Only triggers on lineParam change — not on note switch with a stale param.
-  if (lineParam > 0 && lineParam !== prevLineParamRef.current) {
-    lineParamNoteIdRef.current = selectedNoteId;
+  // State updates during render are React's official "derived state" pattern.
+  if (lineParam > 0 && lineParam !== prevLineParam) {
+    setLineParamNoteId(selectedNoteId);
+    setPrevLineParam(lineParam);
+  } else if (lineParam !== prevLineParam) {
+    setPrevLineParam(lineParam);
   }
-  prevLineParamRef.current = lineParam;
 
   // Detect note switches and invalidate stale lineParam
   useEffect(() => {
     if (selectedNoteId !== prevNoteIdRef.current) {
-      // Note changed - invalidate any existing lineParam
-      // The lineParam will only be valid again once it's explicitly set for this note
-      // (either via search navigation changing lineParam, or handleHeaderClick)
-      lineParamNoteIdRef.current = null;
+      // Only clear on actual note switches, not initial page load
+      // (where ?line= may be a deep link or refresh that should be preserved)
+      if (prevNoteIdRef.current !== null) {
+        setLineParamNoteId(null);
+        setLineParam(null);
+      }
       prevNoteIdRef.current = selectedNoteId;
     }
-  }, [selectedNoteId]);
+  }, [selectedNoteId, setLineParam]);
 
   // Derive current line from query parameter (only on note routes)
   // Only use lineParam if it was set for the current note (not stale from previous note)
@@ -107,9 +114,9 @@ export default function ContentSlotDefault() {
     // Must have a route ID and a positive lineParam
     if (!params?.id || lineParam <= 0) return undefined;
     // The lineParam must have been set for the current note
-    if (lineParamNoteIdRef.current !== selectedNoteId) return undefined;
+    if (lineParamNoteId !== selectedNoteId) return undefined;
     return lineParam;
-  }, [params?.id, lineParam, selectedNoteId]);
+  }, [params?.id, lineParam, selectedNoteId, lineParamNoteId]);
 
   // Scroll to current line when editor is ready or current line changes
   useEffect(() => {
@@ -118,12 +125,16 @@ export default function ContentSlotDefault() {
     }
   }, [currentLine]);
 
-  const selectedNote = selectedNoteId ? getNote(selectedNoteId) : null;
-  // Content is now populated server-side, no null values expected
+  // During note creation, selectedNoteId may lag behind router.push (async transition).
+  // Use newNoteId as the effective target so content changes go to the correct note.
+  const effectiveNoteId = newNoteId ?? selectedNoteId;
+  const selectedNote = effectiveNoteId ? getNote(effectiveNoteId) : null;
   const content = selectedNote?.data?.content || '';
 
   // Keep contentRef in sync with reactive content (covers initial load and note switches)
-  contentRef.current = content;
+  useEffect(() => {
+    contentRef.current = content;
+  }, [content]);
 
   // Calculate cursor position from saved editor state
   // Only restore cursor on initial page load, not on note switches
@@ -131,7 +142,7 @@ export default function ContentSlotDefault() {
     if (!selectedNoteId || !content) return undefined;
 
     // Only restore cursor position on initial page load
-    if (!isInitialLoadRef.current || editorStateRestoredRef.current) {
+    if (editorStateRestored) {
       return undefined;
     }
 
@@ -152,7 +163,7 @@ export default function ContentSlotDefault() {
     position += editorState.cursor.column;
 
     return position;
-  }, [selectedNoteId, content]);
+  }, [selectedNoteId, content, editorStateRestored]);
 
   // Restore unsaved notes on mount or when note changes
   useEffect(() => {
@@ -236,19 +247,23 @@ export default function ContentSlotDefault() {
     }, 300);
   }, [selectedNoteId]);
 
-  const handleContentChange = useCallback((newContent: string) => {
-    // Always keep contentRef current — used by handleSave to avoid stale closures
-    contentRef.current = newContent;
+  const handleContentChange = useCallback(
+    (newContent: string) => {
+      // Always keep contentRef current — used by handleSave to avoid stale closures
+      contentRef.current = newContent;
 
-    if (selectedNoteId) {
-      // Update local state immediately for responsiveness
-      updateNoteContent(selectedNoteId, newContent);
+      const targetNoteId = newNoteId ?? selectedNoteId;
+      if (targetNoteId) {
+        // Update local state immediately for responsiveness
+        updateNoteContent(targetNoteId, newContent);
 
-      // Save unsaved changes to localStorage (debounced)
-      const originalContent = originalContentRef.current || '';
-      saveUnsavedNote(selectedNoteId, originalContent, newContent);
-    }
-  }, [selectedNoteId, updateNoteContent, saveUnsavedNote]);
+        // Save unsaved changes to localStorage (debounced)
+        const originalContent = originalContentRef.current || '';
+        saveUnsavedNote(targetNoteId, originalContent, newContent);
+      }
+    },
+    [selectedNoteId, newNoteId, updateNoteContent, saveUnsavedNote]
+  );
 
   const handleSave = useCallback(async () => {
     // Queue save if note creation is in progress (optimistic update not yet confirmed)
@@ -329,7 +344,7 @@ export default function ContentSlotDefault() {
 
   const handleHeaderClick = (line: number) => {
     // Mark this lineParam as being for the current note
-    lineParamNoteIdRef.current = selectedNoteId;
+    setLineParamNoteId(selectedNoteId);
 
     // Update line query parameter for deep linking and visual feedback
     setLineParam(line);
@@ -374,61 +389,63 @@ export default function ContentSlotDefault() {
     setConflictData(null);
   };
 
-  const handleEditorReady = useCallback((editor: EditorRef) => {
-    editorRef.current = editor;
+  const handleEditorReady = useCallback(
+    (editor: EditorRef) => {
+      editorRef.current = editor;
 
-    if (!selectedNoteId) {
-      return;
-    }
-
-    const isNewNoteBeingCreated =
-      newNoteId !== null && selectedNoteId === newNoteId;
-    if (isNewNoteBeingCreated) {
-      return;
-    }
-
-    const activeElement = document.activeElement;
-    const isInputFocused =
-      activeElement instanceof HTMLInputElement ||
-      activeElement instanceof HTMLTextAreaElement;
-    if (isInputFocused) {
-      return;
-    }
-
-    if (!isInitialLoadRef.current || editorStateRestoredRef.current) {
-      if (editor?.focus) {
-        requestAnimationFrame(() => {
-          const active = document.activeElement;
-          const isStillInputFocused =
-            active instanceof HTMLInputElement ||
-            active instanceof HTMLTextAreaElement;
-          if (!isStillInputFocused) {
-            editor.focus();
-          }
-        });
+      if (!selectedNoteId) {
+        return;
       }
-      return;
-    }
 
-    editorStateRestoredRef.current = true;
+      const isNewNoteBeingCreated = newNoteId !== null && selectedNoteId === newNoteId;
+      if (isNewNoteBeingCreated) {
+        return;
+      }
 
-    const editorState = getEditorState(selectedNoteId);
+      const activeElement = document.activeElement;
+      const isInputFocused =
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement;
+      if (isInputFocused) {
+        return;
+      }
 
-    if (editorState) {
-      isRestoringRef.current = true;
+      if (!isInitialLoadRef.current || editorStateRestoredRef.current) {
+        if (editor?.focus) {
+          requestAnimationFrame(() => {
+            const active = document.activeElement;
+            const isStillInputFocused =
+              active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement;
+            if (!isStillInputFocused) {
+              editor.focus();
+            }
+          });
+        }
+        return;
+      }
 
-      if (editor) {
-        editor.setScrollState(editorState);
+      editorStateRestoredRef.current = true;
+      setEditorStateRestored(true);
+
+      const editorState = getEditorState(selectedNoteId);
+
+      if (editorState) {
+        isRestoringRef.current = true;
+
+        if (editor) {
+          editor.setScrollState(editorState);
+          editor.focus();
+
+          requestAnimationFrame(() => {
+            isRestoringRef.current = false;
+          });
+        }
+      } else if (editor?.focus) {
         editor.focus();
-
-        requestAnimationFrame(() => {
-          isRestoringRef.current = false;
-        });
       }
-    } else if (editor?.focus) {
-      editor.focus();
-    }
-  }, [selectedNoteId, newNoteId]);
+    },
+    [selectedNoteId, newNoteId]
+  );
 
   return (
     <>

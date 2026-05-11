@@ -11,7 +11,7 @@ export default defineConfig({
   reporter: [['list'], ['html', { outputFolder: 'report', open: 'never' }]],
   globalTeardown: require.resolve('./global-teardown.ts'),
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:45678',
+    baseURL: process.env.BASE_URL || 'http://localhost:39147',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     headless: true,
@@ -36,8 +36,8 @@ export default defineConfig({
   webServer: process.env.CI
     ? undefined
     : {
-        command: 'npm run dev -- --port 45678',
-        url: 'http://localhost:45678',
+        command: 'npm run dev -- --port 39147',
+        url: 'http://localhost:39147',
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000
       },

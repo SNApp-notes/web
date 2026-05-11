@@ -2,7 +2,6 @@
 
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQueryState, parseAsInteger } from 'nuqs';
 import { useNotesContext } from '@/components/notes/NotesContext';
 import { createNote, deleteNote, updateNote } from '@/app/actions/notes';
 import LeftPanelComponent from '@/components/notes/LeftPanel';
@@ -33,9 +32,6 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
   const router = useRouter();
   const { clearUnsavedNote } = useUnsavedNotes();
 
-  // Use nuqs to manage line query parameter - clear when switching notes
-  const [, setLineParam] = useQueryState('line', parseAsInteger.withDefault(0));
-
   const handleNewNote = useCallback(async () => {
     // 1. Predict next ID and generate default name
     const predictedId = predictNextNoteId(notes);
@@ -64,10 +60,19 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
     setNewNoteId(predictedId); // Trigger edit mode
     setIsCreatingNote(true); // Block save operations during creation
 
-    // Clear line parameter before navigating to new note
-    // Must await to ensure URL state is cleared before navigation
-    // This prevents the bug where header line position persists across notes
-    await setLineParam(null);
+    // Clear ?line= from URL before navigation. We use replaceState with the
+    // current history state (which has __NA) so Next.js's patched replaceState
+    // short-circuits and does NOT dispatch ACTION_RESTORE — avoiding a race
+    // between the restore and the subsequent router.push.
+    if (window.location.search.includes('line=')) {
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('line');
+      window.history.replaceState(
+        window.history.state,
+        '',
+        cleanUrl.pathname + cleanUrl.search + cleanUrl.hash
+      );
+    }
 
     // Navigate to the new note URL immediately
     router.push(`/note/${predictedId}`);
@@ -137,7 +142,6 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
     setNotes,
     setNewNoteId,
     setIsCreatingNote,
-    setLineParam,
     router,
     selectedNoteId,
     clearUnsavedNote

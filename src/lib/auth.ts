@@ -58,8 +58,8 @@ export const auth = betterAuth({
   plugins: [nextCookies()],
   trustedOrigins: [
     'http://localhost:3000',
-    'http://localhost:45678', // E2E test server
-    'http://host.docker.internal:45678' // E2E tests from Docker container
+    'http://localhost:39147', // E2E test server
+    'http://host.docker.internal:39147' // E2E tests from Docker container
   ],
   advanced: {
     // Disable secure cookies in test/dev mode to allow HTTP testing in Docker

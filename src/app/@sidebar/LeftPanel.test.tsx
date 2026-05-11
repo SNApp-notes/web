@@ -148,7 +148,7 @@ describe('LeftPanel', () => {
       expect(mockSetNotes).toHaveBeenCalledWith(expect.any(Function));
       expect(mockSetNewNoteId).toHaveBeenCalledWith(1); // Predicted ID
 
-      // router.push is called after await setLineParam(null), so wait for it
+      // router.push is called to navigate to the new note
       await waitFor(() => {
         expect(mockPush).toHaveBeenCalledWith('/note/1');
       });

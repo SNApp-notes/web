@@ -86,7 +86,6 @@ import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import { useNodeSelection } from '@/hooks/useNodeSelection';
 import { clearEditorState } from '@/lib/localStorage';
-import { useQueryState, parseAsInteger } from 'nuqs';
 
 /**
  * NotesContext value interface exposing all notes state and operations.
@@ -243,8 +242,6 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
   const params = useParams();
   const pathname = usePathname();
   const router = useRouter();
-  const [, setLineParam] = useQueryState('line', parseAsInteger.withDefault(0));
-
   // list of notes that with marked selected node if it exists in URL
   const initSelectedNodeId = useMemo(() => parseId(params), [params]);
 
@@ -319,7 +316,7 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
 
   // Note selection with Next.js router
   const selectNote = useCallback(
-    async (noteId: number | null) => {
+    (noteId: number | null) => {
       // If already on this note, refresh server data to ensure content is up-to-date
       // (avoids stale content after page reload without resetting editor state)
       if (noteId === selectedNoteId) {
@@ -340,7 +337,19 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
         setOptimisticSelectedNoteId(noteId);
       });
 
-      await setLineParam(null);
+      // Clear ?line= from URL before navigation. We use replaceState with the
+      // current history state (which has __NA) so Next.js's patched replaceState
+      // short-circuits and does NOT dispatch ACTION_RESTORE — avoiding a race
+      // between the restore and the subsequent router.push.
+      if (window.location.search.includes('line=')) {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('line');
+        window.history.replaceState(
+          window.history.state,
+          '',
+          cleanUrl.pathname + cleanUrl.search + cleanUrl.hash
+        );
+      }
 
       if (noteId === null) {
         router.push('/', { scroll: false });
@@ -348,7 +357,7 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
         router.push(`/note/${noteId}`, { scroll: false });
       }
     },
-    [setOptimisticSelectedNoteId, router, selectedNoteId, setLineParam]
+    [setOptimisticSelectedNoteId, router, selectedNoteId]
   );
 
   // Sync URL to state on URL changes

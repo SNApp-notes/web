@@ -126,7 +126,7 @@ jobs:
 
       - name: Get Playwright version
         id: playwright-version
-        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').dependencies['@playwright/test'].version)")" >> $GITHUB_OUTPUT
+        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright browsers
         uses: actions/cache@v5
@@ -151,7 +151,7 @@ jobs:
           COVERAGE: 'true'
           DB_FILE: 'file:./prisma-e2e/test.db'
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
-          BETTER_AUTH_URL: 'http://localhost:45678'
+          BETTER_AUTH_URL: 'http://localhost:39147'
 
       - name: Check for E2E test artifacts
         if: always()

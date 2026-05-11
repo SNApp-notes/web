@@ -14,7 +14,7 @@ exports[`VerifyEmailClient > Error State - Expired Link > matches snapshot for e
         Verification Failed
       </h2>
       <div
-        class="chakra-alert__root css-1kf3jln"
+        class="chakra-alert__root css-17l6vi"
       >
         <span
           class="css-13gnd3a"
@@ -52,7 +52,7 @@ exports[`VerifyEmailClient > Error State - Expired Link > matches snapshot for e
           Verification links expire after 24 hours for security reasons.
         </p>
         <button
-          class="chakra-button css-5yfs8l"
+          class="chakra-button css-p0j63a"
           type="button"
         >
           Register Again
@@ -89,7 +89,7 @@ exports[`VerifyEmailClient > Error State - Generic Error > matches snapshot for 
         Verification Failed
       </h2>
       <div
-        class="chakra-alert__root css-1kf3jln"
+        class="chakra-alert__root css-17l6vi"
       >
         <span
           class="css-13gnd3a"
@@ -122,7 +122,7 @@ exports[`VerifyEmailClient > Error State - Generic Error > matches snapshot for 
         class="chakra-stack css-18abhre"
       >
         <button
-          class="chakra-button css-5yfs8l"
+          class="chakra-button css-p0j63a"
           type="button"
         >
           Try Again
@@ -159,7 +159,7 @@ exports[`VerifyEmailClient > Success State > matches snapshot for successful ver
         Email Verified!
       </h2>
       <div
-        class="chakra-alert__root css-1c44bi3"
+        class="chakra-alert__root css-1a2tgds"
       >
         <span
           class="css-13gnd3a"
