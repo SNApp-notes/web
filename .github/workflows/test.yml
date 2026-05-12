@@ -153,6 +153,51 @@ jobs:
           BETTER_AUTH_SECRET: 'test-secret-key-at-least-32-characters-long-for-ci'
           BETTER_AUTH_URL: 'http://localhost:39147'
 
+      - name: Generate E2E test summary
+        if: always()
+        run: |
+          if [ -f e2e/results/results.json ]; then
+            node -e "
+              const r = require('./e2e/results/results.json');
+              const stats = r.stats;
+              const passed = stats.expected || 0;
+              const failed = stats.unexpected || 0;
+              const flaky = stats.flaky || 0;
+              const skipped = stats.skipped || 0;
+              const total = passed + failed + flaky + skipped;
+              const duration = (stats.duration / 1000).toFixed(1);
+              const status = failed > 0 ? '❌' : '✅';
+
+              let md = '## ' + status + ' E2E Test Results\n\n';
+              md += '| Status | Count |\n|--------|-------|\n';
+              md += '| ✅ Passed | ' + passed + ' |\n';
+              if (failed > 0) md += '| ❌ Failed | ' + failed + ' |\n';
+              if (flaky > 0) md += '| ⚠️ Flaky | ' + flaky + ' |\n';
+              if (skipped > 0) md += '| ⏭️ Skipped | ' + skipped + ' |\n';
+              md += '| **Total** | **' + total + '** |\n';
+              md += '\n⏱️ Duration: ' + duration + 's\n';
+
+              if (failed > 0) {
+                md += '\n### Failed Tests\n\n';
+                for (const suite of r.suites) {
+                  for (const spec of (suite.specs || [])) {
+                    if (spec.ok === false) {
+                      md += '- \`' + spec.title + '\` (' + suite.title + ')\n';
+                    }
+                  }
+                  for (const sub of (suite.suites || [])) {
+                    for (const spec of (sub.specs || [])) {
+                      if (spec.ok === false) {
+                        md += '- \`' + spec.title + '\` (' + sub.title + ')\n';
+                      }
+                    }
+                  }
+                }
+              }
+              process.stdout.write(md);
+            " >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Check for E2E test artifacts
         if: always()
         id: check-artifacts
