@@ -9,7 +9,11 @@ export default defineConfig({
   workers: 1,
   timeout: process.env.CI ? 60000 : 30000, // Extended timeout for CI (60s vs 30s)
   reporter: process.env.CI
-    ? [['list'], ['html', { outputFolder: 'report', open: 'never' }], ['json', { outputFile: 'results/results.json' }]]
+    ? [
+        ['list'],
+        ['html', { outputFolder: 'report', open: 'never' }],
+        ['json', { outputFile: 'results/results.json' }]
+      ]
     : [['list'], ['html', { outputFolder: 'report', open: 'never' }]],
   globalTeardown: require.resolve('./global-teardown.ts'),
   use: {
