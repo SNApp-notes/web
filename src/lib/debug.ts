@@ -1,15 +1,16 @@
-let debugEnabled: boolean | null = null;
+const STORAGE_KEY = 'debug';
 
 function isDebugEnabled(): boolean {
   if (typeof window === 'undefined') return false;
-  if (debugEnabled === null) {
-    debugEnabled = new URLSearchParams(window.location.search).has('debug');
-  }
-  return debugEnabled;
+  return localStorage.getItem(STORAGE_KEY) === '1';
 }
 
-export function resetDebugFlag() {
-  debugEnabled = null;
+export function enableDebug() {
+  localStorage.setItem(STORAGE_KEY, '1');
+}
+
+export function disableDebug() {
+  localStorage.removeItem(STORAGE_KEY);
 }
 
 export function debug(label: string, ...args: unknown[]) {
