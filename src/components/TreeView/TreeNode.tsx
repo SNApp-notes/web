@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import type { TreeNode as TreeNodeType } from '@/types/tree';
 import { TreeNodeProvider, useTreeNodeContext } from './TreeNodeContext';
 import { useTreeViewContext } from './TreeViewContext';
+import { debug } from '@/lib/debug';
 import type { TreeNodeRenderProps } from './types';
 import { TreeNodeEdit } from './TreeNodeEdit';
 import { TreeNodeText } from './TreeNodeText';
@@ -36,6 +37,13 @@ function TreeNodeComponent<T = unknown>({ level = 0, render }: TreeNodeInternalP
 
   const hasChildren = Boolean(contextNode.children && contextNode.children.length > 0);
   const selected = treeContext.selectedNode?.id === contextNode.id;
+  debug('TreeNode.render', {
+    nodeId: contextNode.id,
+    nodeName: contextNode.name,
+    selected,
+    selectedNodeId: treeContext.selectedNodeId,
+    selectedNodeInContext: treeContext.selectedNode?.id ?? null
+  });
 
   useEffect(() => {
     const shouldScrollIntoView = urlNoteId !== null && contextNode.id === urlNoteId;

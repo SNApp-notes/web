@@ -52,6 +52,7 @@ import { SortKey, SortOrder } from '@/types/notes';
 import { SortControls } from '@/components/notes/SortControls';
 import { updateSettings } from '@/app/actions/settings';
 import type { Note } from '@/lib/prisma';
+import { debug } from '@/lib/debug';
 
 /**
  * Props for the LeftPanel component.
@@ -163,15 +164,22 @@ const LeftPanel = memo(function LeftPanel({
       sortOrder
     );
 
-    // Map back to NoteTreeNode[] and filter
-    // Always include newNoteId note regardless of filter (for new notes)
-    return sorted
+    const result = sorted
       .map((sortedNote) => notes.find((n) => n.id === sortedNote.noteId)!)
       .filter(
         (note) =>
           note.id === newNoteId || note.name.toLowerCase().includes(filter.toLowerCase())
       );
-  }, [notes, filter, sortKey, sortOrder, newNoteId]);
+    debug('LeftPanel.treeData', {
+      filter,
+      totalNotes: notes.length,
+      filteredCount: result.length,
+      filteredIds: result.map((n) => n.id),
+      selectedNoteId,
+      selectedInFiltered: result.some((n) => n.id === selectedNoteId)
+    });
+    return result;
+  }, [notes, filter, sortKey, sortOrder, newNoteId, selectedNoteId]);
 
   // Handle TreeNode selection
   const handleTreeNodeSelect = useCallback(

@@ -86,6 +86,7 @@ import type { NoteTreeNode } from '@/types/tree';
 import type { SaveStatus } from '@/types/notes';
 import { useNodeSelection } from '@/hooks/useNodeSelection';
 import { clearEditorState } from '@/lib/localStorage';
+import { debug } from '@/lib/debug';
 
 /**
  * NotesContext value interface exposing all notes state and operations.
@@ -314,12 +315,16 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     [notes]
   );
 
-  // Note selection with Next.js router
   const selectNote = useCallback(
     (noteId: number | null) => {
-      // If already on this note, refresh server data to ensure content is up-to-date
-      // (avoids stale content after page reload without resetting editor state)
+      debug('NotesContext.selectNote', {
+        noteId,
+        currentSelectedNoteId: selectedNoteId,
+        optimisticSelectedNoteId,
+        alreadyOnNote: noteId === selectedNoteId
+      });
       if (noteId === selectedNoteId) {
+        debug('NotesContext.selectNote', 'SKIPPED — same note, calling router.refresh()');
         router.refresh();
         return;
       }
@@ -357,22 +362,28 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
         router.push(`/note/${noteId}`, { scroll: false });
       }
     },
-    [setOptimisticSelectedNoteId, router, selectedNoteId]
+    [setOptimisticSelectedNoteId, router, selectedNoteId, optimisticSelectedNoteId]
   );
 
-  // Sync URL to state on URL changes
   useEffect(() => {
     const urlNoteId = parseId(params);
-
-    // Always update selection when URL has a note ID, but only if:
-    // 1. The note exists in our notes array (prevents issues when URL changes before notes array is updated)
-    // 2. The note is different from currently selected (optimization)
+    debug('NotesContext.syncURL', {
+      urlNoteId,
+      selectedNoteId,
+      noteCount: notes.length,
+      noteExists: urlNoteId !== null ? notes.some((n) => n.id === urlNoteId) : 'N/A'
+    });
     if (urlNoteId !== null) {
       if (urlNoteId !== selectedNoteId) {
         const noteExists = notes.some((n) => n.id === urlNoteId);
         if (noteExists) {
+          debug('NotesContext.syncURL', 'updating selection to', urlNoteId);
           updateSelection(urlNoteId);
+        } else {
+          debug('NotesContext.syncURL', 'note NOT in array, skipping');
         }
+      } else {
+        debug('NotesContext.syncURL', 'already selected, skipping');
       }
     }
   }, [params, updateSelection, notes, selectedNoteId]);
@@ -384,11 +395,10 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     setOptimisticSelectedNoteId(selectedNoteId);
   }, [selectedNoteId]);
 
-  // Auto-select first note when at root with notes available
-  // Skip when note creation is in progress to prevent race conditions
   useEffect(() => {
     if (pathname === '/' && notes.length > 0 && !selectedNoteId && !isCreatingNote) {
       const firstNote = notes[0];
+      debug('NotesContext.autoSelect', 'auto-selecting first note', firstNote.id);
       router.push(`/note/${firstNote.id}`);
     }
   }, [pathname, notes, selectedNoteId, router, isCreatingNote]);

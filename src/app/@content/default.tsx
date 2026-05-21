@@ -13,6 +13,7 @@ import MiddlePanel from '@/components/notes/MiddlePanel';
 import RightPanel from '@/components/notes/RightPanel';
 import { ConflictDialog } from '@/components/notes/ConflictDialog';
 import type { EditorRef } from '@/types/editor';
+import { debug } from '@/lib/debug';
 
 export default function ContentSlotDefault() {
   const editorRef = useRef<EditorRef | null>(null);
@@ -125,11 +126,16 @@ export default function ContentSlotDefault() {
     }
   }, [currentLine]);
 
-  // During note creation, selectedNoteId may lag behind router.push (async transition).
-  // Use newNoteId as the effective target so content changes go to the correct note.
   const effectiveNoteId = newNoteId ?? selectedNoteId;
   const selectedNote = effectiveNoteId ? getNote(effectiveNoteId) : null;
   const content = selectedNote?.data?.content || '';
+
+  debug('ContentSlot.render', {
+    selectedNoteId,
+    effectiveNoteId,
+    noteFound: !!selectedNote,
+    contentLength: content.length
+  });
 
   // Keep contentRef in sync with reactive content (covers initial load and note switches)
   useEffect(() => {

@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import type { TreeNode } from '@/types/tree';
 import { useTreeViewContext } from './TreeViewContext';
+import { debug } from '@/lib/debug';
 
 interface TreeNodeContextValue<T = unknown> {
   node: TreeNode<T>;
@@ -88,11 +89,19 @@ export function TreeNodeProvider<T = unknown>({
   }, [hasChildren]);
 
   const handleNodeSelect = useCallback(() => {
+    debug('TreeNodeContext.handleNodeSelect', {
+      nodeId: node.id,
+      nodeName: node.name,
+      hasChildren,
+      isEditing,
+      selectedNodeId: treeContext.selectedNodeId,
+      alreadySelected: treeContext.selectedNodeId === node.id
+    });
     if (!hasChildren && !isEditing) {
-      // Skip if this node is already selected to avoid re-triggering state updates.
-      // Use selectedNodeId (the prop) as it's available from the first render,
-      // unlike selectedNode (derived state) which syncs asynchronously via useEffect.
-      if (treeContext.selectedNodeId === node.id) return;
+      if (treeContext.selectedNodeId === node.id) {
+        debug('TreeNodeContext.handleNodeSelect', 'SKIPPED — already selected');
+        return;
+      }
       treeContext.setSelectedNode(node);
       treeContext.onNodeSelect?.(node);
     }

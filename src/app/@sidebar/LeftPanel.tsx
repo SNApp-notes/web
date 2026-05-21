@@ -12,6 +12,7 @@ import { toaster } from '@/components/ui/toaster';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 import { useUnsavedNotes } from '@/hooks/useUnsavedNotes';
 import { clearEditorState } from '@/lib/localStorage';
+import { debug } from '@/lib/debug';
 
 interface LeftPanelProps {
   initialSortKey?: SortKey;
@@ -187,15 +188,17 @@ export default function LeftPanel({ initialSortKey, initialSortOrder }: LeftPane
   // to a clean URL without query params (e.g., /note/2 instead of /note/1?line=5)
   const handleNoteSelect = useCallback(
     (noteId: number) => {
-      // Clear newNoteId if selecting a different note
+      debug('LeftPanel.handleNoteSelect', {
+        noteId,
+        currentSelectedNoteId: selectedNoteId,
+        newNoteId
+      });
       if (newNoteId !== null && noteId !== newNoteId) {
         setNewNoteId(null);
       }
-
-      // Select note - this calls router.push which navigates to clean URL
       selectNote(noteId);
     },
-    [newNoteId, setNewNoteId, selectNote]
+    [newNoteId, setNewNoteId, selectNote, selectedNoteId]
   );
 
   // Handle filter change - clears newNoteId when filter changes

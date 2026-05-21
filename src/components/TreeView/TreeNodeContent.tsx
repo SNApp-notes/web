@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { HStack } from '@chakra-ui/react';
 import type { StackProps } from '@chakra-ui/react';
 import { useTreeNodeContext } from './TreeNodeContext';
+import { debug } from '@/lib/debug';
 
 export type TreeNodeContentProps = StackProps;
 
@@ -17,12 +18,10 @@ export function TreeNodeContent({ children, ...props }: TreeNodeContentProps) {
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleClick = () => {
+    debug('TreeNodeContent.click', { nodeId: node.id, nodeName: node.name, hasChildren });
     if (hasChildren) {
-      // For folders, toggle immediately
       handleToggle();
     } else {
-      // For leaf nodes, fire selection immediately but keep a sentinel
-      // timeout so double-click can cancel rename if it fires within CLICK_DELAY
       if (clickTimeoutRef.current) {
         clearTimeout(clickTimeoutRef.current);
         clickTimeoutRef.current = null;

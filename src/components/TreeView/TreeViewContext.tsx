@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import type { TreeNode } from '@/types/tree';
+import { debug } from '@/lib/debug';
 
 interface TreeViewContextValue<T = unknown> {
   selectedNode: TreeNode<T> | null;
@@ -54,13 +55,25 @@ export function TreeViewProvider<T = unknown>({
     setDirectSelectedNode(node);
   }, []);
 
-  // Derive selectedNode directly from the external selectedNodeId + data during
-  // render (no useEffect) so the highlight updates on the same frame as the prop
-  // change — avoids the one-render delay that useEffect would introduce.
   const selectedNode = useMemo<TreeNode<T> | null>(() => {
-    if (selectedNodeId == null) return null;
-    if (!data) return directSelectedNode;
-    return (data.find((n) => n.id === selectedNodeId) as TreeNode<T> | undefined) ?? null;
+    if (selectedNodeId == null) {
+      debug('TreeViewContext.selectedNode', 'selectedNodeId is null');
+      return null;
+    }
+    if (!data) {
+      debug('TreeViewContext.selectedNode', 'no data, using directSelectedNode', {
+        selectedNodeId,
+        directSelectedNode: directSelectedNode?.id ?? null
+      });
+      return directSelectedNode;
+    }
+    const found = data.find((n) => n.id === selectedNodeId) as TreeNode<T> | undefined;
+    debug('TreeViewContext.selectedNode', {
+      selectedNodeId,
+      dataIds: data.map((n) => n.id),
+      foundInData: !!found
+    });
+    return found ?? null;
   }, [selectedNodeId, data, directSelectedNode]);
 
   const value: TreeViewContextValue<T> = {
