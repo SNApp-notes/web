@@ -9,9 +9,10 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['@chakra-ui/react']
   },
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production'
-      ? { exclude: ['debug', 'error', 'warn'] }
-      : false
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? { exclude: ['debug', 'error', 'warn'] }
+        : false
   },
   allowedDevOrigins: ['host.docker.internal'],
   // Exclude server-only packages from client bundle
