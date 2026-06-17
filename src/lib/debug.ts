@@ -15,6 +15,6 @@ export function disableDebug() {
 
 export function debug(label: string, ...args: unknown[]) {
   if (isDebugEnabled()) {
-    console.log(`[DEBUG][${label}]`, ...args);
+    console.debug(`[DEBUG][${label}]`, ...args);
   }
 }
