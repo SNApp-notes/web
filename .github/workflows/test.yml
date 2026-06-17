@@ -284,7 +284,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
           url="$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})"
-          vercel alias --scope jcubics-projects --token=${{ secrets.VERCEL_TOKEN }} set "$url" app.snapp.md
+          vercel alias --scope jcubics-projects --token=${{ secrets.VERCEL_TOKEN }} set "$url" app.snapp.just.net.pl
 
       - name: Deploy Project Artifacts to Vercel (Preview)
         if: github.event_name == 'pull_request'
