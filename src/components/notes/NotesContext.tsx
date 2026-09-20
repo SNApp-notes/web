@@ -264,6 +264,19 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Some note navigations still go through Next's real router (e.g. creating
+  // a note, or opening a search result) rather than our manual history
+  // update, and those succeed normally. When they do, useParams() correctly
+  // reflects the new id, so mirror it into urlNoteId too. This is additive:
+  // it never clears urlNoteId, so it can't undo our own pushState-driven
+  // updates for the note routes where router.push() is unreliable.
+  useEffect(() => {
+    const id = parseId(params);
+    if (id !== null) {
+      setUrlNoteId(id);
+    }
+  }, [params]);
+
   // Use the hook that manages all the state
   const {
     notes,
