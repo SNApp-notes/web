@@ -2,7 +2,6 @@
 
 import { memo, useEffect } from 'react';
 import { VStack } from '@chakra-ui/react';
-import { useParams } from 'next/navigation';
 import type { TreeNode as TreeNodeType } from '@/types/tree';
 import { TreeNodeProvider, useTreeNodeContext } from './TreeNodeContext';
 import { useTreeViewContext } from './TreeViewContext';
@@ -32,8 +31,6 @@ function TreeNodeComponent<T = unknown>({ level = 0, render }: TreeNodeInternalP
     handleDoubleClick
   } = useTreeNodeContext<T>();
   const treeContext = useTreeViewContext<T>();
-  const params = useParams();
-  const urlNoteId = params?.id ? parseInt(params.id as string, 10) : null;
 
   const hasChildren = Boolean(contextNode.children && contextNode.children.length > 0);
   const selected = treeContext.selectedNode?.id === contextNode.id;
@@ -46,15 +43,13 @@ function TreeNodeComponent<T = unknown>({ level = 0, render }: TreeNodeInternalP
   });
 
   useEffect(() => {
-    const shouldScrollIntoView = urlNoteId !== null && contextNode.id === urlNoteId;
-
-    if (shouldScrollIntoView && nodeRef?.current?.scrollIntoView) {
+    if (selected && nodeRef?.current?.scrollIntoView) {
       nodeRef.current.scrollIntoView({
         block: 'nearest',
         inline: 'nearest'
       });
     }
-  }, [nodeRef, contextNode.id, urlNoteId]);
+  }, [nodeRef, selected]);
 
   const renderProps: TreeNodeRenderProps<T> = {
     node: contextNode,

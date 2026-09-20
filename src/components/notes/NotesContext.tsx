@@ -246,6 +246,24 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
   // list of notes that with marked selected node if it exists in URL
   const initSelectedNodeId = useMemo(() => parseId(params), [params]);
 
+  // Track the note id reflected in the address bar ourselves, updated via
+  // history.pushState (see selectNote below) and browser back/forward.
+  // We can't rely on next/navigation's useParams() here: switching between
+  // /note/:id routes goes through a parallel/intercepting route, and
+  // router.push() between two note routes can silently fail to update the
+  // URL or Next's router state (confirmed by reproducing the bug — the
+  // address bar and history never changed, with no error thrown). Managing
+  // the URL ourselves avoids depending on that unreliable navigation.
+  const [urlNoteId, setUrlNoteId] = useState<number | null>(initSelectedNodeId);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setUrlNoteId(parseNoteIdFromPathname(window.location.pathname));
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   // Use the hook that manages all the state
   const {
     notes,
@@ -335,9 +353,7 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
       clearEditorState();
 
       // Update the optimistic selection synchronously so the blue highlight
-      // paints on the very next frame. flushSync forces React to flush this
-      // state update before returning, which means the DOM is updated before
-      // router.push() schedules its (deferred) startTransition navigation.
+      // paints on the very next frame, instead of waiting for a re-render.
       flushSync(() => {
         setOptimisticSelectedNoteId(noteId);
       });
@@ -345,7 +361,7 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
       // Clear ?line= from URL before navigation. We use replaceState with the
       // current history state (which has __NA) so Next.js's patched replaceState
       // short-circuits and does NOT dispatch ACTION_RESTORE — avoiding a race
-      // between the restore and the subsequent router.push.
+      // between the restore and the subsequent history update.
       if (window.location.search.includes('line=')) {
         const cleanUrl = new URL(window.location.href);
         cleanUrl.searchParams.delete('line');
@@ -356,17 +372,19 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
         );
       }
 
-      if (noteId === null) {
-        router.push('/', { scroll: false });
-      } else {
-        router.push(`/note/${noteId}`, { scroll: false });
-      }
+      // Update the address bar directly instead of using router.push(). Next's
+      // router.push() between two /note/:id routes can silently no-op (see the
+      // comment on urlNoteId above), so we manage history ourselves and reuse
+      // the current history.state (same trick as the replaceState above) to
+      // avoid triggering Next's own, unreliable navigation for this URL change.
+      const targetPath = noteId === null ? '/' : `/note/${noteId}`;
+      window.history.pushState(window.history.state, '', targetPath);
+      setUrlNoteId(noteId);
     },
-    [setOptimisticSelectedNoteId, router, selectedNoteId, optimisticSelectedNoteId]
+    [router, selectedNoteId, optimisticSelectedNoteId]
   );
 
   useEffect(() => {
-    const urlNoteId = parseId(params);
     debug('NotesContext.syncURL', {
       urlNoteId,
       selectedNoteId,
@@ -386,7 +404,7 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
         debug('NotesContext.syncURL', 'already selected, skipping');
       }
     }
-  }, [params, updateSelection, notes, selectedNoteId]);
+  }, [urlNoteId, updateSelection, notes, selectedNoteId]);
 
   // Keep optimisticSelectedNoteId in sync with the committed selectedNoteId
   // so that back/forward navigation (which goes through updateSelection above)
@@ -399,9 +417,10 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
     if (pathname === '/' && notes.length > 0 && !selectedNoteId && !isCreatingNote) {
       const firstNote = notes[0];
       debug('NotesContext.autoSelect', 'auto-selecting first note', firstNote.id);
-      router.push(`/note/${firstNote.id}`);
+      window.history.pushState(window.history.state, '', `/note/${firstNote.id}`);
+      setUrlNoteId(firstNote.id);
     }
-  }, [pathname, notes, selectedNoteId, router, isCreatingNote]);
+  }, [pathname, notes, selectedNoteId, isCreatingNote]);
 
   const value: NotesContextValue = {
     notes,
@@ -431,4 +450,9 @@ export function NotesProvider({ children, initialNotes = [] }: NotesProviderProp
 
 function parseId(params: ReturnType<typeof useParams>) {
   return params?.id ? parseInt(params.id as string, 10) : null;
+}
+
+function parseNoteIdFromPathname(pathname: string): number | null {
+  const match = pathname.match(/^\/note\/(\d+)/);
+  return match ? parseInt(match[1], 10) : null;
 }

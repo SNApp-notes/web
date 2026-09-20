@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useQueryState, parseAsInteger } from 'nuqs';
 import { useNotesContext } from '@/components/notes/NotesContext';
 import { updateNote } from '@/app/actions/notes';
@@ -17,7 +17,7 @@ import { debug } from '@/lib/debug';
 
 export default function ContentSlotDefault() {
   const editorRef = useRef<EditorRef | null>(null);
-  const params = useParams();
+  const pathname = usePathname();
 
   // Use nuqs for type-safe line query parameter management
   const [lineParam, setLineParam] = useQueryState('line', parseAsInteger.withDefault(0));
@@ -112,12 +112,12 @@ export default function ContentSlotDefault() {
   // Derive current line from query parameter (only on note routes)
   // Only use lineParam if it was set for the current note (not stale from previous note)
   const currentLine = useMemo(() => {
-    // Must have a route ID and a positive lineParam
-    if (!params?.id || lineParam <= 0) return undefined;
+    // Must be on a note route and have a positive lineParam
+    if (!pathname?.startsWith('/note/') || lineParam <= 0) return undefined;
     // The lineParam must have been set for the current note
     if (lineParamNoteId !== selectedNoteId) return undefined;
     return lineParam;
-  }, [params?.id, lineParam, selectedNoteId, lineParamNoteId]);
+  }, [pathname, lineParam, selectedNoteId, lineParamNoteId]);
 
   // Scroll to current line when editor is ready or current line changes
   useEffect(() => {
