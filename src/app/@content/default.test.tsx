@@ -106,6 +106,7 @@ vi.mock('@/components/notes/RightPanel', () => ({
 }));
 
 import { useNotesContext } from '@/components/notes/NotesContext';
+import MiddlePanel from '@/components/notes/MiddlePanel';
 import { updateNote } from '@/app/actions/notes';
 import { extractHeaders } from '@/lib/markdown-parser';
 import { useQueryState } from 'nuqs';
@@ -540,6 +541,49 @@ describe('ContentSlotDefault', () => {
 
       // Editor ref should be set (we can't directly test ref, but behavior confirms it)
       expect(readyButton).toBeInTheDocument();
+    });
+  });
+
+  describe('Editor State Restoration Race', () => {
+    afterEach(() => {
+      localStorage.removeItem('snapp:editorState');
+    });
+
+    it('does not restore saved editor state onto a note switched to before the initial note becomes ready', () => {
+      const mockNote1 = createMockNote(1, 'Note 1', 'Content 1');
+      const mockNote2 = createMockNote(2, 'Note 2', 'Content 2');
+      const getNote = vi.fn((id: number) => (id === 1 ? mockNote1 : mockNote2));
+
+      // Note 2 has a genuinely saved scroll/cursor position from an earlier session
+      localStorage.setItem(
+        'snapp:editorState',
+        JSON.stringify({
+          noteId: 2,
+          cursor: { line: 5, column: 0 },
+          scrollAnchor: { from: 100, topOffset: 0, scrollLeft: 0 },
+          timestamp: Date.now()
+        })
+      );
+
+      // Page loads on note 1 (the true initial note) — its editor hasn't
+      // signaled ready yet.
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 1,
+        getNote
+      });
+      const { rerender } = render(<ContentSlotDefault />);
+
+      // User switches to note 2 before note 1's editor ever became ready.
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 2,
+        getNote
+      });
+      rerender(<ContentSlotDefault />);
+
+      // Note 2 isn't the note the page actually loaded on, so it must open
+      // at the top rather than jumping to its old saved position.
+      const lastCall = vi.mocked(MiddlePanel).mock.calls.at(-1)?.[0];
+      expect(lastCall?.cursorPosition).toBeUndefined();
     });
   });
 

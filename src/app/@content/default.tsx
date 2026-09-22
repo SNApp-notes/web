@@ -60,10 +60,14 @@ export default function ContentSlotDefault() {
   // Track if we've already restored for current note
   const restoredNoteIdRef = useRef<number | null>(null);
 
-  // Track if this is the initial page load (for editor state restoration)
-  // Editor state (cursor/scroll) should ONLY be restored on page refresh,
-  // not when switching notes during a session
-  const isInitialLoadRef = useRef<boolean>(true);
+  // The note that was selected on the very first render, i.e. a real page
+  // load/refresh rather than a note switch. Editor state (cursor/scroll)
+  // should ONLY ever be restored for this note. A plain "has restoration
+  // happened yet" flag isn't enough: if the user switches notes fast enough
+  // (before this note's onEditorReady fires), the flag would still be unset
+  // and a *different* note would incorrectly go through the restore path,
+  // jumping to whatever position that note happened to have saved.
+  const [initialNoteId] = useState<number | null>(selectedNoteId);
 
   // Track editor state restoration - only happens once on initial page load
   // State is used by cursorPosition memo; ref is used by handleEditorReady callback
@@ -147,8 +151,12 @@ export default function ContentSlotDefault() {
   const cursorPosition = useMemo(() => {
     if (!selectedNoteId || !content) return undefined;
 
-    // Only restore cursor position on initial page load
-    if (editorStateRestored) {
+    // Only restore cursor position for the note that was selected on initial
+    // load, and only once. Without the note-id check, switching to a
+    // different note before the initial note's restoration completes would
+    // incorrectly restore *that* note's saved position instead of opening at
+    // the top.
+    if (editorStateRestored || selectedNoteId !== initialNoteId) {
       return undefined;
     }
 
@@ -169,7 +177,7 @@ export default function ContentSlotDefault() {
     position += editorState.cursor.column;
 
     return position;
-  }, [selectedNoteId, content, editorStateRestored]);
+  }, [selectedNoteId, content, editorStateRestored, initialNoteId]);
 
   // Restore unsaved notes on mount or when note changes
   useEffect(() => {
@@ -339,14 +347,18 @@ export default function ContentSlotDefault() {
     }
   }, [pendingSave, isCreatingNote, selectedNote, executePendingSave, handleSave]);
 
-  // Cleanup debounce timer on unmount
+  // Cancel any pending debounced save when switching notes (and on unmount).
+  // Without this, a save scheduled just before switching notes fires ~300ms
+  // later and reads editorRef.current at that time — which by then points to
+  // the newly mounted note's editor — so it saves the new note's scroll data
+  // under the old note's id, corrupting the single-slot localStorage state.
   useEffect(() => {
     return () => {
       if (cursorDebounceTimerRef.current) {
         clearTimeout(cursorDebounceTimerRef.current);
       }
     };
-  }, []);
+  }, [selectedNoteId]);
 
   const handleHeaderClick = (line: number) => {
     // Mark this lineParam as being for the current note
@@ -416,7 +428,8 @@ export default function ContentSlotDefault() {
         return;
       }
 
-      if (!isInitialLoadRef.current || editorStateRestoredRef.current) {
+      const isInitialNote = selectedNoteId === initialNoteId;
+      if (!isInitialNote || editorStateRestoredRef.current) {
         if (editor?.focus) {
           requestAnimationFrame(() => {
             const active = document.activeElement;
@@ -450,7 +463,7 @@ export default function ContentSlotDefault() {
         editor.focus();
       }
     },
-    [selectedNoteId, newNoteId]
+    [selectedNoteId, newNoteId, initialNoteId]
   );
 
   return (
