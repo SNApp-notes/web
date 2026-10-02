@@ -100,18 +100,25 @@ export default function ContentSlotDefault() {
     setPrevLineParam(lineParam);
   }
 
-  // Detect note switches and invalidate stale lineParam
+  // Detect note switches and invalidate stale lineParam.
+  //
+  // This deliberately only touches React state, never the URL. Writing the
+  // query string here (e.g. setLineParam(null)) issues a nuqs replaceState
+  // against the *current* pathname, which lands while selectNote's
+  // router.push() to the new note is still in flight and clobbers it — the
+  // address bar snaps back to the previous note and the navigation is lost.
+  // The URL needs no cleanup anyway: selectNote pushes a bare /note/:id, so
+  // any ?line= is dropped by the navigation itself.
   useEffect(() => {
     if (selectedNoteId !== prevNoteIdRef.current) {
       // Only clear on actual note switches, not initial page load
       // (where ?line= may be a deep link or refresh that should be preserved)
       if (prevNoteIdRef.current !== null) {
         setLineParamNoteId(null);
-        setLineParam(null);
       }
       prevNoteIdRef.current = selectedNoteId;
     }
-  }, [selectedNoteId, setLineParam]);
+  }, [selectedNoteId]);
 
   // Derive current line from query parameter (only on note routes)
   // Only use lineParam if it was set for the current note (not stale from previous note)

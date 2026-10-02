@@ -524,6 +524,35 @@ describe('ContentSlotDefault', () => {
       // Current line should be cleared (undefined) when note changes
       expect(screen.getByTestId('current-line')).toHaveTextContent('undefined');
     });
+
+    it('does not write the query string when switching notes', () => {
+      // Clearing ?line= via nuqs on a note switch issues a replaceState
+      // against the old pathname, which clobbers the in-flight router.push()
+      // to the new note and strands the URL on the previous note. The
+      // navigation already lands on a bare /note/:id, so the switch must
+      // adjust React state only and leave the URL to the router.
+      mockLineParam = 42;
+      mockUseQueryState.mockReturnValue([mockLineParam, mockSetLineParam]);
+
+      const mockNote1 = createMockNote(1, 'Note 1', 'Content');
+      const mockNote2 = createMockNote(2, 'Note 2', 'Content');
+
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 1,
+        getNote: vi.fn(() => mockNote1)
+      });
+      const { rerender } = render(<ContentSlotDefault />);
+
+      mockSetLineParam.mockClear();
+
+      mockContext = setupMockNotesContext(mockUseNotesContext, {
+        selectedNoteId: 2,
+        getNote: vi.fn(() => mockNote2)
+      });
+      rerender(<ContentSlotDefault />);
+
+      expect(mockSetLineParam).not.toHaveBeenCalled();
+    });
   });
 
   describe('Editor Ref Management', () => {
